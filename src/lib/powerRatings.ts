@@ -22,17 +22,6 @@ export function createPowerRatings(
 
     const grouped = groupByTeamGenderWeapon(normalized);
     const squadRatings = calculateSquadPowerRatings(grouped);
-    console.log(
-    squadRatings
-        .filter((rating) => rating.teamId === 56 && rating.gender === "Men")
-        .map((rating) => ({
-            weapon: JSON.stringify(rating.weapon),
-            length: rating.weapon.length,
-            equalsEpee: rating.weapon === "Epee",
-            charCodes: [...rating.weapon].map((char) => char.charCodeAt(0)),
-        }))
-);
-   
     const teamRatings = calculateTeamPowerRatings(squadRatings);
 
     return [...squadRatings, ...teamRatings];
@@ -208,33 +197,3 @@ function adjustPowerRating(
         return Math.ceil(rawPowerRating/10) * 10;
     }
 }
-
-
-
-import xlsx from "xlsx";
-
-const table = xlsx.readFile("fencer-ratings.xlsx");
-const sheet = table.Sheets[table.SheetNames[1]];
-const teamsSheet = table.Sheets[table.SheetNames[0]];
-
-const teams = xlsx.utils.sheet_to_json<Team>(teamsSheet);
-
-const ratingsRows = xlsx.utils.sheet_to_json<FencerRatingRow>(sheet);
-
-
-const results = createPowerRatings(ratingsRows, "Men", teams);
-
-console.table(
-    results.map((rating) => {
-        const team = teams.find((team) => team.id === rating.teamId);
-
-        return {
-            teamId: rating.teamId,
-            teamName: team?.name ?? "Unknown",
-            gender: rating.gender,
-            weapon: rating.weapon,
-            rawPowerRating: Number(rating.rawPowerRating.toFixed(2)),
-            adjustedPowerRating: rating.adjustedPowerRating,
-        };
-    })
-);

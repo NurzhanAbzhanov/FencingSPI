@@ -1,7 +1,7 @@
 
 // Core enumeration types
 export type Gender = "Men" | "Women";
-export type Weapon = "Saber" | "Foil" | "Epee" | "Team";
+export type Weapon = "Sabre" | "Foil" | "Epee" | "Team";
 export type Result = "W" | "L";
 
 // Raw match results import
@@ -16,11 +16,11 @@ export type MatchRow = {
     leftTeamId: number;
     rightTeamId: number;
 
-    leftSaber: number;
+    leftSabre: number;
     leftFoil: number;
     leftEpee: number;
 
-    rightSaber: number;
+    rightSabre: number;
     rightFoil: number;
     rightEpee: number;
 
@@ -32,7 +32,6 @@ export type FencerRatingRow = {
     weapon: Exclude<Weapon, "Team">;
     powerRating: number;
     teamName: string;
-    gender: Gender;
 }
 
 // Team entity
@@ -48,7 +47,8 @@ export type SquadPowerRating = {
     gender: Gender;
     weapon: Weapon;
 
-    powerRating: number;
+    rawPowerRating: number;
+    adjustedPowerRating: number;
 }
 
 // Expanded results for internal calculations
