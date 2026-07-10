@@ -1,8 +1,5 @@
-import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabase'
-
-export default UploadBox() {
+export default function UploadBox() {
     return (
-        
-    )
+        <div className="upload-box" />
+    );
 }
