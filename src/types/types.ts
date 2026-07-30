@@ -27,6 +27,11 @@ export type MatchRow = {
     host: string;
 }
 
+// Match result entered through the web form
+export type MatchSubmission = MatchRow & {
+    email: string;
+}
+
 // Raw power rating import 
 export type FencerRatingRow = {
     weapon: Exclude<Weapon, "Team">;

@@ -88,8 +88,8 @@ export default function ResultsTable({
     filter,
     hiddenColumns = [],
 }: ResultsTableProps) {
-    const [rows, setRows] = useState<SpiResultRow[]>([]);
-    const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    const [loadedRows, setLoadedRows] = useState<SpiResultRow[]>([]);
+    const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">(
         providedRows ? "ready" : "loading"
     );
     const [sorts, setSorts] = useState<SortStates>([
@@ -101,20 +101,14 @@ export default function ResultsTable({
 
     useEffect(() => {
         if (providedRows) {
-            setRows(providedRows);
-            setStatus("ready");
             return;
         }
 
         if (!csvPath) {
-            setRows([]);
-            setStatus("ready");
             return;
         }
 
         let isMounted = true;
-
-        setStatus("loading");
 
         fetch(csvPath)
             .then((response) => {
@@ -126,13 +120,13 @@ export default function ResultsTable({
             })
             .then((csv) => {
                 if (isMounted) {
-                    setRows(parseCsv(csv));
-                    setStatus("ready");
+                    setLoadedRows(parseCsv(csv));
+                    setLoadStatus("ready");
                 }
             })
             .catch(() => {
                 if (isMounted) {
-                    setStatus("error");
+                    setLoadStatus("error");
                 }
             });
 
@@ -141,6 +135,8 @@ export default function ResultsTable({
         };
     }, [csvPath, providedRows]);
 
+    const rows = providedRows ?? loadedRows;
+    const status = providedRows || !csvPath ? "ready" : loadStatus;
     const sortedRows = useMemo(
         () => {
             const filteredRows = filter ? rows.filter(filter) : rows;

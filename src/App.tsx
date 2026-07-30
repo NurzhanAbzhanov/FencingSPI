@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import ResultsTable, { type SpiResultRow } from "./components/ResultsTable";
+import {
+    readMatchSubmissions,
+    saveMatchSubmissions,
+} from "./lib/matchResultsStore";
+import { TEAMS } from "./lib/teams";
 import RegenerateDataPage from "./pages/RegenerateDataPage";
+import ResultsEntryPage from "./pages/ResultsEntryPage";
+import type { MatchSubmission } from "./types/types";
 import "./App.css";
 
 type Page =
+    | "enter-results"
     | "team-spi"
     | "squad-spi"
     | "regenerate-data";
@@ -12,7 +20,7 @@ type Page =
 type GenderFilter = "All" | "Men" | "Women";
 type WeaponFilter = "All" | "Epee" | "Foil" | "Sabre";
 
-const GENERATED_SPI_ROWS_STORAGE_KEY = "generated-spi-rows-v3-dynamic-pr";
+const GENERATED_SPI_ROWS_STORAGE_KEY = "generated-spi-rows-v5-2025-26";
 
 export default function App(){
     const [page, setPage] = useState<Page>(getPageFromHash);
@@ -22,10 +30,18 @@ export default function App(){
     const [generatedRows, setGeneratedRows] = useState<SpiResultRow[]>(
         readGeneratedRowsFromStorage
     );
+    const [matchSubmissions, setMatchSubmissions] = useState<MatchSubmission[]>(
+        readMatchSubmissions
+    );
 
     function handleRowsGenerated(rows: SpiResultRow[]) {
         setGeneratedRows(rows);
         localStorage.setItem(GENERATED_SPI_ROWS_STORAGE_KEY, JSON.stringify(rows));
+    }
+
+    function handleMatchSubmissionsChange(rows: MatchSubmission[]) {
+        setMatchSubmissions(rows);
+        saveMatchSubmissions(rows);
     }
 
     useEffect(() => {
@@ -44,7 +60,13 @@ export default function App(){
         <>
             <Header activePage={page} />
             <main className="app-shell">
-                {page === "team-spi" ? (
+                {page === "enter-results" ? (
+                    <ResultsEntryPage
+                        submissions={matchSubmissions}
+                        teams={TEAMS}
+                        onSubmissionsChange={handleMatchSubmissionsChange}
+                    />
+                ) : page === "team-spi" ? (
                     <section className="page-section">
                         <div className="page-header">
                             <h1>Team SPI</h1>
@@ -133,7 +155,10 @@ export default function App(){
                         />
                     </section>
                 ) : page === "regenerate-data" ? (
-                    <RegenerateDataPage onRowsGenerated={handleRowsGenerated} />
+                    <RegenerateDataPage
+                        enteredMatches={matchSubmissions}
+                        onRowsGenerated={handleRowsGenerated}
+                    />
                 ) : (
                     <TeamSpiRedirect />
                 )}
@@ -150,7 +175,11 @@ function TeamSpiRedirect() {
 function getPageFromHash(): Page {
     const hash = window.location.hash.replace("#/", "");
 
-    if (hash === "squad-spi" || hash === "regenerate-data") {
+    if (
+        hash === "enter-results" ||
+        hash === "squad-spi" ||
+        hash === "regenerate-data"
+    ) {
         return hash;
     }
 

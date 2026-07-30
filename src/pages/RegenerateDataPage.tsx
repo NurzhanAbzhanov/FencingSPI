@@ -23,7 +23,8 @@ type InputKey =
 
 type RegenerateOptions = {
     fillMissingPowerRatings: boolean;
-    applyPennStateOverride: boolean;
+    useDynamicTeamPowerRatings: boolean;
+    useEnteredMatches: boolean;
     includeTeamRows: boolean;
     includeSquadRows: boolean;
 };
@@ -45,16 +46,19 @@ const INPUT_LABELS: Record<InputKey, string> = {
 
 const DEFAULT_OPTIONS: RegenerateOptions = {
     fillMissingPowerRatings: true,
-    applyPennStateOverride: true,
+    useDynamicTeamPowerRatings: false,
+    useEnteredMatches: false,
     includeTeamRows: true,
     includeSquadRows: true,
 };
 
 type RegenerateDataPageProps = {
+    enteredMatches: MatchRow[];
     onRowsGenerated: (rows: SpiResultRow[]) => void;
 };
 
 export default function RegenerateDataPage({
+    enteredMatches,
     onRowsGenerated,
 }: RegenerateDataPageProps) {
     const [files, setFiles] = useState<Partial<Record<InputKey, File>>>({});
@@ -67,17 +71,33 @@ export default function RegenerateDataPage({
         () =>
             Boolean(
                 files.matches &&
+                    !options.useEnteredMatches &&
                     files.teams &&
                     files.menRatings &&
                     files.womenRatings &&
-                    files.dynamicPowerRatings
-            ),
-        [files]
+                    (!options.useDynamicTeamPowerRatings ||
+                        files.dynamicPowerRatings)
+                ) ||
+                Boolean(
+                    options.useEnteredMatches &&
+                        enteredMatches.length > 0 &&
+                        files.teams &&
+                        files.menRatings &&
+                        files.womenRatings &&
+                        (!options.useDynamicTeamPowerRatings ||
+                            files.dynamicPowerRatings)
+                ),
+        [
+            enteredMatches.length,
+            files,
+            options.useDynamicTeamPowerRatings,
+            options.useEnteredMatches,
+        ]
     );
 
     async function handleCalculate() {
         if (!canCalculate) {
-            setStatus("Select all five input files.");
+            setStatus("Select all required input files.");
             return;
         }
 
@@ -85,15 +105,18 @@ export default function RegenerateDataPage({
         setStatus("");
 
         try {
-            const [matchRows, teamRows, menRows, womenRows, dynamicTeamRatings] =
+            const [matchRows, teamRows, menRows, womenRows] =
                 await Promise.all([
-                    readRowsFile(files.matches),
+                    options.useEnteredMatches
+                        ? Promise.resolve([])
+                        : readRowsFile(files.matches),
                     readRowsFile(files.teams),
                     readRowsFile(files.menRatings),
                     readRowsFile(files.womenRatings),
-                    readDynamicTeamPowerRatings(files.dynamicPowerRatings),
                 ]);
-            const matches = matchRows.map(parseMatchRow);
+            const matches = options.useEnteredMatches
+                ? enteredMatches
+                : matchRows.map(parseMatchRow);
             const teams = teamRows.map(parseTeamRow);
             const menFencerRatings = menRows.map(parseFencerRatingRow);
             const womenFencerRatings = womenRows.map(parseFencerRatingRow);
@@ -105,17 +128,14 @@ export default function RegenerateDataPage({
                 ? fillMissingPowerRatings(calculatedPowerRatings, teams, matches)
                 : calculatedPowerRatings;
 
-            applyDynamicTeamPowerRatings(powerRatings, dynamicTeamRatings);
+            let dynamicTeamRatingCount = 0;
 
-            if (options.applyPennStateOverride) {
-                applyPowerRatingOverrides(powerRatings, [
-                    {
-                        teamId: 26,
-                        gender: "Men",
-                        weapon: "Team",
-                        adjustedPowerRating: 90,
-                    },
-                ]);
+            if (options.useDynamicTeamPowerRatings) {
+                const dynamicTeamRatings = await readDynamicTeamPowerRatings(
+                    files.dynamicPowerRatings
+                );
+                applyDynamicTeamPowerRatings(powerRatings, dynamicTeamRatings);
+                dynamicTeamRatingCount = dynamicTeamRatings.length;
             }
 
             const generatedRows = calculateSPI(matches, powerRatings)
@@ -155,7 +175,11 @@ export default function RegenerateDataPage({
             setRows(generatedRows);
             onRowsGenerated(generatedRows);
             setStatus(
-                `Generated ${generatedRows.length} SPI rows using ${dynamicTeamRatings.length} dynamic team power ratings. Team SPI and Squad SPI now use this dataset.`
+                `Generated ${generatedRows.length} SPI rows${
+                    dynamicTeamRatingCount > 0
+                        ? ` using ${dynamicTeamRatingCount} dynamic team power ratings`
+                        : " using fencer-based team power ratings"
+                }. Team SPI and Squad SPI now use this dataset.`
             );
         } catch (error) {
             setStatus(error instanceof Error ? error.message : "Calculation failed.");
@@ -193,6 +217,10 @@ export default function RegenerateDataPage({
                                         : ".csv,.tsv,.json"
                                 }
                                 type="file"
+                                disabled={
+                                    inputKey === "matches" &&
+                                    options.useEnteredMatches
+                                }
                                 onChange={(event) => {
                                     const file = event.target.files?.[0];
 
@@ -209,6 +237,21 @@ export default function RegenerateDataPage({
                 <div className="options-panel">
                     <label>
                         <input
+                            checked={options.useEnteredMatches}
+                            disabled={enteredMatches.length === 0}
+                            type="checkbox"
+                            onChange={(event) =>
+                                setOptions((currentOptions) => ({
+                                    ...currentOptions,
+                                    useEnteredMatches: event.target.checked,
+                                }))
+                            }
+                        />
+                        Use entered match results ({enteredMatches.length})
+                    </label>
+
+                    <label>
+                        <input
                             checked={options.fillMissingPowerRatings}
                             type="checkbox"
                             onChange={(event) =>
@@ -223,16 +266,17 @@ export default function RegenerateDataPage({
 
                     <label>
                         <input
-                            checked={options.applyPennStateOverride}
+                            checked={options.useDynamicTeamPowerRatings}
                             type="checkbox"
                             onChange={(event) =>
                                 setOptions((currentOptions) => ({
                                     ...currentOptions,
-                                    applyPennStateOverride: event.target.checked,
+                                    useDynamicTeamPowerRatings:
+                                        event.target.checked,
                                 }))
                             }
                         />
-                        Override Penn State Men Team PR to 90
+                        Use dynamic Team power ratings
                     </label>
 
                     <label>
@@ -603,39 +647,6 @@ function fillMissingPowerRatings(
     }
 
     return completedPowerRatings;
-}
-
-function applyPowerRatingOverrides(
-    powerRatings: SquadPowerRating[],
-    overrides: Array<{
-        teamId: number;
-        gender: Gender;
-        weapon: Weapon;
-        adjustedPowerRating: number;
-    }>
-): void {
-    for (const override of overrides) {
-        const rating = powerRatings.find(
-            (powerRating) =>
-                powerRating.teamId === override.teamId &&
-                powerRating.gender === override.gender &&
-                powerRating.weapon === override.weapon
-        );
-
-        if (rating) {
-            rating.rawPowerRating = override.adjustedPowerRating;
-            rating.adjustedPowerRating = override.adjustedPowerRating;
-            continue;
-        }
-
-        powerRatings.push({
-            teamId: override.teamId,
-            gender: override.gender,
-            weapon: override.weapon,
-            rawPowerRating: override.adjustedPowerRating,
-            adjustedPowerRating: override.adjustedPowerRating,
-        });
-    }
 }
 
 function applyDynamicTeamPowerRatings(

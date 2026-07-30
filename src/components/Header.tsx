@@ -2,6 +2,7 @@ import "./Header.css";
 
 type HeaderProps = {
     activePage:
+        | "enter-results"
         | "team-spi"
         | "squad-spi"
         | "regenerate-data";
@@ -17,6 +18,17 @@ export default function Header({ activePage }: HeaderProps) {
 
                 <nav aria-label="Main navigation">
                     <ul className="nav-list">
+                        <li>
+                            <a
+                                className={
+                                    activePage === "enter-results" ? "active" : ""
+                                }
+                                href="#/enter-results"
+                            >
+                                Enter Results
+                            </a>
+                        </li>
+
                         <li>
                             <a
                                 className={

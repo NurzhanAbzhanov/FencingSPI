@@ -172,7 +172,7 @@ function calculateAveragePowerRating(
     for(const row of rows){
        sumPR += row.powerRating;
     }
-    const rawPowerRating = sumPR / rows.length;
+    const rawPowerRating = sumPR / 3;
     
     return {
         teamId: rows[0].teamId,
@@ -190,6 +190,10 @@ function adjustPowerRating(
     rawPowerRating: number,
     gender: Gender
 ): number{  
+    if (rawPowerRating < 10) {
+        return 10;
+    }
+
     if(gender === "Men"){
         return Math.floor(rawPowerRating/10) * 10;
     }

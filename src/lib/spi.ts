@@ -46,10 +46,29 @@ export function calculateSPI(
 ): SpiResult[] {
     const squadResults = expandMatchRowsToSquadResults(matches, powerRatings);
     const grouped = groupSquadResults(squadResults);
-
-    return Object.values(grouped).map((results) =>
-        calculateSpiForGroup(results, powerRatings)
+    const results = Object.values(grouped).map((groupResults) =>
+        calculateSpiForGroup(groupResults, powerRatings)
     );
+    const resultKeys = new Set(
+        results.map((result) =>
+            createGroupKey(result.teamId, result.gender, result.weapon)
+        )
+    );
+
+    for (const powerRating of powerRatings) {
+        const key = createGroupKey(
+            powerRating.teamId,
+            powerRating.gender,
+            powerRating.weapon
+        );
+
+        if (!resultKeys.has(key)) {
+            results.push(createNoBoutSpiResult(powerRating));
+            resultKeys.add(key);
+        }
+    }
+
+    return results;
 }
 
 function expandMatchRowsToSquadResults(
@@ -62,6 +81,10 @@ function expandMatchRowsToSquadResults(
         for (const weapon of WEAPONS) {
             const leftScore = getWeaponScore(match, "left", weapon);
             const rightScore = getWeaponScore(match, "right", weapon);
+
+            if (leftScore === rightScore) {
+                continue;
+            }
 
             results.push(
                 createSquadResult({
@@ -99,6 +122,7 @@ function expandMatchRowsToSquadResults(
                 weapon: "Team",
                 scoreFor: leftTotal,
                 scoreAgainst: rightTotal,
+                winsTie: false,
                 powerRatings,
             })
         );
@@ -111,6 +135,7 @@ function expandMatchRowsToSquadResults(
                 weapon: "Team",
                 scoreFor: rightTotal,
                 scoreAgainst: leftTotal,
+                winsTie: true,
                 powerRatings,
             })
         );
@@ -126,6 +151,7 @@ function createSquadResult(params: {
     weapon: Weapon;
     scoreFor: number;
     scoreAgainst: number;
+    winsTie?: boolean;
     powerRatings: SquadPowerRating[];
 }): SquadResult {
     return {
@@ -141,7 +167,11 @@ function createSquadResult(params: {
         ).adjustedPowerRating,
         scoreFor: params.scoreFor,
         scoreAgainst: params.scoreAgainst,
-        result: getResult(params.scoreFor, params.scoreAgainst),
+        result: getResult(
+            params.scoreFor,
+            params.scoreAgainst,
+            params.winsTie ?? false
+        ),
     };
 }
 
@@ -173,8 +203,14 @@ function getWeaponScore(
     return match.rightSabre;
 }
 
-function getResult(scoreFor: number, scoreAgainst: number): Result {
-    return scoreFor > scoreAgainst ? "W" : "L";
+function getResult(
+    scoreFor: number,
+    scoreAgainst: number,
+    winsTie: boolean
+): Result {
+    return scoreFor > scoreAgainst || (winsTie && scoreFor === scoreAgainst)
+        ? "W"
+        : "L";
 }
 
 function findPowerRating(
@@ -217,7 +253,11 @@ function groupSquadResults(
     const grouped: Record<string, SquadResult[]> = {};
 
     for (const result of squadResults) {
-        const key = `${result.teamId}-${result.gender}-${result.weapon}`;
+        const key = createGroupKey(
+            result.teamId,
+            result.gender,
+            result.weapon
+        );
 
         if (!grouped[key]) {
             grouped[key] = [];
@@ -227,6 +267,37 @@ function groupSquadResults(
     }
 
     return grouped;
+}
+
+function createGroupKey(
+    teamId: number,
+    gender: MatchRow["gender"],
+    weapon: Weapon
+): string {
+    return `${teamId}-${gender}-${weapon}`;
+}
+
+function createNoBoutSpiResult(
+    powerRating: SquadPowerRating
+): SpiResult {
+    const prc = powerRating.adjustedPowerRating * 0.05;
+
+    return {
+        teamId: powerRating.teamId,
+        gender: powerRating.gender,
+        weapon: powerRating.weapon,
+        lowWinPct: 0,
+        mediumWinPct: 0,
+        highWinPct: 0,
+        lowCategoryStrength: LOW_BASE_STRENGTH,
+        mediumCategoryStrength: MEDIUM_BASE_STRENGTH,
+        highCategoryStrength: 0,
+        lowScore: 0,
+        mediumScore: 0,
+        highScore: 0,
+        prc,
+        spi: prc,
+    };
 }
 
 function calculateCategoryStats(
