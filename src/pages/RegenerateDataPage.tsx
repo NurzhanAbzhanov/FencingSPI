@@ -24,6 +24,7 @@ type InputKey =
 type RegenerateOptions = {
     fillMissingPowerRatings: boolean;
     useDynamicTeamPowerRatings: boolean;
+    overridePennStateWomenTeamPowerRating: boolean;
     useEnteredMatches: boolean;
     includeTeamRows: boolean;
     includeSquadRows: boolean;
@@ -47,6 +48,7 @@ const INPUT_LABELS: Record<InputKey, string> = {
 const DEFAULT_OPTIONS: RegenerateOptions = {
     fillMissingPowerRatings: true,
     useDynamicTeamPowerRatings: false,
+    overridePennStateWomenTeamPowerRating: true,
     useEnteredMatches: false,
     includeTeamRows: true,
     includeSquadRows: true,
@@ -136,6 +138,14 @@ export default function RegenerateDataPage({
                 );
                 applyDynamicTeamPowerRatings(powerRatings, dynamicTeamRatings);
                 dynamicTeamRatingCount = dynamicTeamRatings.length;
+            }
+
+            if (options.overridePennStateWomenTeamPowerRating) {
+                applyTeamPowerRatingOverride(powerRatings, {
+                    teamId: 44,
+                    gender: "Women",
+                    adjustedPowerRating: 70,
+                });
             }
 
             const generatedRows = calculateSPI(matches, powerRatings)
@@ -277,6 +287,23 @@ export default function RegenerateDataPage({
                             }
                         />
                         Use dynamic Team power ratings
+                    </label>
+
+                    <label>
+                        <input
+                            checked={
+                                options.overridePennStateWomenTeamPowerRating
+                            }
+                            type="checkbox"
+                            onChange={(event) =>
+                                setOptions((currentOptions) => ({
+                                    ...currentOptions,
+                                    overridePennStateWomenTeamPowerRating:
+                                        event.target.checked,
+                                }))
+                            }
+                        />
+                        Override Penn State Women Team PR to 70
                     </label>
 
                     <label>
@@ -675,6 +702,31 @@ function applyDynamicTeamPowerRatings(
             adjustedPowerRating: dynamicRating.adjustedPowerRating,
         });
     }
+}
+
+function applyTeamPowerRatingOverride(
+    powerRatings: SquadPowerRating[],
+    override: {
+        teamId: number;
+        gender: Gender;
+        adjustedPowerRating: number;
+    }
+): void {
+    const rating = powerRatings.find(
+        (powerRating) =>
+            powerRating.teamId === override.teamId &&
+            powerRating.gender === override.gender &&
+            powerRating.weapon === "Team"
+    );
+
+    if (!rating) {
+        throw new Error(
+            `Could not override Team power rating for team ${override.teamId}, ${override.gender}`
+        );
+    }
+
+    rating.rawPowerRating = override.adjustedPowerRating;
+    rating.adjustedPowerRating = override.adjustedPowerRating;
 }
 
 function normalizeHeader(header: string): string {
