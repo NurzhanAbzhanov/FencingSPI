@@ -20,7 +20,7 @@ type Page =
 type GenderFilter = "All" | "Men" | "Women";
 type WeaponFilter = "All" | "Epee" | "Foil" | "Sabre";
 
-const GENERATED_SPI_ROWS_STORAGE_KEY = "generated-spi-rows-v5-2025-26";
+const GENERATED_SPI_ROWS_STORAGE_KEY = "generated-spi-rows-v6-2025-26";
 
 export default function App(){
     const [page, setPage] = useState<Page>(getPageFromHash);
