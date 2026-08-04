@@ -39,6 +39,16 @@
     background: #ffffff;
 }
 
+.editing-banner {
+    margin: 0 -24px;
+    padding: 10px 24px;
+    border-bottom: 1px solid #c7d9d2;
+    background: #eaf4f0;
+    color: #174f40;
+    font-size: 0.8125rem;
+    font-weight: 800;
+}
+
 .entry-section {
     padding: 26px 0 30px;
     border-bottom: 1px solid #e1e5ea;
@@ -301,8 +311,7 @@
 }
 
 .primary-action,
-.secondary-action,
-.delete-action {
+.secondary-action {
     min-height: 38px;
     padding: 0 14px;
     border-radius: 3px;
@@ -399,17 +408,42 @@
     text-align: right;
 }
 
+.entry-history-table tbody tr.editing-row {
+    background: #edf6f2;
+    box-shadow: inset 3px 0 #1f5a4a;
+}
+
 .history-empty {
     height: 84px;
     color: #7a8390;
     text-align: center !important;
 }
 
-.delete-action {
-    min-height: 32px;
-    padding: 0 10px;
+.history-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.history-icon-action {
+    width: 34px;
+    height: 34px;
+    padding: 0;
     border: 1px solid transparent;
     background: transparent;
+    color: #3f4b5b;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.history-icon-action:hover,
+.history-icon-action:focus-visible {
+    border-color: #bac4ce;
+    background: #f4f6f8;
+}
+
+.delete-action {
     color: #a32920;
 }
 
@@ -443,6 +477,13 @@
     }
 
     .results-entry-form {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .editing-banner {
+        margin-right: -16px;
+        margin-left: -16px;
         padding-right: 16px;
         padding-left: 16px;
     }

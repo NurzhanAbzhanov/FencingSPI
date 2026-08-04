@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import {
     createMatchId,
     downloadMatchSubmissions,
@@ -43,8 +44,10 @@ export default function ResultsEntryPage({
     onSubmissionsChange,
 }: ResultsEntryPageProps) {
     const [form, setForm] = useState<EntryForm>(createInitialForm);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [status, setStatus] = useState("");
     const [error, setError] = useState("");
+    const formRef = useRef<HTMLFormElement>(null);
 
     const genderTeams = useMemo(
         () =>
@@ -104,9 +107,12 @@ export default function ResultsEntryPage({
             return;
         }
 
+        const existingSubmission = editingId === null
+            ? undefined
+            : submissions.find((row) => row.id === editingId);
         const submission: MatchSubmission = {
-            id: createMatchId(submissions),
-            timestamp: new Date().toISOString(),
+            id: existingSubmission?.id ?? createMatchId(submissions),
+            timestamp: existingSubmission?.timestamp ?? new Date().toISOString(),
             date: form.date,
             gender: form.gender,
             leftTeamId: Number(form.leftTeamId),
@@ -121,16 +127,51 @@ export default function ResultsEntryPage({
             email: form.email.trim(),
         };
 
-        onSubmissionsChange([...submissions, submission]);
+        onSubmissionsChange(
+            existingSubmission
+                ? submissions.map((row) => row.id === existingSubmission.id ? submission : row)
+                : [...submissions, submission]
+        );
+        setEditingId(null);
         setForm((current) => clearMatchFields(current));
         setError("");
-        setStatus("Result saved. It is now available on the Regenerate page.");
+        setStatus(existingSubmission ? "Result updated." : "Result saved.");
     }
 
     function handleDelete(id: number) {
+        const submission = submissions.find((row) => row.id === id);
+        const label = submission
+            ? `${getTeamName(submission.leftTeamId, teams)} versus ${getTeamName(submission.rightTeamId, teams)}`
+            : "this result";
+
+        if (!window.confirm(`Delete ${label}? This cannot be undone.`)) {
+            return;
+        }
+
         onSubmissionsChange(submissions.filter((row) => row.id !== id));
+        if (editingId === id) {
+            setEditingId(null);
+            setForm(createInitialForm());
+        }
         setStatus("Result deleted.");
         setError("");
+    }
+
+    function handleEdit(submission: MatchSubmission) {
+        setEditingId(submission.id);
+        setForm(createFormFromSubmission(submission));
+        setError("");
+        setStatus("");
+        requestAnimationFrame(() => {
+            formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }
+
+    function resetForm() {
+        setEditingId(null);
+        setForm(createInitialForm());
+        setError("");
+        setStatus("");
     }
 
     return (
@@ -142,7 +183,12 @@ export default function ResultsEntryPage({
                 </div>
             </div>
 
-            <form className="results-entry-form" onSubmit={handleSubmit}>
+            <form className="results-entry-form" onSubmit={handleSubmit} ref={formRef}>
+                {editingId !== null && (
+                    <div className="editing-banner" role="status">
+                        Editing saved result #{editingId}
+                    </div>
+                )}
                 <section className="entry-section">
                     <div className="entry-section-heading">
                         <span className="section-number">01</span>
@@ -367,18 +413,22 @@ export default function ResultsEntryPage({
                         disabled={!canSubmit}
                         type="submit"
                     >
-                        Submit result
+                        {editingId === null ? "Submit result" : "Save changes"}
                     </button>
                     <button
                         className="secondary-action"
                         type="button"
                         onClick={() => {
-                            setForm((current) => clearMatchFields(current));
-                            setError("");
-                            setStatus("");
+                            if (editingId === null) {
+                                setForm((current) => clearMatchFields(current));
+                                setError("");
+                                setStatus("");
+                            } else {
+                                resetForm();
+                            }
                         }}
                     >
-                        Clear match
+                        {editingId === null ? "Clear match" : "Cancel editing"}
                     </button>
                     <span className="form-readiness">
                         {totals.count === 27
@@ -427,7 +477,7 @@ export default function ResultsEntryPage({
                                 </tr>
                             ) : (
                                 [...submissions].reverse().map((row) => (
-                                    <tr key={row.id}>
+                                    <tr className={editingId === row.id ? "editing-row" : ""} key={row.id}>
                                         <td>{formatDate(row.date)}</td>
                                         <td>{row.gender}</td>
                                         <td>
@@ -440,20 +490,37 @@ export default function ResultsEntryPage({
                                         </td>
                                         <td>{row.host}</td>
                                         <td>
-                                            <button
-                                                className="delete-action"
-                                                type="button"
-                                                aria-label={`Delete ${getTeamName(
-                                                    row.leftTeamId,
-                                                    teams
-                                                )} versus ${getTeamName(
-                                                    row.rightTeamId,
-                                                    teams
-                                                )}`}
-                                                onClick={() => handleDelete(row.id)}
-                                            >
-                                                Delete
-                                            </button>
+                                            <div className="history-actions">
+                                                <button
+                                                    className="history-icon-action"
+                                                    type="button"
+                                                    aria-label={`Edit ${getTeamName(
+                                                        row.leftTeamId,
+                                                        teams
+                                                    )} versus ${getTeamName(
+                                                        row.rightTeamId,
+                                                        teams
+                                                    )}`}
+                                                    title="Edit result"
+                                                    onClick={() => handleEdit(row)}
+                                                >
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button
+                                                    className="history-icon-action delete-action"
+                                                    type="button"
+                                                    aria-label={`Delete ${getTeamName(
+                                                        row.leftTeamId,
+                                                        teams
+                                                    )} versus ${getTeamName(
+                                                        row.rightTeamId,
+                                                        teams
+                                                    )}`}
+                                                    onClick={() => handleDelete(row.id)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -530,6 +597,23 @@ function createInitialForm(): EntryForm {
         rightSabre: "",
         rightFoil: "",
         rightEpee: "",
+    };
+}
+
+function createFormFromSubmission(submission: MatchSubmission): EntryForm {
+    return {
+        gender: submission.gender,
+        hostName: submission.host,
+        email: submission.email,
+        date: submission.date,
+        leftTeamId: String(submission.leftTeamId),
+        rightTeamId: String(submission.rightTeamId),
+        leftSabre: String(submission.leftSabre),
+        leftFoil: String(submission.leftFoil),
+        leftEpee: String(submission.leftEpee),
+        rightSabre: String(submission.rightSabre),
+        rightFoil: String(submission.rightFoil),
+        rightEpee: String(submission.rightEpee),
     };
 }
 

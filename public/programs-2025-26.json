@@ -1,0 +1,731 @@
+[
+  {
+    "id": 48,
+    "name": "U.S. Air Force Academy",
+    "gender": "Men",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 49,
+    "name": "Boston College",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 50,
+    "name": "Brandeis University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 51,
+    "name": "Cleveland State University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 52,
+    "name": "Columbia University-Barnard College",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 53,
+    "name": "University of Detroit Mercy",
+    "gender": "Men",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 56,
+    "name": "Drew University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 57,
+    "name": "Duke University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 55,
+    "name": "Harvard University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 54,
+    "name": "Haverford College",
+    "gender": "Men",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 58,
+    "name": "Hunter College",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 59,
+    "name": "University of the Incarnate Word",
+    "gender": "Men",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 60,
+    "name": "Johns Hopkins University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 62,
+    "name": "Lafayette College",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 61,
+    "name": "Lawrence University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 63,
+    "name": "Long Island University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 64,
+    "name": "Massachusetts Institute of Technology",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 65,
+    "name": "New Jersey Institute of Technology",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 66,
+    "name": "University of North Carolina, Chapel Hill",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 67,
+    "name": "University of Notre Dame",
+    "gender": "Men",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 30,
+    "name": "New York University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 34,
+    "name": "The Ohio State University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 28,
+    "name": "University of Pennsylvania",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 26,
+    "name": "Penn State",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 25,
+    "name": "Princeton University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 24,
+    "name": "Sacred Heart University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 23,
+    "name": "St. John's University (New York)",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 22,
+    "name": "Stanford University",
+    "gender": "Men",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 81,
+    "name": "Stevens Institute of Technology",
+    "gender": "Men",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 21,
+    "name": "University of California, San Diego",
+    "gender": "Men",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 20,
+    "name": "Vassar College",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 89,
+    "name": "Wagner College",
+    "gender": "Men",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 33,
+    "name": "Wayne State University (Michigan)",
+    "gender": "Men",
+    "division": "2",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 90,
+    "name": "Wheaton College (Massachusetts)",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 79,
+    "name": "Yale University",
+    "gender": "Men",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 41,
+    "name": "Yeshiva University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 15,
+    "name": "Boston College",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 82,
+    "name": "Brandeis University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 2,
+    "name": "Brown University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 38,
+    "name": "The City College of New York",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 8,
+    "name": "Cleveland State University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 32,
+    "name": "Columbia University-Barnard College",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 1,
+    "name": "Cornell University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 83,
+    "name": "Denison University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 39,
+    "name": "University of Detroit Mercy",
+    "gender": "Women",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 43,
+    "name": "Drew University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 6,
+    "name": "Duke University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 11,
+    "name": "Fairleigh Dickinson University, Metropolitan Campus",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 12,
+    "name": "Harvard University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 10,
+    "name": "Haverford College",
+    "gender": "Women",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 42,
+    "name": "Hunter College",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 9,
+    "name": "Johns Hopkins University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 29,
+    "name": "Lafayette College",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 36,
+    "name": "Lawrence University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 84,
+    "name": "Long Island University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 85,
+    "name": "Massachusetts Institute of Technology",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 86,
+    "name": "New Jersey Institute of Technology",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 46,
+    "name": "Northwestern University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 18,
+    "name": "University of Notre Dame",
+    "gender": "Women",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 5,
+    "name": "New York University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 4,
+    "name": "The Ohio State University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 3,
+    "name": "University of Pennsylvania",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 44,
+    "name": "Pennsylvania State University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 45,
+    "name": "Princeton University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 35,
+    "name": "Sacred Heart University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 17,
+    "name": "St. John's University (New York)",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 75,
+    "name": "Stanford University",
+    "gender": "Women",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 31,
+    "name": "Stevens Institute of Technology",
+    "gender": "Women",
+    "division": "3",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 27,
+    "name": "Temple University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 13,
+    "name": "Tufts University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 76,
+    "name": "University of California, San Diego",
+    "gender": "Women",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 80,
+    "name": "University of the Incarnate Word",
+    "gender": "Women",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 87,
+    "name": "University of North Carolina, Chapel Hill",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 37,
+    "name": "U.S. Air Force Academy",
+    "gender": "Women",
+    "division": "1",
+    "region": "West",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 7,
+    "name": "Vassar College",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 14,
+    "name": "Wagner College",
+    "gender": "Women",
+    "division": "1",
+    "region": "Mid-Atlantic/South",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 47,
+    "name": "Wayne State University (Michigan)",
+    "gender": "Women",
+    "division": "2",
+    "region": "Midwest",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 40,
+    "name": "Wellesley College",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 91,
+    "name": "Wheaton College (Massachusetts)",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 19,
+    "name": "Yale University",
+    "gender": "Women",
+    "division": "1",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  },
+  {
+    "id": 88,
+    "name": "Yeshiva University",
+    "gender": "Women",
+    "division": "3",
+    "region": "Northeast",
+    "conference": "Unassigned",
+    "logoUrl": null
+  }
+]
