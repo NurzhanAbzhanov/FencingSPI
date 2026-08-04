@@ -29,7 +29,8 @@ type EntryForm = {
 type ResultsEntryPageProps = {
     teams: Team[];
     submissions: MatchSubmission[];
-    onSubmissionsChange: (rows: MatchSubmission[]) => void;
+    onSaveSubmission: (submission: MatchSubmission) => Promise<void>;
+    onDeleteSubmission: (submission: MatchSubmission) => Promise<void>;
 };
 
 const WEAPONS = [
@@ -41,12 +42,14 @@ const WEAPONS = [
 export default function ResultsEntryPage({
     teams,
     submissions,
-    onSubmissionsChange,
+    onSaveSubmission,
+    onDeleteSubmission,
 }: ResultsEntryPageProps) {
     const [form, setForm] = useState<EntryForm>(createInitialForm);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [status, setStatus] = useState("");
     const [error, setError] = useState("");
+    const [saving, setSaving] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
 
     const genderTeams = useMemo(
@@ -87,7 +90,7 @@ export default function ResultsEntryPage({
         setStatus("");
     }
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         const validationError = getValidationError(
@@ -127,18 +130,22 @@ export default function ResultsEntryPage({
             email: form.email.trim(),
         };
 
-        onSubmissionsChange(
-            existingSubmission
-                ? submissions.map((row) => row.id === existingSubmission.id ? submission : row)
-                : [...submissions, submission]
-        );
-        setEditingId(null);
-        setForm((current) => clearMatchFields(current));
-        setError("");
-        setStatus(existingSubmission ? "Result updated." : "Result saved.");
+        setSaving(true);
+        try {
+            await onSaveSubmission(submission);
+            setEditingId(null);
+            setForm((current) => clearMatchFields(current));
+            setError("");
+            setStatus(existingSubmission ? "Result updated." : "Result saved.");
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : "Could not save result.");
+            setStatus("");
+        } finally {
+            setSaving(false);
+        }
     }
 
-    function handleDelete(id: number) {
+    async function handleDelete(id: number) {
         const submission = submissions.find((row) => row.id === id);
         const label = submission
             ? `${getTeamName(submission.leftTeamId, teams)} versus ${getTeamName(submission.rightTeamId, teams)}`
@@ -148,13 +155,23 @@ export default function ResultsEntryPage({
             return;
         }
 
-        onSubmissionsChange(submissions.filter((row) => row.id !== id));
-        if (editingId === id) {
-            setEditingId(null);
-            setForm(createInitialForm());
+        if (!submission) return;
+
+        setSaving(true);
+        try {
+            await onDeleteSubmission(submission);
+            if (editingId === id) {
+                setEditingId(null);
+                setForm(createInitialForm());
+            }
+            setStatus("Result deleted.");
+            setError("");
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Could not delete result.");
+            setStatus("");
+        } finally {
+            setSaving(false);
         }
-        setStatus("Result deleted.");
-        setError("");
     }
 
     function handleEdit(submission: MatchSubmission) {
@@ -410,10 +427,10 @@ export default function ResultsEntryPage({
                 <div className="entry-actions">
                     <button
                         className="primary-action"
-                        disabled={!canSubmit}
+                        disabled={!canSubmit || saving}
                         type="submit"
                     >
-                        {editingId === null ? "Submit result" : "Save changes"}
+                        {saving ? "Saving" : editingId === null ? "Submit result" : "Save changes"}
                     </button>
                     <button
                         className="secondary-action"
@@ -442,7 +459,7 @@ export default function ResultsEntryPage({
                 <div className="history-header">
                     <div>
                         <h2>Entered results</h2>
-                        <p>{submissions.length} saved in this browser</p>
+                        <p>{submissions.length} saved result{submissions.length === 1 ? "" : "s"}</p>
                     </div>
                     <button
                         className="secondary-action"
@@ -502,6 +519,7 @@ export default function ResultsEntryPage({
                                                         teams
                                                     )}`}
                                                     title="Edit result"
+                                                    disabled={saving}
                                                     onClick={() => handleEdit(row)}
                                                 >
                                                     <Pencil size={16} />
@@ -516,6 +534,7 @@ export default function ResultsEntryPage({
                                                         row.rightTeamId,
                                                         teams
                                                     )}`}
+                                                    disabled={saving}
                                                     onClick={() => handleDelete(row.id)}
                                                 >
                                                     <Trash2 size={16} />

@@ -25,9 +25,9 @@ export default function PollsPage({ programs, user }: { programs: Program[]; use
             const complete = row.overallCount === row.overall.rankLimit && row.d3Count === row.d3.rankLimit;
             return <tr key={`${row.weapon}-${row.gender}`}><td className="school-cell"><strong>{row.weapon}</strong></td><td>{row.gender}</td><td><span className={`status-badge ${row.overall.status.toLowerCase()}`}>{row.overall.status}</span></td>
                 <td>{progress(row.overallCount, row.overall.rankLimit)}</td><td>{progress(row.d3Count, row.d3.rankLimit)}</td>
-                <td><a className="icon-text-link" href={`#/polls/vote/${month}/${row.gender}/${row.weapon}`}><ClipboardList size={16} /> {complete ? "Review" : "Rank"}</a>{row.overall.status === "Closed" && <a className="icon-text-link" href={`#/polls/transparency/${month}/${row.gender}/${row.weapon}`}><Eye size={16} /> Votes</a>}</td></tr>;
+                <td>{user.canVote && row.overall.status === "Open" && <a className="icon-text-link" href={`#/polls/vote/${month}/${row.gender}/${row.weapon}`}><ClipboardList size={16} /> {complete ? "Review" : "Rank"}</a>}{!user.canVote && row.overall.status === "Open" && <span className="muted">View only</span>}{row.overall.status === "Closed" && <a className="icon-text-link" href={`#/polls/transparency/${month}/${row.gender}/${row.weapon}`}><Eye size={16} /> Votes</a>}</td></tr>;
         })}</tbody></table></div>
-        <p className="help-line">Each coach submits Team, Epee, Foil and Sabre ballots for both genders. Overall and DIII rankings are edited together.</p>
+        <p className="help-line">{user.canVote ? "Submit Team, Epee, Foil and Sabre ballots for both genders. Overall and DIII rankings are edited together." : "This account can administer polls and review committee activity, but is not assigned a ballot."}</p>
     </section>;
 }
 

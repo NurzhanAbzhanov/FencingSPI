@@ -93,4 +93,5 @@ export type PlatformUser = {
     id: string;
     name: string;
     role: UserRole;
+    canVote: boolean;
 };

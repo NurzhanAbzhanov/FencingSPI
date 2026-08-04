@@ -7,7 +7,7 @@ export default function Header({ activePage, user, onSignOut }: { activePage: st
         <nav aria-label="Main navigation"><ul className="nav-list">
             <li><a className={activePage === "team-spi" ? "active" : ""} href="#/team-spi">Team SPI</a></li>
             <li><a className={activePage === "squad-spi" ? "active" : ""} href="#/squad-spi">Squad SPI</a></li>
-            <li><a className={activePage === "enter-results" ? "active" : ""} href="#/enter-results">Enter Results</a></li>
+            {user?.role === "admin" && <li><a className={activePage === "enter-results" ? "active" : ""} href="#/enter-results">Enter Results</a></li>}
             <li><a className={["polls", "ballot", "transparency"].includes(activePage) ? "active" : ""} href="#/polls">Coaches Poll</a></li>
             {user?.role === "admin" && <li><a className={activePage === "power-ratings" ? "active" : ""} href="#/power-ratings">Power Ratings</a></li>}
             {user?.role === "admin" && <li><a className={activePage === "admin" ? "active" : ""} href="#/admin"><ShieldCheck size={15} /> Admin</a></li>}

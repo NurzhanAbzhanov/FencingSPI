@@ -119,7 +119,13 @@ export function readDemoUser(): PlatformUser | null {
     const value = localStorage.getItem(DEMO_USER_KEY);
     if (!value) return null;
     try {
-        return JSON.parse(value) as PlatformUser;
+        const user = JSON.parse(value) as PlatformUser;
+        return {
+            ...user,
+            canVote: typeof user.canVote === "boolean"
+                ? user.canVote
+                : user.role === "coach",
+        };
     } catch {
         return null;
     }
@@ -130,6 +136,7 @@ export function signInDemo(role: "coach" | "admin"): PlatformUser {
         id: role === "admin" ? "demo-admin" : "demo-coach-1",
         name: role === "admin" ? "Committee Administrator" : "Coach 1",
         role,
+        canVote: role === "coach",
     } satisfies PlatformUser;
     localStorage.setItem(DEMO_USER_KEY, JSON.stringify(user));
     return user;

@@ -2,6 +2,27 @@ import type { PollMonth, Program } from "../types/platform";
 import { addLocalProgram } from "./platformData";
 import { supabase } from "./supabase";
 
+export async function loadCommitteeCounts(): Promise<{ admins: number; voters: number }> {
+    if (!supabase) return { admins: 0, voters: 0 };
+
+    const [admins, voters] = await Promise.all([
+        supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("active", true)
+            .eq("role", "admin"),
+        supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("active", true)
+            .eq("can_vote", true),
+    ]);
+
+    if (admins.error) throw admins.error;
+    if (voters.error) throw voters.error;
+    return { admins: admins.count ?? 0, voters: voters.count ?? 0 };
+}
+
 export async function createProgram(program: Program) {
     if (!supabase) { addLocalProgram(program); return; }
     const season = await supabase.from("seasons").select("id").eq("is_active", true).single();

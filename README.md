@@ -13,8 +13,8 @@ npm run dev
 
 1. Create or link a Supabase project.
 2. Apply all migrations in `supabase/migrations`, then load `supabase/seed.sql`. Use `supabase db reset` locally, or `supabase link` and `supabase db push` before loading the seed in production.
-3. Create ten coach users and one administrator in Supabase Auth.
-4. Add one `public.profiles` row per Auth user with role `coach` or `admin`.
+3. Create committee users in Supabase Auth. A database trigger creates their `public.profiles` row automatically.
+4. Assign `role = 'admin'` for platform administrators and `can_vote = true` only for committee members who receive ballots. Admin and voting permissions are independent.
 5. Set these variables locally and in Vercel for Production, Preview, and Development:
 
 ```text
@@ -22,7 +22,7 @@ VITE_SUPABASE_URL
 VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 
-The migration applies row-level security. Coaches can edit only their own ballots while a poll is open. Individual ballots become committee-visible only after close. Public users see only published aggregate poll results.
+The migrations apply row-level security. Assigned voters can edit only their own ballots while a poll is open. Individual ballots become committee-visible only after close. Public users see only published aggregate poll results. Match results are publicly readable, but only administrators can add, edit, or delete match records.
 
 ## Verification
 
