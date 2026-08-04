@@ -52,6 +52,7 @@
 .auth-panel { width: min(430px, 100%); padding: 28px; border: 1px solid #d5dae1; background: #fff; }
 .stack-form, .demo-login { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
 .demo-login p { margin: 0; color: #5e6874; line-height: 1.55; }
+.auth-status { margin: 24px 0 0; color: #5e6874; }
 .form-message.error { color: #a32e3a; }
 
 .month-tabs { display: flex; overflow-x: auto; border-bottom: 1px solid #cfd5dc; }
