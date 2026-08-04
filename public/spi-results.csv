@@ -323,3 +323,7 @@ teamId,teamName,gender,weapon,lowWinPct,mediumWinPct,highWinPct,lowStrength,medi
 38,The City College of New York,Women,Foil,0,0,0,30,40,0,0,0,0,1,1
 38,The City College of New York,Women,Epee,0,0,0,30,40,0,0,0,0,1,1
 38,The City College of New York,Women,Team,0,0,0,30,40,0,0,0,0,1,1
+92,Denison University,Men,Epee,0,0,0,30,40,0,0,0,0,0,0
+92,Denison University,Men,Foil,0,0,0,30,40,0,0,0,0,0,0
+92,Denison University,Men,Sabre,0,0,0,30,40,0,0,0,0,0,0
+92,Denison University,Men,Team,0,0,0,30,40,0,0,0,0,0,0

@@ -47,6 +47,7 @@ insert into public.schools (id, name, logo_url, conference, region) values
 (32, 'Columbia University-Barnard College', null, 'Unassigned', 'Northeast'),
 (1, 'Cornell University', null, 'Unassigned', 'Northeast'),
 (83, 'Denison University', null, 'Unassigned', 'Midwest'),
+(92, 'Denison University', null, 'CCFC', 'Midwest'),
 (39, 'University of Detroit Mercy', null, 'Unassigned', 'Midwest'),
 (43, 'Drew University', null, 'Unassigned', 'Mid-Atlantic/South'),
 (6, 'Duke University', null, 'Unassigned', 'Mid-Atlantic/South'),
@@ -131,6 +132,7 @@ insert into public.programs (school_id, legacy_team_id, gender) values
 (32, 32, 'Women'),
 (1, 1, 'Women'),
 (83, 83, 'Women'),
+(92, 92, 'Men'),
 (39, 39, 'Women'),
 (43, 43, 'Women'),
 (6, 6, 'Women'),
@@ -217,6 +219,7 @@ from (values
 (32, 1, 'Unassigned', 'Northeast'),
 (1, 1, 'Unassigned', 'Northeast'),
 (83, 3, 'Unassigned', 'Midwest'),
+(92, 3, 'CCFC', 'Midwest'),
 (39, 1, 'Unassigned', 'Midwest'),
 (43, 3, 'Unassigned', 'Mid-Atlantic/South'),
 (6, 1, 'Unassigned', 'Mid-Atlantic/South'),
@@ -258,6 +261,56 @@ from (values
 join public.programs p using (legacy_team_id)
 join public.seasons s on s.slug='2025-26'
 on conflict (season_id, program_id) do update set division=excluded.division, conference=excluded.conference, region=excluded.region;
+
+update public.schools
+set conference = case
+    when name in (
+        'U.S. Air Force Academy',
+        'University of California, San Diego',
+        'University of the Incarnate Word'
+    ) then 'MPSF'
+    when name in (
+        'Boston College',
+        'University of Notre Dame',
+        'Stanford University',
+        'University of North Carolina, Chapel Hill',
+        'Duke University'
+    ) then 'ACC'
+    when name in (
+        'The Ohio State University',
+        'Northwestern University',
+        'University of Detroit Mercy',
+        'Wayne State University (Michigan)',
+        'Lawrence University',
+        'Denison University',
+        'Cleveland State University'
+    ) then 'CCFC'
+    else conference
+end
+where name in (
+    'U.S. Air Force Academy',
+    'University of California, San Diego',
+    'University of the Incarnate Word',
+    'Boston College',
+    'University of Notre Dame',
+    'Stanford University',
+    'University of North Carolina, Chapel Hill',
+    'Duke University',
+    'The Ohio State University',
+    'Northwestern University',
+    'University of Detroit Mercy',
+    'Wayne State University (Michigan)',
+    'Lawrence University',
+    'Denison University',
+    'Cleveland State University'
+);
+
+update public.program_seasons ps
+set conference = s.conference
+from public.programs p
+join public.schools s on s.id = p.school_id
+where ps.program_id = p.id
+  and s.conference <> 'Unassigned';
 
 insert into public.matches (source_id, season_id, fenced_on, gender, left_program_id, right_program_id, left_sabre, left_foil, left_epee, right_sabre, right_foil, right_epee, host)
 select seed.source_id, s.id, seed.fenced_on::date, seed.gender::public.fencing_gender, lp.id, rp.id, seed.left_sabre, seed.left_foil, seed.left_epee, seed.right_sabre, seed.right_foil, seed.right_epee, seed.host
@@ -1512,7 +1565,11 @@ from (values
 (38, 'Sabre', 1),
 (38, 'Foil', 1),
 (38, 'Epee', 1),
-(38, 'Team', 1)
+(38, 'Team', 1),
+(92, 'Epee', 0),
+(92, 'Foil', 0),
+(92, 'Sabre', 0),
+(92, 'Team', 0)
 ) seed(legacy_team_id, weapon, spi)
 join public.seasons s on s.slug='2025-26'
 join public.programs p using (legacy_team_id)

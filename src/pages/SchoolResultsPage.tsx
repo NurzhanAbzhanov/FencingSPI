@@ -29,7 +29,7 @@ export default function SchoolResultsPage({ teamId, season, programs, matches }:
         <a className="back-link" href="#/team-spi"><ArrowLeft size={16} /> Team standings</a>
         <div className="school-heading">
             <SchoolLogo program={currentProgram} />
-            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {divisionLabel(currentProgram.division)} · {currentProgram.region} · {currentProgram.conference}</p></div>
+            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {currentProgram.division} · {currentProgram.region} · {currentProgram.conference}</p></div>
             <button className="button secondary" onClick={download} disabled={!rows.length}><Download size={17} /> Download matches</button>
         </div>
         <div className="platform-table-wrap"><table className="platform-table matches-table"><thead><tr>
@@ -57,4 +57,3 @@ function orientMatch(match: SeasonMatch, teamId: number, programs: Program[]) {
 }
 
 function formatDate(value: string) { return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }
-function divisionLabel(value: string) { return value === "3" ? "Division III" : value === "2" ? "Division II" : value === "1" ? "Division I" : "Division unassigned"; }

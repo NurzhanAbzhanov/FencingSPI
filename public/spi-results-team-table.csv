@@ -80,3 +80,4 @@ teamId,teamName,gender,weapon,lowWinPct,mediumWinPct,highWinPct,lowStrength,medi
 1,Cornell University,Women,Team,0.9091,0.8333,0.5,27.5455,41.3333,60,25.0413,34.4444,30,5,94.4858
 55,Harvard University,Men,Team,0.6667,0.5625,0.5625,30,40,60.7143,20,22.5,34.1518,5,81.6518
 38,The City College of New York,Women,Team,0,0,0,30,40,0,0,0,0,1,1
+92,Denison University,Men,Team,0,0,0,30,40,0,0,0,0,0,0

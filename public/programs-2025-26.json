@@ -5,7 +5,7 @@
     "gender": "Men",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -14,7 +14,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -32,7 +32,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -50,7 +50,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -68,7 +68,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -104,7 +104,7 @@
     "gender": "Men",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -131,7 +131,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -167,7 +167,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -176,7 +176,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -194,7 +194,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -248,7 +248,7 @@
     "gender": "Men",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -266,7 +266,7 @@
     "gender": "Men",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -293,7 +293,7 @@
     "gender": "Men",
     "division": "2",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -324,12 +324,21 @@
     "logoUrl": null
   },
   {
+    "id": 92,
+    "name": "Denison University",
+    "gender": "Men",
+    "division": "3",
+    "region": "Midwest",
+    "conference": "CCFC",
+    "logoUrl": null
+  },
+  {
     "id": 15,
     "name": "Boston College",
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -365,7 +374,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -392,7 +401,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -401,7 +410,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -419,7 +428,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -482,7 +491,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -518,7 +527,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -527,7 +536,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -545,7 +554,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {
@@ -599,7 +608,7 @@
     "gender": "Women",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -635,7 +644,7 @@
     "gender": "Women",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -644,7 +653,7 @@
     "gender": "Women",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -653,7 +662,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "ACC",
     "logoUrl": null
   },
   {
@@ -662,7 +671,7 @@
     "gender": "Women",
     "division": "1",
     "region": "West",
-    "conference": "Unassigned",
+    "conference": "MPSF",
     "logoUrl": null
   },
   {
@@ -689,7 +698,7 @@
     "gender": "Women",
     "division": "2",
     "region": "Midwest",
-    "conference": "Unassigned",
+    "conference": "CCFC",
     "logoUrl": null
   },
   {

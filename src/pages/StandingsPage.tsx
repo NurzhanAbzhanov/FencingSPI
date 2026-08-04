@@ -70,7 +70,7 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
                 <Filter label="Season" value={season} onChange={onSeasonChange} options={SEASONS.map((item) => [item.slug, item.name])} />
                 <Filter label="Gender" value={gender} onChange={(value) => setGender(value as typeof gender)} options={["All", "Men", "Women"]} />
                 {mode === "Squad" && <Filter label="Squad" value={weapon} onChange={(value) => setWeapon(value as typeof weapon)} options={["All", "Epee", "Foil", "Sabre"]} />}
-                <Filter label="Division" value={division} onChange={(value) => setDivision(value as typeof division)} options={[["All", "All"], ["3", "DIII"]]} />
+                <Filter label="Division" value={division} onChange={(value) => setDivision(value as typeof division)} options={[["All", "All"], ["3", "3"]]} />
                 <Filter label="Region" value={region} onChange={setRegion} options={["All", ...regions]} />
                 <Filter label="Conference" value={conference} onChange={setConference} options={["All", ...conferences]} />
             </div>
@@ -96,7 +96,7 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
                             <td className="numeric rank-cell">{rank}</td><td><SchoolLogo program={program} size="small" /></td>
                             <td className="school-cell">{program.name}</td><td>{standing.gender}</td>
                             {mode === "Squad" && <td>{standing.weapon}</td>}
-                            <td>{program.division === "3" ? "DIII" : `DI${program.division === "2" ? "I" : ""}`}</td>
+                            <td>{program.division}</td>
                             <td>{program.conference}</td><td>{program.region}</td>
                             {POLL_MONTHS.map((month) => <td className="numeric muted" key={month}>{pollResults.find((result) => result.teamId === program.id && result.month === month && result.gender === standing.gender && result.weapon === standing.weapon && result.scope === (division === "3" ? "DIII" : "Overall"))?.rank ?? "—"}</td>)}
                             <td className="numeric spi-cell">{formatNumber(standing.spi)}</td>
