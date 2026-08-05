@@ -23,7 +23,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -41,7 +41,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -59,7 +59,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -77,7 +77,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -86,7 +86,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -95,7 +95,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -113,7 +113,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -122,7 +122,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -140,7 +140,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -149,7 +149,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -158,7 +158,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -185,7 +185,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -203,7 +203,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -212,7 +212,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -221,7 +221,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -230,7 +230,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -239,7 +239,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -257,7 +257,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -275,7 +275,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -284,7 +284,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -302,7 +302,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -311,7 +311,7 @@
     "gender": "Men",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -320,7 +320,7 @@
     "gender": "Men",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -347,7 +347,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -356,7 +356,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -365,7 +365,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -383,7 +383,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -392,7 +392,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -419,7 +419,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -437,7 +437,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -446,7 +446,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -455,7 +455,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -464,7 +464,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -473,7 +473,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -482,7 +482,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -500,7 +500,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -509,7 +509,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -518,7 +518,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -545,7 +545,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -563,7 +563,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -572,7 +572,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -581,7 +581,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -590,7 +590,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -599,7 +599,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -617,7 +617,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   },
   {
@@ -626,7 +626,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -635,7 +635,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -680,7 +680,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -689,7 +689,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Mid-Atlantic/South",
-    "conference": "Unassigned",
+    "conference": "Independent",
     "logoUrl": null
   },
   {
@@ -707,7 +707,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -716,7 +716,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "NFC",
     "logoUrl": null
   },
   {
@@ -725,7 +725,7 @@
     "gender": "Women",
     "division": "1",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "Ivy League",
     "logoUrl": null
   },
   {
@@ -734,7 +734,7 @@
     "gender": "Women",
     "division": "3",
     "region": "Northeast",
-    "conference": "Unassigned",
+    "conference": "MACFA",
     "logoUrl": null
   }
 ]
