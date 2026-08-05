@@ -160,6 +160,14 @@ export function saveBallot(definitionId: string, userId: string, rankings: Ballo
     localStorage.setItem(`spi-ballot:${userId}:${definitionId}`, JSON.stringify(rankings));
 }
 
+export function readLocalBallotStatus(definitionId: string, userId: string) {
+    return localStorage.getItem(`spi-ballot-status:${userId}:${definitionId}`) ?? "draft";
+}
+
+export function saveLocalBallotStatus(definitionId: string, userId: string, status: string) {
+    localStorage.setItem(`spi-ballot-status:${userId}:${definitionId}`, status);
+}
+
 export function addLocalProgram(program: Program) {
     const current = readLocalPrograms();
     localStorage.setItem("spi-local-programs", JSON.stringify([...current, program]));

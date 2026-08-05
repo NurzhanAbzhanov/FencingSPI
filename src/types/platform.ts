@@ -77,6 +77,32 @@ export type BallotRanking = {
     rank: number;
 };
 
+export type BallotStatus = "draft" | "submitted" | "reopened";
+
+export type BallotState = {
+    ballotId: string | null;
+    status: BallotStatus;
+    rankings: BallotRanking[];
+};
+
+export type SubmittedBallotSummary = {
+    ballotId: string;
+    voterName: string;
+    month: PollMonth;
+    gender: Gender;
+    weapon: Weapon;
+    scope: PollScope;
+    submittedAt: string;
+};
+
+export type CommitteeBallot = {
+    ballotId: string;
+    voterName: string;
+    scope: PollScope;
+    status: BallotStatus;
+    rankings: BallotRanking[];
+};
+
 export type PollResult = {
     definitionId: string;
     teamId: number;

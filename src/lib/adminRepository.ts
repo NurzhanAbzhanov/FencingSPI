@@ -1,4 +1,4 @@
-import type { PollMonth, Program } from "../types/platform";
+import type { PollMonth, Program, SubmittedBallotSummary } from "../types/platform";
 import { addLocalProgram } from "./platformData";
 import { supabase } from "./supabase";
 
@@ -51,4 +51,34 @@ export async function savePollSchedule(periods: Array<{ month: PollMonth; status
             if (published.error) throw published.error;
         }
     }
+}
+
+export async function loadSubmittedBallots(): Promise<SubmittedBallotSummary[]> {
+    if (!supabase) return [];
+    const result = await supabase
+        .from("ballots")
+        .select("id, submitted_at, profiles!ballots_voter_id_fkey(display_name), ballot_definitions!inner(gender, weapon, scope, poll_periods!inner(label))")
+        .eq("status", "submitted")
+        .order("submitted_at", { ascending: false });
+    if (result.error) throw result.error;
+    return (result.data ?? []).map((row) => {
+        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+        const definition = Array.isArray(row.ballot_definitions) ? row.ballot_definitions[0] : row.ballot_definitions;
+        const period = Array.isArray(definition.poll_periods) ? definition.poll_periods[0] : definition.poll_periods;
+        return {
+            ballotId: row.id,
+            voterName: profile?.display_name ?? "Committee voter",
+            month: (period.label.startsWith("October") ? "October" : period.label) as SubmittedBallotSummary["month"],
+            gender: definition.gender,
+            weapon: definition.weapon,
+            scope: definition.scope,
+            submittedAt: row.submitted_at,
+        };
+    });
+}
+
+export async function reopenSubmittedBallot(ballotId: string) {
+    if (!supabase) return;
+    const result = await supabase.rpc("reopen_ballot", { target_ballot: ballotId });
+    if (result.error) throw result.error;
 }
