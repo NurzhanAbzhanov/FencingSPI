@@ -2,6 +2,11 @@
     gap: 18px;
 }
 
+.admin-section.power-ratings-page {
+    display: flex;
+    flex-direction: column;
+}
+
 .power-rating-filters {
     display: grid;
     grid-template-columns: 150px 150px minmax(240px, 1fr) auto;

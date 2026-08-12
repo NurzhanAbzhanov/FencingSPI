@@ -1,12 +1,8 @@
 import type { Gender, Weapon } from "../types/types";
 
-export type StandingsView = "Team" | "Squad";
-
 export type StandingsCsvRow = {
     rank: number;
     school: string;
-    gender: Gender;
-    weapon: Weapon;
     division: string;
     conference: string;
     region: string;
@@ -16,9 +12,8 @@ export type StandingsCsvRow = {
 type StandingsCsvOptions = {
     downloadedAt: Date;
     season: string;
-    mode: StandingsView;
     gender: Gender;
-    weapon: "All" | Exclude<Weapon, "Team">;
+    selection: Weapon;
     division: string;
     region: string;
     conference: string;
@@ -39,19 +34,16 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
     const metadata: Array<[string, string]> = [
         ["Downloaded at", options.downloadedAt.toISOString()],
         ["Season", options.season],
-        ["View", options.mode],
         ["Gender", options.gender],
-        ...(options.mode === "Squad" ? [["Squad", options.weapon] as [string, string]] : []),
+        ["Team/Squad", options.selection],
         ["Division", options.division === "All" ? "All" : formatDivision(options.division)],
         ["Region", options.region],
         ["Conference", options.conference],
     ];
-    const headers = ["Rank", "School", "Gender", "Squad", "Division", "Conference", "Region", "SPI"];
+    const headers = ["Rank", "School", "Division", "Conference", "Region", "SPI"];
     const table = options.rows.map((row) => [
         row.rank,
         row.school,
-        row.gender,
-        row.weapon,
         formatDivision(row.division),
         row.conference,
         row.region,

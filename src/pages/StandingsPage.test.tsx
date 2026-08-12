@@ -20,7 +20,7 @@ const standings: Standing[] = [
 ];
 
 describe("StandingsPage", () => {
-    it("starts with men's Team SPI and switches to Squad SPI in place", async () => {
+    it("starts with men's Team SPI and selects one squad at a time", async () => {
         const user = userEvent.setup();
         render(<StandingsPage
             programs={programs}
@@ -36,15 +36,20 @@ describe("StandingsPage", () => {
         expect(within(genderFilter).queryByRole("option", { name: "All" })).not.toBeInTheDocument();
         expect(screen.getByRole("cell", { name: "I" })).toBeInTheDocument();
 
-        await user.click(screen.getByRole("button", { name: "Squad" }));
+        const teamSquadFilter = screen.getByLabelText("Team/Squad");
+        expect(teamSquadFilter).toHaveValue("Team");
+        expect(within(teamSquadFilter).queryByRole("option", { name: "All" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: "Gender" })).not.toBeInTheDocument();
+
+        await user.selectOptions(teamSquadFilter, "Foil");
 
         expect(screen.getByRole("heading", { name: "Squad SPI" })).toBeInTheDocument();
-        expect(screen.getByLabelText("Squad")).toHaveValue("All");
+        expect(screen.getByLabelText("Team/Squad")).toHaveValue("Foil");
     });
 
-    it("can open directly in Squad view for a compatible legacy route", () => {
+    it("can open directly on a single squad for a compatible legacy route", () => {
         render(<StandingsPage
-            initialMode="Squad"
+            initialWeapon="Epee"
             programs={programs}
             standings={standings}
             pollResults={[]}
@@ -53,13 +58,13 @@ describe("StandingsPage", () => {
         />);
 
         expect(screen.getByRole("heading", { name: "Squad SPI" })).toBeInTheDocument();
-        expect(screen.getByLabelText("Squad")).toBeInTheDocument();
+        expect(screen.getByLabelText("Team/Squad")).toHaveValue("Epee");
     });
 
-    it("updates the view when legacy hash navigation changes the initial mode", () => {
+    it("updates the selection when legacy hash navigation changes the initial weapon", () => {
         const { rerender } = render(<StandingsPage
             key="Team"
-            initialMode="Team"
+            initialWeapon="Team"
             programs={programs}
             standings={standings}
             pollResults={[]}
@@ -68,8 +73,8 @@ describe("StandingsPage", () => {
         />);
 
         rerender(<StandingsPage
-            key="Squad"
-            initialMode="Squad"
+            key="Sabre"
+            initialWeapon="Sabre"
             programs={programs}
             standings={standings}
             pollResults={[]}
@@ -78,5 +83,6 @@ describe("StandingsPage", () => {
         />);
 
         expect(screen.getByRole("heading", { name: "Squad SPI" })).toBeInTheDocument();
+        expect(screen.getByLabelText("Team/Squad")).toHaveValue("Sabre");
     });
 });

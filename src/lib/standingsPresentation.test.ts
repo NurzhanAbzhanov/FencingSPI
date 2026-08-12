@@ -17,17 +17,14 @@ describe("createStandingsCsv", () => {
         const csv = createStandingsCsv({
             downloadedAt: new Date("2026-08-12T10:15:30.000Z"),
             season: "2025-26",
-            mode: "Squad",
             gender: "Men",
-            weapon: "Foil",
+            selection: "Foil",
             division: "3",
             region: "Northeast",
             conference: "Ivy League",
             rows: [{
                 rank: 1,
                 school: "Columbia University-Barnard College",
-                gender: "Men",
-                weapon: "Foil",
                 division: "3",
                 conference: "Ivy League",
                 region: "Northeast",
@@ -37,13 +34,12 @@ describe("createStandingsCsv", () => {
 
         expect(csv).toContain("Downloaded at,2026-08-12T10:15:30.000Z");
         expect(csv).toContain("Season,2025-26");
-        expect(csv).toContain("View,Squad");
         expect(csv).toContain("Gender,Men");
-        expect(csv).toContain("Squad,Foil");
+        expect(csv).toContain("Team/Squad,Foil");
         expect(csv).toContain("Division,III");
         expect(csv).toContain("Region,Northeast");
         expect(csv).toContain("Conference,Ivy League");
-        expect(csv).toContain("\n\nRank,School,Gender,Squad,Division,Conference,Region,SPI\n");
-        expect(csv).toContain("1,Columbia University-Barnard College,Men,Foil,III,Ivy League,Northeast,101.25");
+        expect(csv).toContain("\n\nRank,School,Division,Conference,Region,SPI\n");
+        expect(csv).toContain("1,Columbia University-Barnard College,III,Ivy League,Northeast,101.25");
     });
 });

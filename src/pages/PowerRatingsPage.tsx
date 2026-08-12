@@ -25,10 +25,12 @@ import "./PowerRatingsPage.css";
 const WEAPONS: Weapon[] = ["Team", "Epee", "Foil", "Sabre"];
 
 export default function PowerRatingsPage({
+    embedded = false,
     programs,
     season,
     user,
 }: {
+    embedded?: boolean;
     programs: Program[];
     season: string;
     user: PlatformUser;
@@ -174,8 +176,8 @@ export default function PowerRatingsPage({
     }
 
     return (
-        <section className="page-section power-ratings-page">
-            <div className="page-title-row">
+        <section className={`${embedded ? "admin-section" : "page-section"} power-ratings-page`} aria-label={embedded ? "Power Rating Overrides" : undefined}>
+            {embedded ? <h2>Power Rating Overrides</h2> : <div className="page-title-row">
                 <div>
                     <p className="eyebrow">Calculation controls</p>
                     <h1>Power Rating Overrides</h1>
@@ -183,7 +185,7 @@ export default function PowerRatingsPage({
                 <div className="session-user">
                     <ShieldCheck size={16} /> {user.name}
                 </div>
-            </div>
+            </div>}
 
             <div className="power-rating-filters">
                 <label>
@@ -197,7 +199,7 @@ export default function PowerRatingsPage({
                     </select>
                 </label>
                 <label>
-                    Squad
+                    Team/Squad
                     <select value={weapon} onChange={(event) => {
                         setWeapon(event.target.value as Weapon);
                         cancelEditing();
