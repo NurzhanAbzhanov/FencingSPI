@@ -1,7 +1,7 @@
 .header { width: 100%; border-bottom: 1px solid #d5dae1; background: #fff; position: sticky; top: 0; z-index: 20; }
 .header-content { max-width: 1800px; min-height: 64px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; gap: 28px; }
 .header-title { display: flex; align-items: center; gap: 10px; color: #111827; font-size: 1.05rem; font-weight: 750; text-decoration: none; white-space: nowrap; }
-.brand-mark { display: grid; place-items: center; width: 34px; height: 34px; background: #133f54; color: #fff; font-size: .75rem; }
+.usfca-logo { width: 34px; height: 42px; object-fit: contain; }
 .header nav { flex: 1; min-width: 0; }
 .nav-list { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .nav-list a { min-height: 40px; padding: 0 11px; display: flex; align-items: center; gap: 6px; border-bottom: 3px solid transparent; color: #4b5563; font-size: .9rem; font-weight: 600; text-decoration: none; white-space: nowrap; }

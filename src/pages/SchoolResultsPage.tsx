@@ -1,6 +1,7 @@
 import { ArrowLeft, Download } from "lucide-react";
 import { useMemo } from "react";
 import SchoolLogo from "../components/SchoolLogo";
+import { formatDivision } from "../lib/standingsPresentation";
 import type { Program, SeasonMatch } from "../types/platform";
 
 export default function SchoolResultsPage({ teamId, season, programs, matches }: { teamId: number; season: string; programs: Program[]; matches: SeasonMatch[] }) {
@@ -10,7 +11,7 @@ export default function SchoolResultsPage({ teamId, season, programs, matches }:
         .map((match) => orientMatch(match, teamId, programs))
         .sort((a, b) => b.date.localeCompare(a.date)), [matches, programs, teamId]);
 
-    if (!program) return <section className="page-section"><h1>Program not found</h1><a href="#/team-spi">Return to standings</a></section>;
+    if (!program) return <section className="page-section"><h1>Program not found</h1><a href="#/spi">Return to standings</a></section>;
     const currentProgram = program;
 
     function download() {
@@ -26,10 +27,10 @@ export default function SchoolResultsPage({ teamId, season, programs, matches }:
     }
 
     return <section className="page-section results-detail-page">
-        <a className="back-link" href="#/team-spi"><ArrowLeft size={16} /> Team standings</a>
+        <a className="back-link" href="#/spi"><ArrowLeft size={16} /> SPI standings</a>
         <div className="school-heading">
             <SchoolLogo program={currentProgram} />
-            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {currentProgram.division} · {currentProgram.region} · {currentProgram.conference}</p></div>
+            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {formatDivision(currentProgram.division)} · {currentProgram.region} · {currentProgram.conference}</p></div>
             <button className="button secondary" onClick={download} disabled={!rows.length}><Download size={17} /> Download matches</button>
         </div>
         <div className="platform-table-wrap"><table className="platform-table matches-table"><thead><tr>

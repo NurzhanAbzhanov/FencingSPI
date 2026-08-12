@@ -3,10 +3,9 @@ import type { PlatformUser } from "../types/platform";
 import "./Header.css";
 
 export default function Header({ activePage, user, onSignOut }: { activePage: string; user: PlatformUser | null; onSignOut: () => void }) {
-    return <header className="header"><div className="header-content"><a className="header-title" href="#/team-spi"><span className="brand-mark">SPI</span><span>NCAA Fencing</span></a>
+    return <header className="header"><div className="header-content"><a className="header-title" href="#/spi"><img className="usfca-logo" src="/usfca-logo.png" alt="USFCA" /><span>Fencing SPI</span></a>
         <nav aria-label="Main navigation"><ul className="nav-list">
-            <li><a className={activePage === "team-spi" ? "active" : ""} href="#/team-spi">Team SPI</a></li>
-            <li><a className={activePage === "squad-spi" ? "active" : ""} href="#/squad-spi">Squad SPI</a></li>
+            <li><a className={activePage === "spi" ? "active" : ""} href="#/spi">SPI</a></li>
             {user?.role === "admin" && <li><a className={activePage === "enter-results" ? "active" : ""} href="#/enter-results">Enter Results</a></li>}
             <li><a className={["polls", "ballot", "transparency"].includes(activePage) ? "active" : ""} href="#/polls">Coaches Poll</a></li>
             {user?.role === "admin" && <li><a className={activePage === "power-ratings" ? "active" : ""} href="#/power-ratings">Power Ratings</a></li>}

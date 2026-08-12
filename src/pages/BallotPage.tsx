@@ -31,6 +31,7 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import SchoolLogo from "../components/SchoolLogo";
 import { getBallotDefinitions, getBallotState, saveBallotDraft, submitBallots } from "../lib/ballotRepository";
 import { createBallotDefinitions } from "../lib/platformData";
+import { formatDivision } from "../lib/standingsPresentation";
 import type {
     BallotDefinition,
     BallotRanking,
@@ -273,14 +274,14 @@ function DraggableCandidate({ candidate, ranked, showSpi, locked, onAdd, onResea
     return <article ref={setNodeRef} style={style} className={`candidate-tile ${ranked ? "ranked" : ""} ${isDragging ? "dragging" : ""}`}>
         <button className="candidate-drag" disabled={locked || ranked} aria-label={`${ranked ? "Ranked" : "Drag"} ${candidate.program.name}`} {...listeners} {...attributes}><GripVertical size={17} /></button>
         <SchoolLogo program={candidate.program} size="small" />
-        <div className="candidate-name"><strong>{candidate.program.name}</strong><span>Div {candidate.program.division} · {candidate.program.conference} · {candidate.program.region}</span>{showSpi && <span>SPI {candidate.spi.toFixed(2)}</span>}</div>
+        <div className="candidate-name"><strong>{candidate.program.name}</strong><span>Division {formatDivision(candidate.program.division)} · {candidate.program.conference} · {candidate.program.region}</span>{showSpi && <span>SPI {candidate.spi.toFixed(2)}</span>}</div>
         <button className="tile-action" aria-label={`Research ${candidate.program.name}`} title="Research" onClick={onResearch}><Info size={16} /></button>
         <button className="tile-action" disabled={locked || ranked} aria-label={`Add ${candidate.program.name} to next open rank`} title={ranked ? "Already ranked" : "Add to next open rank"} onClick={onAdd}>{ranked ? <Check size={16} /> : <Plus size={16} />}</button>
     </article>;
 }
 
 function CandidateTile({ candidate, showSpi, overlay = false }: { candidate: Candidate; showSpi: boolean; overlay?: boolean }) {
-    return <div className={`candidate-tile overlay ${overlay ? "active" : ""}`}><GripVertical size={17} /><SchoolLogo program={candidate.program} size="small" /><div className="candidate-name"><strong>{candidate.program.name}</strong><span>Div {candidate.program.division} · {candidate.program.conference}</span>{showSpi && <span>SPI {candidate.spi.toFixed(2)}</span>}</div></div>;
+    return <div className={`candidate-tile overlay ${overlay ? "active" : ""}`}><GripVertical size={17} /><SchoolLogo program={candidate.program} size="small" /><div className="candidate-name"><strong>{candidate.program.name}</strong><span>Division {formatDivision(candidate.program.division)} · {candidate.program.conference}</span>{showSpi && <span>SPI {candidate.spi.toFixed(2)}</span>}</div></div>;
 }
 
 function ResearchDialog({ candidate, gender, weapon, matches, pollResults, onClose }: { candidate: Candidate; gender: Gender; weapon: Weapon; matches: SeasonMatch[]; pollResults: PollResult[]; onClose: () => void }) {
@@ -288,7 +289,7 @@ function ResearchDialog({ candidate, gender, weapon, matches, pollResults, onClo
     const wins = teamMatches.filter((match) => scoreFor(match, candidate.program.id, weapon) > scoreAgainst(match, candidate.program.id, weapon)).length;
     const previousPolls = pollResults.filter((result) => result.teamId === candidate.program.id && result.gender === gender && result.weapon === weapon).sort((a, b) => monthIndex(b.month) - monthIndex(a.month));
     return <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="dialog-panel research-dialog" role="dialog" aria-modal="true" aria-labelledby="research-title"><div className="dialog-heading"><div className="school-inline"><SchoolLogo program={candidate.program} /><div><p className="eyebrow">School research</p><h2 id="research-title">{candidate.program.name}</h2></div></div><button className="icon-button" aria-label="Close research" onClick={onClose}><X size={19} /></button></div>
-        <dl className="research-summary"><div><dt>SPI</dt><dd>{candidate.spi.toFixed(2)}</dd></div><div><dt>Record</dt><dd>{wins}-{teamMatches.length - wins}</dd></div><div><dt>Division</dt><dd>{candidate.program.division}</dd></div><div><dt>Conference</dt><dd>{candidate.program.conference}</dd></div><div><dt>Region</dt><dd>{candidate.program.region}</dd></div></dl>
+        <dl className="research-summary"><div><dt>SPI</dt><dd>{candidate.spi.toFixed(2)}</dd></div><div><dt>Record</dt><dd>{wins}-{teamMatches.length - wins}</dd></div><div><dt>Division</dt><dd>{formatDivision(candidate.program.division)}</dd></div><div><dt>Conference</dt><dd>{candidate.program.conference}</dd></div><div><dt>Region</dt><dd>{candidate.program.region}</dd></div></dl>
         <h3>Published poll history</h3>{previousPolls.length ? <div className="research-polls">{previousPolls.map((poll) => <span key={`${poll.definitionId}-${poll.scope}`}>{poll.month} {poll.scope}: <strong>#{poll.rank}</strong></span>)}</div> : <p className="help-line">No published poll results for this ballot yet.</p>}
         <div className="dialog-actions"><a className="button secondary" href={`#/schools/${candidate.program.id}/results?season=2025-26`}>View match results</a><button className="button primary" onClick={onClose}>Done</button></div>
     </section></div>;

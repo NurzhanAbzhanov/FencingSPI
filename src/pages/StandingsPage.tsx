@@ -2,11 +2,12 @@ import { Download, List } from "lucide-react";
 import { useMemo, useState } from "react";
 import SchoolLogo from "../components/SchoolLogo";
 import { POLL_MONTHS, SEASONS } from "../lib/platformData";
+import { createStandingsCsv, formatDivision, type StandingsView } from "../lib/standingsPresentation";
 import type { PollResult, Program, Standing } from "../types/platform";
 import type { Gender, Weapon } from "../types/types";
 
 type Props = {
-    mode: "Team" | "Squad";
+    initialMode?: StandingsView;
     programs: Program[];
     standings: Standing[];
     pollResults: PollResult[];
@@ -17,10 +18,11 @@ type Props = {
 type SortKey = "rank" | "school" | "gender" | "weapon" | "division" | "conference" | "region" | "spi";
 type Sort = { key: SortKey; direction: "asc" | "desc" };
 
-export default function StandingsPage({ mode, programs, standings, pollResults, season, onSeasonChange }: Props) {
-    const [gender, setGender] = useState<"All" | Gender>("All");
+export default function StandingsPage({ initialMode = "Team", programs, standings, pollResults, season, onSeasonChange }: Props) {
+    const [mode, setMode] = useState<StandingsView>(initialMode);
+    const [gender, setGender] = useState<Gender>("Men");
     const [weapon, setWeapon] = useState<"All" | Exclude<Weapon, "Team">>("All");
-    const [division, setDivision] = useState<"All" | "3">("All");
+    const [division, setDivision] = useState<"All" | "1" | "3">("All");
     const [region, setRegion] = useState("All");
     const [conference, setConference] = useState("All");
     const [sorts, setSorts] = useState<Sort[]>([{ key: "spi", direction: "desc" }]);
@@ -31,7 +33,7 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
             .map((standing) => ({ standing, program: programs.find((item) => item.id === standing.teamId) }))
             .filter((row): row is { standing: Standing; program: Program } => Boolean(row.program))
             .filter(({ standing, program }) =>
-                (gender === "All" || standing.gender === gender) &&
+                standing.gender === gender &&
                 (mode === "Team" || weapon === "All" || standing.weapon === weapon) &&
                 (division === "All" || program.division === division) &&
                 (region === "All" || program.region === region) &&
@@ -45,11 +47,19 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
     const conferences = unique(programs.map((program) => program.conference));
 
     function downloadSelection() {
-        const headers = ["Rank", "School", "Gender", "Squad", "Division", "Conference", "Region", "SPI"];
-        const csv = [headers, ...rows.map(({ rank, standing, program }) => [
-            rank, program.name, standing.gender, standing.weapon, program.division,
-            program.conference, program.region, standing.spi,
-        ])].map((line) => line.map(csvCell).join(",")).join("\n");
+        const csv = createStandingsCsv({
+            downloadedAt: new Date(), season, mode, gender, weapon, division, region, conference,
+            rows: rows.map(({ rank, standing, program }) => ({
+                rank,
+                school: program.name,
+                gender: standing.gender,
+                weapon: standing.weapon,
+                division: program.division,
+                conference: program.conference,
+                region: program.region,
+                spi: standing.spi,
+            })),
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
         link.download = `${season}-${mode.toLowerCase()}-standings.csv`;
@@ -67,10 +77,22 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
             </div>
 
             <div className="filter-bar" aria-label="Standings filters">
+                <div className="standings-view-filter">
+                    <span>View</span>
+                    <div className="standings-view-toggle" role="group" aria-label="SPI view">
+                        {(["Team", "Squad"] as StandingsView[]).map((view) => <button
+                            aria-pressed={mode === view}
+                            className={mode === view ? "active" : ""}
+                            key={view}
+                            onClick={() => setMode(view)}
+                            type="button"
+                        >{view}</button>)}
+                    </div>
+                </div>
                 <Filter label="Season" value={season} onChange={onSeasonChange} options={SEASONS.map((item) => [item.slug, item.name])} />
-                <Filter label="Gender" value={gender} onChange={(value) => setGender(value as typeof gender)} options={["All", "Men", "Women"]} />
+                <Filter label="Gender" value={gender} onChange={(value) => setGender(value as Gender)} options={["Men", "Women"]} />
                 {mode === "Squad" && <Filter label="Squad" value={weapon} onChange={(value) => setWeapon(value as typeof weapon)} options={["All", "Epee", "Foil", "Sabre"]} />}
-                <Filter label="Division" value={division} onChange={(value) => setDivision(value as typeof division)} options={[["All", "All"], ["3", "3"]]} />
+                <Filter label="Division" value={division} onChange={(value) => setDivision(value as typeof division)} options={[["All", "All"], ["1", "I"], ["3", "III"]]} />
                 <Filter label="Region" value={region} onChange={setRegion} options={["All", ...regions]} />
                 <Filter label="Conference" value={conference} onChange={setConference} options={["All", ...conferences]} />
             </div>
@@ -96,7 +118,7 @@ export default function StandingsPage({ mode, programs, standings, pollResults, 
                             <td className="numeric rank-cell">{rank}</td><td><SchoolLogo program={program} size="small" /></td>
                             <td className="school-cell">{program.name}</td><td>{standing.gender}</td>
                             {mode === "Squad" && <td>{standing.weapon}</td>}
-                            <td>{program.division}</td>
+                            <td>{formatDivision(program.division)}</td>
                             <td>{program.conference}</td><td>{program.region}</td>
                             {POLL_MONTHS.map((month) => <td className="numeric muted" key={month}>{pollResults.find((result) => result.teamId === program.id && result.month === month && result.gender === standing.gender && result.weapon === standing.weapon && result.scope === (division === "3" ? "DIII" : "Overall"))?.rank ?? "—"}</td>)}
                             <td className="numeric spi-cell">{formatNumber(standing.spi)}</td>
@@ -150,4 +172,3 @@ function valueForSort(row: { standing: Standing; program: Program }, key: SortKe
 
 function unique(values: string[]) { return [...new Set(values)].sort(); }
 function formatNumber(value: number) { return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, ""); }
-function csvCell(value: string | number) { const text = String(value); return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text; }

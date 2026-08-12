@@ -14,9 +14,15 @@
 .button:hover:not(:disabled) { filter: brightness(.96); }
 .button:disabled { opacity: .48; cursor: not-allowed; }
 
-.filter-bar { display: grid; grid-template-columns: repeat(6, minmax(130px, 1fr)); gap: 10px; padding: 14px; border: 1px solid #d8dde3; background: #fff; }
+.filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 14px; border: 1px solid #d8dde3; background: #fff; }
 .filter-bar label, .stack-form label, .school-form label { display: flex; flex-direction: column; gap: 5px; color: #4b5563; font-size: .72rem; font-weight: 800; text-transform: uppercase; }
 .filter-bar select, .stack-form input, .school-form input, .school-form select, .admin-list select { min-height: 38px; padding: 0 10px; border: 1px solid #bfc7d0; border-radius: 3px; background: #fff; color: #111827; text-transform: none; }
+.standings-view-filter { display: flex; flex-direction: column; gap: 5px; color: #4b5563; font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+.standings-view-toggle { min-height: 38px; display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #bfc7d0; border-radius: 3px; overflow: hidden; }
+.standings-view-toggle button { min-width: 0; padding: 0 11px; border: 0; background: #fff; color: #4b5563; font-weight: 750; cursor: pointer; }
+.standings-view-toggle button + button { border-left: 1px solid #bfc7d0; }
+.standings-view-toggle button.active { background: #176b93; color: #fff; }
+.standings-view-toggle button:focus-visible { position: relative; z-index: 1; outline: 2px solid #c69f2d; outline-offset: -3px; }
 .data-summary { display: flex; gap: 5px; color: #4b5563; font-size: .82rem; }
 .data-summary span { margin-left: auto; color: #78828d; }
 

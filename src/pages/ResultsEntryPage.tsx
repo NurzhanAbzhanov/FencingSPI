@@ -211,7 +211,6 @@ export default function ResultsEntryPage({
                         <span className="section-number">01</span>
                         <div>
                             <h2>Competition details</h2>
-                            <p>Identify the event and reporting contact.</p>
                         </div>
                     </div>
 
@@ -295,7 +294,6 @@ export default function ResultsEntryPage({
                         <span className="section-number">02</span>
                         <div>
                             <h2>Match result</h2>
-                            <p>Enter bouts won by each squad.</p>
                         </div>
                     </div>
 
