@@ -7,14 +7,18 @@ import { deleteDatabaseMatchSubmission, loadDatabaseMatchSubmissions, saveDataba
 import { isInitialPasswordSetup, supabase } from "./lib/supabase";
 import { TEAMS } from "./lib/teams";
 import AdminPage from "./pages/AdminPage";
-import BallotPage from "./pages/BallotPage";
-import PollsPage from "./pages/PollsPage";
 import ResultsEntryPage from "./pages/ResultsEntryPage";
 import SchoolResultsPage from "./pages/SchoolResultsPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
 import SignInPage from "./pages/SignInPage";
 import StandingsPage from "./pages/StandingsPage";
-import TransparencyPage from "./pages/TransparencyPage";
+import CoachManagementPage from "./pages/polls/CoachManagementPage";
+import PollBallotPage from "./pages/polls/PollBallotPage";
+import PollDashboardPage from "./pages/polls/PollDashboardPage";
+import PollManagementPage from "./pages/polls/PollManagementPage";
+import PollParticipationPage from "./pages/polls/PollParticipationPage";
+import PollResultsPage from "./pages/polls/PollResultsPage";
+import PublicPollResultsPage from "./pages/polls/PublicPollResultsPage";
 import type { PlatformUser, PollResult, Program, SeasonMatch, Standing } from "./types/platform";
 import type { MatchSubmission } from "./types/types";
 import "./App.css";
@@ -91,10 +95,11 @@ export default function App() {
     }
     async function signOut() { signOutDemo(); if (supabase) await supabase.auth.signOut(); setUser(null); window.location.hash = "#/spi"; }
 
-    const protectedPage = route.page === "enter-results" || route.page === "polls" || route.page === "ballot" || route.page === "transparency" || route.page === "admin";
+    const protectedPage = ["enter-results", "polls", "poll-ballot", "poll-results", "admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page);
+    const dataIndependentPage = ["sign-in", "set-password", "polls", "poll-ballot", "poll-results", "public-poll-results", "admin-polls", "admin-coaches", "admin-participation", "invalid-ballot"].includes(route.page);
     return <><Header activePage={route.page} user={user} onSignOut={signOut} /><main className="app-shell">
-        {status === "loading" && !["enter-results", "sign-in", "set-password"].includes(route.page) ? <div className="page-loading">Loading season data</div> :
-        status === "error" && !["enter-results", "sign-in", "set-password"].includes(route.page) ? <div className="empty-state"><h1>Season data unavailable</h1><p>Refresh the page or choose the active 2025-26 season.</p></div> :
+        {status === "loading" && !dataIndependentPage ? <div className="page-loading">Loading season data</div> :
+        status === "error" && !dataIndependentPage ? <div className="empty-state"><h1>Season data unavailable</h1><p>Refresh the page or choose the active 2025-26 season.</p></div> :
         protectedPage && !user ? <SignInPage onSignedIn={setUser} /> :
         route.page === "spi" ? <StandingsPage key={route.initialWeapon ?? "Team"} initialWeapon={route.initialWeapon} programs={programs} standings={standings} pollResults={pollResults} season={season} onSeasonChange={changeSeason} /> :
         route.page === "school-results" ? <SchoolResultsPage teamId={route.teamId} season={route.season} programs={programs} matches={matches} /> :
@@ -102,11 +107,17 @@ export default function App() {
         route.page === "enter-results" ? <AccessDenied title="Admin access required" message="Only administrators can upload or edit match results." /> :
         route.page === "set-password" ? <SetPasswordPage onCompleted={(signedIn) => { setUser(signedIn); window.location.hash = "#/polls"; }} /> :
         route.page === "sign-in" ? <SignInPage onSignedIn={(signedIn) => { setUser(signedIn); window.location.hash = "#/polls"; }} /> :
-        route.page === "polls" && user ? <PollsPage programs={programs} user={user} /> :
-        route.page === "ballot" && user?.canVote ? <BallotPage month={route.month} gender={route.gender} weapon={route.weapon} programs={programs} standings={standings} matches={matches} pollResults={pollResults} user={user} /> :
-        route.page === "ballot" ? <AccessDenied title="Voting access required" message="This administrator is not assigned a coaches poll ballot." /> :
-        route.page === "transparency" ? <TransparencyPage month={route.month} gender={route.gender} weapon={route.weapon} programs={programs} /> :
-        route.page === "admin" && user ? <AdminPage user={user} programs={programs} season={season} onProgramAdded={(program) => setPrograms((current) => [...current, program])} /> : null}
+        route.page === "polls" && user ? <PollDashboardPage user={user} /> :
+        route.page === "poll-ballot" && user?.canVote ? <PollBallotPage slug={route.slug} user={user} /> :
+        route.page === "poll-ballot" ? <AccessDenied title="Voting access required" message="This account is not assigned a coaches poll ballot." /> :
+        route.page === "poll-results" ? <PollResultsPage periodId={route.periodId} /> :
+        route.page === "public-poll-results" ? <PublicPollResultsPage periodId={route.periodId} /> :
+        route.page === "invalid-ballot" ? <AccessDenied title="Ballot not found" message="This coaches poll category is not available." /> :
+        route.page === "admin" && user?.role === "admin" ? <AdminPage user={user} programs={programs} season={season} onProgramAdded={(program) => setPrograms((current) => [...current, program])} /> :
+        route.page === "admin-polls" && user?.role === "admin" ? <PollManagementPage season={season} /> :
+        route.page === "admin-coaches" && user?.role === "admin" ? <CoachManagementPage /> :
+        route.page === "admin-participation" && user?.role === "admin" ? <PollParticipationPage periodId={route.periodId} /> :
+        ["admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page) ? <AccessDenied title="Admin access required" message="Only administrators can change poll settings." /> : null}
     </main></>;
 }
 

@@ -1,7 +1,5 @@
 import type { SpiResultRow } from "../components/ResultsTable";
 import type {
-    BallotDefinition,
-    BallotRanking,
     PlatformUser,
     PollResult,
     Program,
@@ -21,7 +19,6 @@ export const SEASONS: Season[] = [
 ];
 
 export const POLL_MONTHS = ["October", "November", "December", "January"] as const;
-export const POLL_WEAPONS: Weapon[] = ["Team", "Epee", "Foil", "Sabre"];
 
 export async function loadPrograms(season: string): Promise<Program[]> {
     if (season !== "2025-26") return [];
@@ -88,31 +85,6 @@ export async function loadPollResults(season: string): Promise<PollResult[]> {
     });
 }
 
-export function createBallotDefinitions(programs: Program[]): BallotDefinition[] {
-    const definitions: BallotDefinition[] = [];
-    for (const month of POLL_MONTHS) {
-        for (const gender of ["Men", "Women"] as Gender[]) {
-            for (const weapon of POLL_WEAPONS) {
-                for (const scope of ["Overall", "DIII"] as const) {
-                    const d3Count = programs.filter(
-                        (program) => program.gender === gender && program.division === "3"
-                    ).length;
-                    definitions.push({
-                        id: `${month}-${gender}-${weapon}-${scope}`.replaceAll(" ", "-").toLowerCase(),
-                        month,
-                        gender,
-                        weapon,
-                        scope,
-                        rankLimit: scope === "Overall" ? 15 : d3Count,
-                        status: month === "October" ? "Open" : "Draft",
-                    });
-                }
-            }
-        }
-    }
-    return definitions;
-}
-
 const DEMO_USER_KEY = "spi-platform-demo-user";
 
 export function readDemoUser(): PlatformUser | null {
@@ -144,28 +116,6 @@ export function signInDemo(role: "coach" | "admin"): PlatformUser {
 
 export function signOutDemo() {
     localStorage.removeItem(DEMO_USER_KEY);
-}
-
-export function readBallot(definitionId: string, userId: string): BallotRanking[] {
-    const stored = localStorage.getItem(`spi-ballot:${userId}:${definitionId}`);
-    if (!stored) return [];
-    try {
-        return JSON.parse(stored) as BallotRanking[];
-    } catch {
-        return [];
-    }
-}
-
-export function saveBallot(definitionId: string, userId: string, rankings: BallotRanking[]) {
-    localStorage.setItem(`spi-ballot:${userId}:${definitionId}`, JSON.stringify(rankings));
-}
-
-export function readLocalBallotStatus(definitionId: string, userId: string) {
-    return localStorage.getItem(`spi-ballot-status:${userId}:${definitionId}`) ?? "draft";
-}
-
-export function saveLocalBallotStatus(definitionId: string, userId: string, status: string) {
-    localStorage.setItem(`spi-ballot-status:${userId}:${definitionId}`, status);
 }
 
 export function addLocalProgram(program: Program) {
