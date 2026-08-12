@@ -5,9 +5,6 @@ import AdminPage from "./AdminPage";
 vi.mock("../lib/adminRepository", () => ({
     createProgram: vi.fn(),
     loadCommitteeCounts: vi.fn().mockResolvedValue({ admins: 2, voters: 2 }),
-    loadSubmittedBallots: vi.fn().mockResolvedValue([]),
-    reopenSubmittedBallot: vi.fn(),
-    savePollSchedule: vi.fn(),
 }));
 
 vi.mock("./PowerRatingsPage", () => ({
@@ -24,5 +21,6 @@ describe("AdminPage", () => {
         />);
 
         expect(screen.getByRole("region", { name: "Power Rating Overrides" })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /poll management/i })).toHaveAttribute("href", "#/admin/polls");
     });
 });

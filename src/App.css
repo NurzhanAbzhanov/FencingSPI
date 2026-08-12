@@ -139,6 +139,8 @@
 .admin-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
 .admin-section { padding: 18px; border: 1px solid #d7dce2; background: #fff; }
 .admin-section h2 { margin: 0; font-size: 1rem; }.admin-section > p { color: #65717c; font-size: .82rem; }
+.admin-action-links { display: grid; margin-top: 12px; border-top: 1px solid #e0e4e8; }
+.admin-action-links a { min-height: 46px; display: grid; grid-template-columns: 24px 1fr 18px; align-items: center; gap: 9px; border-bottom: 1px solid #e0e4e8; color: #273544; font-weight: 650; }
 .admin-list { margin: 14px 0; border-top: 1px solid #e0e4e8; }.admin-list-row { min-height: 50px; border-bottom: 1px solid #e0e4e8; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .submitted-ballot-row > div { display: flex; flex-direction: column; gap: 3px; }.submitted-ballot-row span { color: #74808b; font-size: .72rem; }
 .committee-count { min-height: 110px; display: grid; grid-template-columns: auto 1fr; align-content: center; gap: 3px 10px; color: #3d4a57; }.committee-count span { grid-column: 2; color: #74808b; font-size: .76rem; }
