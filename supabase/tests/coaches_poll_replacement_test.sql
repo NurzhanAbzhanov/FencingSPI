@@ -823,6 +823,27 @@ select ok(
 set local role authenticated;
 select set_config('request.jwt.claim.sub', 'ffffffff-ffff-4fff-8fff-ffffffffffff', true);
 select is(
+    (select display_name from public.profiles where id = auth.uid()),
+    'unlisted',
+    'a fresh authenticated user can read their own profile'
+);
+
+select set_config('request.jwt.claim.sub', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', true);
+select is(
+    (
+        select profile.display_name
+        from public.ballots ballot
+        join public.ballot_definitions definition on definition.id = ballot.definition_id
+        join public.profiles profile on profile.id = ballot.voter_id
+        where definition.slug = 'men_team_overall'
+          and ballot.voter_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    ),
+    'Fixture Voter',
+    'authenticated committee visibility includes ballot voter profiles after close'
+);
+
+select set_config('request.jwt.claim.sub', 'ffffffff-ffff-4fff-8fff-ffffffffffff', true);
+select is(
     (select count(*)::integer from public.ballots),
     0,
     'inactive authenticated users cannot read individual ballots after close'
@@ -907,6 +928,109 @@ select is((select count(*)::integer from public.committee_access_grants), 0, 'co
 select set_config('request.jwt.claim.sub', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', true);
 select is((select count(*)::integer from public.committee_access_grants), 5, 'administrators can read committee access grants');
 select ok((select count(*) > 0 from public.poll_admin_audit_log), 'administrative mutations are audited');
+
+select lives_ok(
+    $$
+        insert into public.matches (
+            source_id,
+            season_id,
+            fenced_on,
+            gender,
+            left_program_id,
+            right_program_id,
+            left_sabre,
+            left_foil,
+            left_epee,
+            right_sabre,
+            right_foil,
+            right_epee,
+            host,
+            submitted_by,
+            submission_email
+        )
+        values (
+            990002,
+            '11111111-1111-4111-8111-111111111111',
+            '2026-08-11',
+            'Men',
+            md5('task-2-program-1')::uuid,
+            md5('task-2-program-2')::uuid,
+            8,
+            8,
+            8,
+            7,
+            7,
+            6,
+            'Task 2 Admin Match',
+            'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            'admin@example.com'
+        )
+    $$,
+    'an authenticated administrator can insert matches through admin-only RLS'
+);
+
+select set_config('request.jwt.claim.sub', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
+select throws_ok(
+    $$
+        insert into public.matches (
+            source_id,
+            season_id,
+            fenced_on,
+            gender,
+            left_program_id,
+            right_program_id,
+            left_sabre,
+            left_foil,
+            left_epee,
+            right_sabre,
+            right_foil,
+            right_epee,
+            host,
+            submitted_by
+        )
+        values (
+            990003,
+            '11111111-1111-4111-8111-111111111111',
+            '2026-08-12',
+            'Men',
+            md5('task-2-program-1')::uuid,
+            md5('task-2-program-2')::uuid,
+            8,
+            8,
+            8,
+            7,
+            7,
+            6,
+            'Task 2 Coach Match',
+            'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+        )
+    $$,
+    '42501',
+    null,
+    'an authenticated coach cannot insert matches'
+);
+select results_eq(
+    $$update public.matches set host = 'Coach Update' where source_id = 990002 returning source_id$$,
+    $$values (null::bigint) limit 0$$,
+    'an authenticated coach cannot update administrator matches'
+);
+select results_eq(
+    $$delete from public.matches where source_id = 990002 returning source_id$$,
+    $$values (null::bigint) limit 0$$,
+    'an authenticated coach cannot delete administrator matches'
+);
+
+select set_config('request.jwt.claim.sub', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', true);
+select results_eq(
+    $$update public.matches set host = 'Task 2 Admin Match Updated' where source_id = 990002 returning host$$,
+    $$values ('Task 2 Admin Match Updated'::text)$$,
+    'an authenticated administrator can update matches through admin-only RLS'
+);
+select results_eq(
+    $$delete from public.matches where source_id = 990002 returning source_id$$,
+    $$values (990002::bigint)$$,
+    'an authenticated administrator can delete matches through admin-only RLS'
+);
 
 reset role;
 select * from finish();

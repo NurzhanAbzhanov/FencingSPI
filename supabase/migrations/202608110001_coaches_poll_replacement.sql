@@ -1180,7 +1180,8 @@ grant select on public.poll_periods,
                 public.published_poll_results,
                 public.poll_spi_snapshots,
                 public.committee_access_grants,
-                public.poll_admin_audit_log
+                public.poll_admin_audit_log,
+                public.profiles
 to authenticated;
 
 grant select on public.poll_periods,
@@ -1198,7 +1199,7 @@ revoke select on public.spi_results from anon, authenticated;
 grant select on public.spi_results to authenticated;
 
 revoke select on public.matches from anon;
-grant select on public.matches to authenticated;
+grant select, insert, update, delete on public.matches to authenticated;
 grant select (
     id,
     source_id,
