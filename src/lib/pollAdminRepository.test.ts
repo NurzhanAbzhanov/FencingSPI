@@ -65,4 +65,11 @@ describe("pollAdminRepository", () => {
             requested_can_vote: true,
         }));
     });
+
+    it("loads linked committee state through the admin-only RPC", async () => {
+        mocks.rpc.mockResolvedValue({ data: [{ email: "coach@ucsd.edu", display_name: "Coach", role: "coach", can_vote: true, active: true, linked: true }], error: null });
+        const { loadCommitteeAccess } = await import("./pollAdminRepository");
+        await expect(loadCommitteeAccess()).resolves.toEqual([expect.objectContaining({ email: "coach@ucsd.edu", linked: true })]);
+        expect(mocks.rpc).toHaveBeenCalledWith("list_committee_access");
+    });
 });

@@ -27,36 +27,36 @@ describe('poll categories', () => {
 });
 
 describe('computePollStandings', () => {
-    it('awards reverse rank points and sequentially ranks a complete tie', () => {
+    it('awards reverse rank points and preserves a complete tie', () => {
         expect(computePollStandings([
             { rankings: [1, 2, 3] },
             { rankings: [2, 1, 3] },
         ], new Map([[1, 'Alpha'], [2, 'Beta'], [3, 'Gamma']]), 3)).toEqual([
             { rank: 1, teamId: 1, teamName: 'Alpha', points: 5, firstPlaceVotes: 1 },
-            { rank: 2, teamId: 2, teamName: 'Beta', points: 5, firstPlaceVotes: 1 },
+            { rank: 1, teamId: 2, teamName: 'Beta', points: 5, firstPlaceVotes: 1 },
             { rank: 3, teamId: 3, teamName: 'Gamma', points: 2, firstPlaceVotes: 0 },
         ]);
     });
 
-    it('uses first-place votes before canonical school name to break point ties', () => {
+    it('does not use first-place votes to break point ties', () => {
         expect(computePollStandings([
             { rankings: [1, 2, 3] },
             { rankings: [1, 3, 2] },
             { rankings: [2, 3, 1] },
             { rankings: [3, 2, 1] },
         ], new Map([[1, 'Zeta'], [2, 'Alpha'], [3, 'Gamma']]), 3)).toMatchObject([
-            { teamId: 1, points: 8, firstPlaceVotes: 2 },
-            { teamId: 2, points: 8, firstPlaceVotes: 1 },
-            { teamId: 3, points: 8, firstPlaceVotes: 1 },
+            { rank: 1, points: 8 },
+            { rank: 1, points: 8 },
+            { rank: 1, points: 8 },
         ]);
     });
 
-    it('uses canonical school name for deterministic ordering after equal votes', () => {
+    it('uses canonical school name only for deterministic display order after a tie', () => {
         expect(computePollStandings([
             { rankings: [2, 1] },
             { rankings: [1, 2] },
         ], new Map([[1, 'zeta university'], [2, 'Alpha College']]), 2))
-            .toMatchObject([{ teamId: 2 }, { teamId: 1 }]);
+            .toMatchObject([{ rank: 1, teamId: 2 }, { rank: 1, teamId: 1 }]);
     });
 });
 

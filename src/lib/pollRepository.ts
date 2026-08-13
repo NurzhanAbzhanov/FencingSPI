@@ -1,4 +1,4 @@
-import { deriveLockedD3TeamIds, getPollCategorySpec } from './pollDomain';
+import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec } from './pollDomain';
 import { supabase } from './supabase';
 import type {
     IndividualPollBallot,
@@ -88,7 +88,11 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
         .eq('slug', categorySlug)
         .is('archived_at', null);
     if (definitionResult.error) throw definitionResult.error;
-    const definition = (definitionResult.data ?? [])[0] as unknown as Record<string, unknown> | undefined;
+    const definitionRows = (definitionResult.data ?? []) as unknown as Array<Record<string, unknown>>;
+    const definition = definitionRows.find((row) => {
+        const candidatePeriod = one(row.poll_periods as Relation<Parameters<typeof periodFromRow>[0]>);
+        return candidatePeriod ? periodFromRow(candidatePeriod).effectivelyOpen : false;
+    }) ?? definitionRows[0];
     if (!definition) throw new Error('Poll ballot is not available.');
     const rawPeriod = one(definition.poll_periods as Relation<Parameters<typeof periodFromRow>[0]>);
     if (!rawPeriod) throw new Error('Poll period is not available.');
@@ -184,7 +188,42 @@ export async function savePollBallot(input: { definitionId: string; teamIds: num
 }
 
 export async function loadPollResults(periodId: string): Promise<PollCategoryResults[]> {
-    return loadResults(periodId);
+    const published = await loadResults(periodId);
+    if (published.length) return published;
+
+    const db = client();
+    const definitions = await db.from('ballot_definitions')
+        .select('id, slug, rank_limit')
+        .eq('period_id', periodId)
+        .eq('hidden', false)
+        .is('archived_at', null);
+    if (definitions.error) throw definitions.error;
+    const definitionRows = definitions.data ?? [];
+    if (!definitionRows.length) return [];
+    const ballots = await db.from('ballots')
+        .select('definition_id, ballot_rankings(rank, programs!inner(legacy_team_id, schools!inner(name)))')
+        .in('definition_id', definitionRows.map((definition) => definition.id))
+        .eq('status', 'submitted');
+    if (ballots.error) throw ballots.error;
+
+    return definitionRows.flatMap((definition) => {
+        const names = new Map<number, string>();
+        const votes = (ballots.data ?? []).filter((ballot) => ballot.definition_id === definition.id).map((ballot) => ({
+            rankings: (ballot.ballot_rankings ?? []).flatMap((ranking) => {
+                const program = one(ranking.programs as Relation<{ legacy_team_id: number; schools: Relation<{ name: string }> }>);
+                const school = one(program?.schools ?? null);
+                if (!program || !school) return [];
+                const teamId = Number(program.legacy_team_id);
+                names.set(teamId, school.name);
+                return [{ rank: Number(ranking.rank), teamId }];
+            }).sort((a, b) => a.rank - b.rank).map((ranking) => ranking.teamId),
+        }));
+        return votes.length ? [{
+            definitionId: definition.id,
+            category: getPollCategorySpec(definition.slug),
+            standings: computePollStandings(votes, names, Number(definition.rank_limit)),
+        }] : [];
+    });
 }
 
 export async function loadPublicPollResults(periodId: string): Promise<PollCategoryResults[]> {

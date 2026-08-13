@@ -4,6 +4,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 select no_plan();
 
+select has_function('public', 'list_committee_access', array[]::text[], 'committee access listing RPC exists');
+select has_function('public', 'list_poll_participation', array['uuid'], 'participation listing RPC exists');
+
 select has_table('public', 'poll_spi_snapshots', 'poll SPI snapshots table exists');
 select has_table('public', 'committee_access_grants', 'committee access grants table exists');
 select has_table('public', 'poll_admin_audit_log', 'poll administrator audit table exists');
@@ -724,17 +727,15 @@ select is(
 
 select is(
     (
-        select s.name
+        select count(*)::integer
         from public.published_poll_results r
         join public.ballot_definitions d on d.id = r.definition_id
-        join public.programs p on p.id = r.program_id
-        join public.schools s on s.id = p.school_id
         where d.slug = 'men_team_overall'
           and d.period_id = '22222222-2222-4222-8222-222222222221'
           and r.rank = 1
     ),
-    'Test School 01',
-    'canonical school name deterministically breaks a points and first-vote tie'
+    15,
+    'published standings preserve equal ranks for equal point totals'
 );
 
 select is(
@@ -745,8 +746,8 @@ select is(
         where d.slug = 'men_team_overall'
           and d.period_id = '22222222-2222-4222-8222-222222222221'
     ),
-    array(select generate_series(1, 15)),
-    'published ranks are deterministic and sequential'
+    array_fill(1, array[15]),
+    'published ranks are based only on total points'
 );
 
 select lives_ok(

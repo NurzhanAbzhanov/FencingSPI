@@ -52,6 +52,12 @@ export default function TeamSelectCombobox({ rankNumber, selectedTeamId, teams, 
 
 function TeamIdentity({ team }: { team: TeamOption }) {
     const url = getSchoolLogoUrl({ name: team.teamName, logoUrl: team.logoUrl });
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const initials = team.teamName.split(/\s+/).filter((word) => !['of', 'the', 'and'].includes(word.toLowerCase())).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
-    return <span className="team-identity">{url ? <img src={url} alt="" /> : <span className="team-identity-fallback">{initials}</span>}<span>{team.teamName}</span></span>;
+    return <span className="team-identity">
+        {url && failedUrl !== url
+            ? <img src={url} alt="" onError={() => setFailedUrl(url)} />
+            : <span className="team-identity-fallback">{initials}</span>}
+        <span>{team.teamName}</span>
+    </span>;
 }

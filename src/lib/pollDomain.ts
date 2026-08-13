@@ -78,14 +78,20 @@ export function computePollStandings(
         });
     }
 
-    return [...standings.values()]
+    const ordered = [...standings.values()]
         .sort((left, right) => (
             right.points - left.points
-            || right.firstPlaceVotes - left.firstPlaceVotes
             || canonicalSchoolName(left.teamName).localeCompare(canonicalSchoolName(right.teamName))
             || left.teamId - right.teamId
-        ))
-        .map((standing, index) => ({ ...standing, rank: index + 1 }));
+        ));
+
+    let previousPoints: number | null = null;
+    let currentRank = 0;
+    return ordered.map((standing, index) => {
+        if (standing.points !== previousPoints) currentRank = index + 1;
+        previousPoints = standing.points;
+        return { ...standing, rank: currentRank };
+    });
 }
 
 export function deriveLockedD3TeamIds(

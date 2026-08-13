@@ -886,12 +886,9 @@ begin
         totals.definition_id,
         totals.program_id,
         totals.points,
-        row_number() over (
+        rank() over (
             partition by totals.definition_id
-            order by totals.points desc,
-                     totals.first_place_votes desc,
-                     lower(btrim(totals.school_name)),
-                     totals.program_id
+            order by totals.points desc
         )::integer,
         totals.first_place_votes,
         now()
@@ -1028,6 +1025,87 @@ begin
             'active', requested_active
         )
     );
+end;
+$$;
+
+create or replace function public.list_committee_access()
+returns table (
+    email text,
+    display_name text,
+    role public.app_role,
+    can_vote boolean,
+    active boolean,
+    linked boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if public.current_app_role() is distinct from 'admin' then
+        raise exception 'Administrator access required';
+    end if;
+
+    return query
+    select
+        grant_row.email,
+        grant_row.display_name,
+        grant_row.role,
+        grant_row.can_vote,
+        grant_row.active,
+        exists (
+            select 1
+            from auth.users auth_user
+            where lower(btrim(auth_user.email)) = grant_row.email
+        ) as linked
+    from public.committee_access_grants grant_row
+    order by lower(grant_row.display_name), grant_row.email;
+end;
+$$;
+
+create or replace function public.list_poll_participation(target_period uuid)
+returns table (
+    voter_id uuid,
+    voter_name text,
+    email text,
+    definition_slug text,
+    ballot_status text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if public.current_app_role() is distinct from 'admin' then
+        raise exception 'Administrator access required';
+    end if;
+
+    return query
+    select
+        auth_user.id,
+        grant_row.display_name,
+        grant_row.email,
+        definition.slug,
+        coalesce(ballot.status::text, 'not_started')
+    from public.committee_access_grants grant_row
+    join auth.users auth_user
+      on lower(btrim(auth_user.email)) = grant_row.email
+    join public.profiles profile
+      on profile.id = auth_user.id
+     and profile.active
+     and profile.can_vote
+    cross join public.ballot_definitions definition
+    left join public.ballots ballot
+      on ballot.definition_id = definition.id
+     and ballot.voter_id = auth_user.id
+    where grant_row.active
+      and grant_row.can_vote
+      and definition.period_id = target_period
+      and not definition.hidden
+      and definition.archived_at is null
+    order by lower(grant_row.display_name), definition.slug;
 end;
 $$;
 
@@ -1229,6 +1307,8 @@ revoke execute on function public.close_poll_period(uuid) from public, anon;
 revoke execute on function public.save_poll_ballot(uuid, uuid[], boolean) from public, anon;
 revoke execute on function public.publish_poll_period(uuid) from public, anon;
 revoke execute on function public.save_committee_access(text, text, public.app_role, boolean, boolean) from public, anon;
+revoke execute on function public.list_committee_access() from public, anon;
+revoke execute on function public.list_poll_participation(uuid) from public, anon;
 revoke execute on function public.create_spi_profile_for_auth_user() from public, anon, authenticated;
 revoke execute on function public.sync_existing_committee_access_grants() from public, anon, authenticated;
 
@@ -1239,3 +1319,5 @@ grant execute on function public.close_poll_period(uuid) to authenticated;
 grant execute on function public.save_poll_ballot(uuid, uuid[], boolean) to authenticated;
 grant execute on function public.publish_poll_period(uuid) to authenticated;
 grant execute on function public.save_committee_access(text, text, public.app_role, boolean, boolean) to authenticated;
+grant execute on function public.list_committee_access() to authenticated;
+grant execute on function public.list_poll_participation(uuid) to authenticated;

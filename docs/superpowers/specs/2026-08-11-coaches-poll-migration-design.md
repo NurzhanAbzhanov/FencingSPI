@@ -123,10 +123,9 @@ Men's and Women's Team Division III ballots require the matching Team Overall ba
 Each rank receives reverse points: rank one receives the category slot count and the final rank receives one point. Standings sort by:
 
 1. total points descending
-2. first-place votes descending
-3. canonical school name ascending for deterministic ordering
+2. canonical school name ascending for deterministic display order within a tie
 
-Ranks remain sequential after sorting. Exact equality does not create a shared rank, matching the supplied application's current behavior.
+Ranks are based only on points. Equal point totals receive the same competition rank, such as `1, 1, 3`; first-place-vote counts remain visible but do not break ties.
 
 Aggregate standings are recalculated when a poll closes and stored when published. Published rows include points and first-place-vote counts. Individual ballots become visible to authenticated committee members after closing, while anonymous visitors can see only published aggregate results.
 
@@ -229,7 +228,7 @@ The migration preserves user accounts, permissions, and fencing data. Browser-lo
 
 - category metadata and visibility
 - reverse-point scoring
-- first-place-vote tiebreaks and deterministic final ordering
+- shared ranks for equal point totals and deterministic display ordering within ties
 - gender, weapon, and Division III eligibility
 - Division III auto-fill and locked-slot derivation
 - logo mapping and fallback

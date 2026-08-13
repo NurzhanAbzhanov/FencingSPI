@@ -119,12 +119,12 @@ expect(computePollStandings([
     { rankings: [2, 1, 3] },
 ], new Map([[1, "Alpha"], [2, "Beta"], [3, "Gamma"]]), 3)).toEqual([
     { rank: 1, teamId: 1, teamName: "Alpha", points: 5, firstPlaceVotes: 1 },
-    { rank: 2, teamId: 2, teamName: "Beta", points: 5, firstPlaceVotes: 1 },
+    { rank: 1, teamId: 2, teamName: "Beta", points: 5, firstPlaceVotes: 1 },
     { rank: 3, teamId: 3, teamName: "Gamma", points: 2, firstPlaceVotes: 0 },
 ]);
 ```
 
-Also test first-place-vote tiebreaking, canonical-name deterministic ordering, invalid slugs, unique/full ranking validation, eligibility validation, and `deriveLockedD3TeamIds([9, 3, 7, 5], new Set([3, 5]), 8) === [3, 5]`.
+Also test shared ranks for equal point totals, canonical-name deterministic display ordering, invalid slugs, unique/full ranking validation, eligibility validation, and `deriveLockedD3TeamIds([9, 3, 7, 5], new Set([3, 5]), 8) === [3, 5]`.
 
 - [ ] **Step 3: Run the tests and verify the expected failure**
 
@@ -158,7 +158,7 @@ export type PollStanding = {
 };
 ```
 
-`computePollStandings` assigns `slotCount - index` points, then sorts by points descending, first-place votes descending, and canonical school name ascending. It assigns sequential ranks. `validateBallotTeamIds` returns a string error for wrong size, zero IDs, duplicates, ineligible IDs, or a locked prefix mismatch; otherwise it returns `null`.
+`computePollStandings` assigns `slotCount - index` points, then ranks by points descending. Equal point totals receive the same competition rank; canonical school name is used only for deterministic display order within a tie. `validateBallotTeamIds` returns a string error for wrong size, zero IDs, duplicates, ineligible IDs, or a locked prefix mismatch; otherwise it returns `null`.
 
 - [ ] **Step 5: Run domain tests and the existing build**
 
@@ -280,7 +280,7 @@ set search_path = public;
 
 It verifies the caller can vote, the period is effectively open, array length equals `rank_limit`, IDs are unique, all candidates match season/gender/scope, and Team Division III begins with the current submitted Team Overall Division III subset. It upserts the caller's ballot, replaces rankings in array order, sets `submitted` when `submit_now` is true, permits later replacement while open, and writes a ballot audit row. Saving a changed submitted Team Overall ballot marks an existing matching Team Division III ballot `draft` so the coach must review and resubmit its regenerated locked prefix.
 
-`schedule_poll_period` rejects non-admins, requires `opens_at < closes_at` when both values exist, updates the two timestamps only while the period is draft, and audits. `close_poll_period` rejects non-admins, verifies every submitted Team Division III ballot matches its current Overall prefix, marks the period closed, and audits. `publish_poll_period` requires closed status, computes reverse points and first-place votes, sorts with `row_number()` by points, first-place votes, and canonical school name, stores results, marks published, and audits.
+`schedule_poll_period` rejects non-admins, requires `opens_at < closes_at` when both values exist, updates the two timestamps only while the period is draft, and audits. `close_poll_period` rejects non-admins, verifies every submitted Team Division III ballot matches its current Overall prefix, marks the period closed, and audits. `publish_poll_period` requires closed status, computes reverse points and first-place votes, assigns shared competition ranks with `rank()` based only on points, stores results, marks published, and audits.
 
 `save_committee_access` lowercases and validates the email, upserts the grant, synchronizes an already-linked profile, prevents deactivating or demoting the final active administrator, and audits the change without exposing `auth.users` to the browser.
 
@@ -580,7 +580,7 @@ git commit -m "Port supplied coaches poll ballot"
 
 - [ ] **Step 1: Write failing standings and export tests**
 
-Assert category switching, rank/points/first-place-vote columns, sequential exact-tie ranks from repository results, individual ballot visibility only after close, public omission of individual voters, and RFC-compatible CSV quoting.
+Assert category switching, rank/points/first-place-vote columns, shared exact-tie ranks from repository results, individual ballot visibility only after close, public omission of individual voters, and RFC-compatible CSV quoting.
 
 ```ts
 expect(createPollResultsCsv(rows)).toContain('1,"Columbia University-Barnard College",120,4');

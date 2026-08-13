@@ -3,9 +3,27 @@ import type {
     CommitteeAccess,
     CommitteeAccessInput,
     PollParticipationRow,
+    PollParticipationStatus,
     PollPeriodAdmin,
     PollPeriodStatus,
 } from '../types/polls';
+
+type ParticipationRpcRow = {
+    voter_id: string;
+    voter_name: string;
+    email: string;
+    definition_slug: string;
+    ballot_status: PollParticipationStatus;
+};
+
+type CommitteeAccessRpcRow = {
+    email: string;
+    display_name: string;
+    role: CommitteeAccess['role'];
+    can_vote: boolean;
+    active: boolean;
+    linked: boolean;
+};
 
 function client() {
     if (!supabase) throw new Error('Poll data requires a configured Supabase project');
@@ -59,39 +77,27 @@ export async function publishPoll(periodId: string): Promise<void> {
 }
 
 export async function loadParticipation(periodId: string): Promise<PollParticipationRow[]> {
-    const db = client();
-    const [profiles, definitions] = await Promise.all([
-        db.from('profiles').select('id, display_name').eq('active', true).eq('can_vote', true),
-        db.from('ballot_definitions').select('id, slug').eq('period_id', periodId).eq('hidden', false).is('archived_at', null),
-    ]);
-    if (profiles.error) throw profiles.error;
-    if (definitions.error) throw definitions.error;
-    const definitionRows = definitions.data ?? [];
-    const ballotResult = definitionRows.length
-        ? await db.from('ballots').select('voter_id, definition_id, status').in('definition_id', definitionRows.map((item) => item.id))
-        : { data: [], error: null };
-    if (ballotResult.error) throw ballotResult.error;
-    const statuses = new Map((ballotResult.data ?? []).map((item) => [`${item.voter_id}:${item.definition_id}`, item.status]));
-    return (profiles.data ?? []).map((profile) => ({
-        voterId: profile.id,
-        voterName: profile.display_name,
-        email: '',
-        statuses: Object.fromEntries(definitionRows.map((definition) => [definition.slug, statuses.get(`${profile.id}:${definition.id}`) ?? 'not_started'])),
-    }));
+    const result = await client().rpc('list_poll_participation', { target_period: periodId });
+    if (result.error) throw result.error;
+    const grouped = new Map<string, PollParticipationRow>();
+    for (const row of (result.data ?? []) as ParticipationRpcRow[]) {
+        const current = grouped.get(row.voter_id) ?? { voterId: row.voter_id, voterName: row.voter_name, email: row.email, statuses: {} };
+        current.statuses[row.definition_slug] = row.ballot_status;
+        grouped.set(row.voter_id, current);
+    }
+    return [...grouped.values()];
 }
 
 export async function loadCommitteeAccess(): Promise<CommitteeAccess[]> {
-    const result = await client().from('committee_access_grants')
-        .select('email, display_name, role, can_vote, active')
-        .order('display_name');
+    const result = await client().rpc('list_committee_access');
     if (result.error) throw result.error;
-    return (result.data ?? []).map((row) => ({
+    return ((result.data ?? []) as CommitteeAccessRpcRow[]).map((row) => ({
         email: row.email,
         displayName: row.display_name,
         role: row.role,
         canVote: row.can_vote,
         active: row.active,
-        linked: false,
+        linked: row.linked,
     }));
 }
 

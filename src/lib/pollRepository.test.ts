@@ -10,7 +10,7 @@ vi.mock("./supabase", () => ({
     supabase: { from: mocks.from, rpc: mocks.rpc },
 }));
 
-import { loadPollBallot, savePollBallot } from "./pollRepository";
+import { loadPollBallot, loadPollResults, savePollBallot } from "./pollRepository";
 
 function query(data: unknown, error: unknown = null) {
     const result = Promise.resolve({ data, error });
@@ -68,6 +68,27 @@ describe("pollRepository", () => {
         expect(ballot.prerequisite).toBe("ready");
     });
 
+    it("selects the effective open period when a category exists in multiple months", async () => {
+        mocks.from
+            .mockReturnValueOnce(query([{
+                id: "closed-definition",
+                period_id: "closed-period",
+                slug: "men_team_overall",
+                poll_periods: { id: "closed-period", label: "November", status: "closed", opens_at: "2026-11-01T00:00:00Z", closes_at: "2026-11-08T00:00:00Z", seasons: { slug: "2025-26" } },
+            }, {
+                id: "open-definition",
+                period_id: "open-period",
+                slug: "men_team_overall",
+                poll_periods: { id: "open-period", label: "December", status: "open", opens_at: null, closes_at: null, seasons: { slug: "2025-26" } },
+            }]))
+            .mockReturnValueOnce(query([]))
+            .mockReturnValueOnce(query([]));
+
+        const ballot = await loadPollBallot("men_team_overall", "user-1");
+        expect(ballot.definitionId).toBe("open-definition");
+        expect(ballot.period.id).toBe("open-period");
+    });
+
     it("converts legacy team IDs to program UUIDs before saving", async () => {
         mocks.from.mockReturnValueOnce(query([
             { id: "program-49", legacy_team_id: 49 },
@@ -87,5 +108,34 @@ describe("pollRepository", () => {
             ranked_programs: ["program-49", "program-50", "program-51"],
             submit_now: true,
         });
+    });
+
+    it("calculates tied aggregate results for authenticated users after close", async () => {
+        mocks.from
+            .mockReturnValueOnce(query([]))
+            .mockReturnValueOnce(query([{ id: "definition-1", slug: "men_team_overall", rank_limit: 3 }]))
+            .mockReturnValueOnce(query([
+                {
+                    definition_id: "definition-1",
+                    ballot_rankings: [
+                        { rank: 1, programs: { legacy_team_id: 1, schools: { name: "Alpha" } } },
+                        { rank: 2, programs: { legacy_team_id: 2, schools: { name: "Beta" } } },
+                    ],
+                },
+                {
+                    definition_id: "definition-1",
+                    ballot_rankings: [
+                        { rank: 1, programs: { legacy_team_id: 2, schools: { name: "Beta" } } },
+                        { rank: 2, programs: { legacy_team_id: 1, schools: { name: "Alpha" } } },
+                    ],
+                },
+            ]));
+
+        const results = await loadPollResults("period-1");
+
+        expect(results[0].standings).toMatchObject([
+            { rank: 1, teamId: 1, points: 5 },
+            { rank: 1, teamId: 2, points: 5 },
+        ]);
     });
 });
