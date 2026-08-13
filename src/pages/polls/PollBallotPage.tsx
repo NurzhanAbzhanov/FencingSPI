@@ -48,7 +48,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                 {message && <p className="form-message" role="status">{message}</p>}
                 <button className="button primary ballot-review-button" type="button" onClick={review} disabled={!view.period.effectivelyOpen}>Review ballot</button>
             </section>
-            <PollSpiReference candidates={view.candidates} seasonSlug={view.period.seasonSlug} onRank={quickRank} rankedTeamIds={slots} />
+            <PollSpiReference candidates={view.candidates} onRank={quickRank} rankedTeamIds={slots} />
         </div>
         {reviewing && <div className="modal-backdrop" role="presentation"><section className="review-dialog" role="dialog" aria-modal="true" aria-labelledby="review-title"><h2 id="review-title">Review your ballot</h2><ol>{slots.map((teamId, index) => <li key={teamId}>{index + 1}. {candidatesById.get(teamId)?.teamName}</li>)}</ol><div className="dialog-actions"><button className="button secondary" type="button" onClick={() => setReviewing(false)}>Continue editing</button><button className="button primary" type="button" disabled={saving} onClick={submit}>{saving ? 'Submitting' : 'Confirm and submit'}</button></div></section></div>}
     </PollShell>;

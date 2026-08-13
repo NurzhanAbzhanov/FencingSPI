@@ -94,20 +94,23 @@
 .poll-reference-table th,
 .poll-reference-table td { height: auto; padding: 10px 8px; white-space: normal; }
 .poll-reference-table th { background: #f6f7f9; color: #667085; font-size: 11px; letter-spacing: .04em; }
-.poll-reference-table th:nth-child(1) { width: 62px; }
+.poll-reference-table th:nth-child(1) { width: 54px; }
 .poll-reference-table th:nth-child(2) { width: auto; }
-.poll-reference-table th:nth-child(3) { width: 84px; }
-.poll-reference-table th:nth-child(4) { width: 54px; }
-.poll-reference-table th:nth-child(5) { width: 104px; }
+.poll-reference-table th:nth-child(3),
+.poll-reference-table th:nth-child(4) { width: 82px; }
+.poll-reference-table th:nth-child(5) { width: 44px; }
+.poll-reference-table th:nth-child(6) { width: 96px; }
 .poll-reference-table td { border-bottom-color: #edf0f2; }
 .poll-reference-table td:first-child,
-.poll-reference-table td:nth-child(4) { color: #667085; }
-.poll-reference-table .spi-cell { color: #475467 !important; font-weight: 700; white-space: nowrap; }
+.poll-reference-table td:nth-child(5) { color: #667085; }
+.poll-reference-table .current-spi-cell { color: #176aa6 !important; background: #eef6fc; font-weight: 800; white-space: nowrap; }
+.poll-reference-table .previous-spi-cell { color: #475467 !important; font-weight: 700; white-space: nowrap; }
 .poll-reference-table tbody tr:hover { background: #fafbfc; }
-.poll-team-cell { min-width: 0; display: flex; align-items: center; gap: 8px; font-weight: 700; }
-.poll-team-cell .school-logo,
-.poll-team-cell .school-logo-fallback { width: 26px; height: 26px; flex: 0 0 26px; }
-.poll-team-cell > span { min-width: 0; overflow-wrap: anywhere; }
+.poll-team-cell { min-width: 0; font-weight: 700; }
+.poll-team-identity { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.poll-team-identity .school-logo,
+.poll-team-identity .school-logo-fallback { width: 26px; height: 26px; flex: 0 0 26px; }
+.poll-team-identity > span { min-width: 0; overflow-wrap: anywhere; }
 .poll-rank-action { min-height: 32px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 3px; border: 1px solid #bde6d0; border-radius: 5px; padding: 0 6px; background: #effaf3; color: #267a48; font: inherit; font-weight: 700; line-height: 1.1; cursor: pointer; }
 .poll-rank-action:hover:not(:disabled), .poll-rank-action:focus-visible { border-color: #74b78d; background: #e2f5e9; }
 .poll-rank-action:focus-visible { outline: 2px solid #176aa6; outline-offset: 1px; }
@@ -119,13 +122,16 @@
     .poll-reference-table, .poll-reference-table tbody, .poll-reference-table tr, .poll-reference-table td { display: block; width: 100%; }
     .poll-reference-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .poll-reference-table tbody { border-top: 1px solid #e1e5ea; }
-    .poll-reference-table tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 7px 10px; padding: 10px 0; border-bottom: 1px solid #e1e5ea; }
+    .poll-reference-table tr { display: grid; grid-template-columns: 44px minmax(0, 1fr) 84px 92px; align-items: center; gap: 7px 10px; padding: 10px 0; border-bottom: 1px solid #e1e5ea; }
     .poll-reference-table td { padding: 0; border: 0; }
     .poll-reference-table td:first-child { grid-column: 1; grid-row: 1; }
-    .poll-reference-table .poll-team-cell { grid-column: 2; grid-row: 1; }
-    .poll-reference-table .spi-cell { grid-column: 1 / span 2; grid-row: 2; }
-    .poll-reference-table td:nth-child(4) { grid-column: 3; grid-row: 2; }
-    .poll-reference-table td:last-child { grid-column: 3; grid-row: 1; width: 92px; }
+    .poll-reference-table .poll-team-cell { grid-column: 2 / span 2; grid-row: 1; }
+    .poll-reference-table .current-spi-cell { grid-column: 1 / span 2; grid-row: 2; justify-self: start; border-radius: 3px; padding: 3px 6px; }
+    .poll-reference-table .current-spi-cell::before { content: "Current "; color: #667085; font-weight: 600; }
+    .poll-reference-table .previous-spi-cell { grid-column: 3; grid-row: 2; }
+    .poll-reference-table .previous-spi-cell::before { content: "Last "; color: #667085; font-weight: 600; }
+    .poll-reference-table td:nth-child(5) { grid-column: 4; grid-row: 2; text-align: right; }
+    .poll-reference-table td:last-child { grid-column: 4; grid-row: 1; width: 92px; }
     .poll-rank-action { min-height: 34px; }
     .poll-voted-state { justify-content: flex-end; }
 }

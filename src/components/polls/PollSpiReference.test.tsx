@@ -13,7 +13,8 @@ const candidates: PollCandidate[] = [
         division: 1,
         conference: "Conference Alpha",
         region: "Region Alpha",
-        spi: 12.3456,
+        currentSpi: 12.3456,
+        previousSpi: 11.1111,
         spiRank: 1,
         powerRating: 10,
     },
@@ -25,7 +26,8 @@ const candidates: PollCandidate[] = [
         division: 3,
         conference: "Conference Beta",
         region: "Region Beta",
-        spi: 9.8765,
+        currentSpi: 9.8765,
+        previousSpi: null,
         spiRank: 2,
         powerRating: null,
     },
@@ -36,13 +38,18 @@ describe("PollSpiReference", () => {
         const user = userEvent.setup();
         const onRank = vi.fn();
 
-        render(<PollSpiReference candidates={candidates} seasonSlug="2025-26" rankedTeamIds={[1, 0, 0]} onRank={onRank} />);
+        render(<PollSpiReference candidates={candidates} rankedTeamIds={[1, 0, 0]} onRank={onRank} />);
 
         expect(screen.getByText("#1")).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "Team" })).toHaveAttribute("scope", "col");
+        expect(screen.getByRole("columnheader", { name: "Current SPI" })).toBeInTheDocument();
+        expect(screen.getByRole("columnheader", { name: "Last Season SPI" })).toBeInTheDocument();
         const alphaTeamCell = screen.getByRole("cell", { name: "Alpha" });
         expect(alphaTeamCell).toHaveClass("poll-team-cell");
-        expect(alphaTeamCell.querySelector(".school-logo-fallback")).toBeInTheDocument();
+        expect(alphaTeamCell.querySelector(".poll-team-identity .school-logo-fallback")).toBeInTheDocument();
+        expect(screen.getByRole("cell", { name: "12.3456" })).toHaveClass("current-spi-cell");
+        expect(screen.getByRole("cell", { name: "11.1111" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("cell", { name: "No prior-season SPI" })).toHaveTextContent("—");
         expect(screen.getByRole("cell", { name: "D1" })).toBeInTheDocument();
         expect(screen.getByRole("cell", { name: "D3" })).toBeInTheDocument();
         expect(screen.getByText("Voted")).toBeInTheDocument();
@@ -58,7 +65,7 @@ describe("PollSpiReference", () => {
     });
 
     it("shows a disabled ballot-full action when no ballot position is open", () => {
-        render(<PollSpiReference candidates={candidates} seasonSlug="2025-26" rankedTeamIds={[1, 99, 98]} onRank={vi.fn()} />);
+        render(<PollSpiReference candidates={candidates} rankedTeamIds={[1, 99, 98]} onRank={vi.fn()} />);
 
         const ballotFullAction = screen.getByRole("button", { name: "Ballot full: Beta cannot be ranked" });
         expect(ballotFullAction).toBeDisabled();
