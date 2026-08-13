@@ -29,8 +29,8 @@ describe("PollBallotPage", () => {
         const event = userEvent.setup();
         render(<PollBallotPage slug="men_squad_epee_overall" user={user} />);
 
-        await event.click(await screen.findByRole("button", { name: "Rank Alpha" }));
-        await event.click(screen.getByRole("button", { name: "Rank Beta" }));
+        await event.click(await screen.findByRole("button", { name: "Rank Alpha at position 1" }));
+        await event.click(screen.getByRole("button", { name: "Rank Beta at position 2" }));
         await event.click(screen.getByRole("button", { name: "Review ballot" }));
         expect(screen.getByRole("dialog")).toHaveTextContent("1. Alpha");
         await event.click(screen.getByRole("button", { name: "Confirm and submit" }));
