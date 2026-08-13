@@ -157,10 +157,19 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
             previousSpi: previousSeason
                 ? spiBySeasonAndProgram.get(`${previousSeason.id}:${candidate.programId}`) ?? null
                 : null,
-        })).sort((a, b) => b.currentSpi - a.currentSpi || a.teamName.localeCompare(b.teamName)).map((candidate, index) => {
-            const { snapshotSpi: _snapshotSpi, ...publicCandidate } = candidate;
-            return { ...publicCandidate, spiRank: index + 1 };
-        });
+        })).sort((a, b) => b.currentSpi - a.currentSpi || a.teamName.localeCompare(b.teamName)).map((candidate, index) => ({
+            programId: candidate.programId,
+            teamId: candidate.teamId,
+            teamName: candidate.teamName,
+            logoUrl: candidate.logoUrl,
+            division: candidate.division,
+            conference: candidate.conference,
+            region: candidate.region,
+            currentSpi: candidate.currentSpi,
+            previousSpi: candidate.previousSpi,
+            spiRank: index + 1,
+            powerRating: candidate.powerRating,
+        }));
     }
 
     const ballotResult = await db.from('ballots')
