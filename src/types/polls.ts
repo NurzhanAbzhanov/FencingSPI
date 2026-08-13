@@ -71,7 +71,8 @@ export type PollCandidate = {
     division: number;
     conference: string;
     region: string;
-    spi: number;
+    currentSpi: number;
+    previousSpi: number | null;
     spiRank: number;
     powerRating: number | null;
 };

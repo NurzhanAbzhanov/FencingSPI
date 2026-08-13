@@ -28,7 +28,16 @@ describe("pollRepository", () => {
         mocks.rpc.mockReset();
     });
 
-    it("maps a calculated SPI snapshot into ballot candidates", async () => {
+    it("maps live and prior-season SPI into ballot candidates ordered by live SPI", async () => {
+        const seasonsQuery = query([
+            { id: "season-current", slug: "2025-26", starts_on: "2025-08-01", ends_on: "2026-07-31" },
+            { id: "season-previous", slug: "2024-25", starts_on: "2024-08-01", ends_on: "2025-07-31" },
+        ]);
+        const resultsQuery = query([
+            { season_id: "season-current", program_id: "program-49", spi: 110 },
+            { season_id: "season-current", program_id: "program-50", spi: 120 },
+            { season_id: "season-previous", program_id: "program-50", spi: 98 },
+        ]);
         mocks.from
             .mockReturnValueOnce(query([{
                 id: "definition-1",
@@ -41,6 +50,55 @@ describe("pollRepository", () => {
                 hidden: false,
                 poll_periods: { label: "October (Preseason)", status: "open", opens_at: null, closes_at: null, seasons: { slug: "2025-26" } },
             }]))
+            .mockReturnValueOnce(query([
+                {
+                    program_id: "program-49",
+                    spi: 112.5,
+                    spi_rank: 1,
+                    power_rating: 90,
+                    division: 1,
+                    conference: "ACC",
+                    region: "Northeast",
+                    programs: { legacy_team_id: 49, schools: { name: "Boston College", logo_url: null } },
+                },
+                {
+                    program_id: "program-50",
+                    spi: 105,
+                    spi_rank: 2,
+                    power_rating: 80,
+                    division: 3,
+                    conference: "CCFC",
+                    region: "Midwest",
+                    programs: { legacy_team_id: 50, schools: { name: "Brandeis", logo_url: null } },
+                },
+            ]))
+            .mockReturnValueOnce(seasonsQuery)
+            .mockReturnValueOnce(resultsQuery)
+            .mockReturnValueOnce(query([]));
+
+        const ballot = await loadPollBallot("men_team_overall", "user-1");
+
+        expect(mocks.from).toHaveBeenCalledWith("poll_spi_snapshots");
+        expect(ballot.candidates).toMatchObject([
+            { programId: "program-50", teamId: 50, currentSpi: 120, previousSpi: 98, spiRank: 1 },
+            { programId: "program-49", teamId: 49, currentSpi: 110, previousSpi: null, spiRank: 2 },
+        ]);
+        expect(seasonsQuery.order).toHaveBeenCalledWith("ends_on", { ascending: false });
+        expect(resultsQuery.in).toHaveBeenCalledWith("season_id", ["season-current", "season-previous"]);
+        expect(resultsQuery.in).toHaveBeenCalledWith("program_id", ["program-49", "program-50"]);
+        expect(resultsQuery.eq).toHaveBeenCalledWith("weapon", "Team");
+        expect(ballot.rankings).toEqual([]);
+        expect(ballot.prerequisite).toBe("ready");
+    });
+
+    it("falls back to the poll snapshot when current live SPI is unavailable", async () => {
+        mocks.from
+            .mockReturnValueOnce(query([{
+                id: "definition-1",
+                period_id: "period-1",
+                slug: "men_team_overall",
+                poll_periods: { label: "October (Preseason)", status: "open", opens_at: null, closes_at: null, seasons: { slug: "2025-26" } },
+            }]))
             .mockReturnValueOnce(query([{
                 program_id: "program-49",
                 spi: 112.5,
@@ -51,21 +109,19 @@ describe("pollRepository", () => {
                 region: "Northeast",
                 programs: { legacy_team_id: 49, schools: { name: "Boston College", logo_url: null } },
             }]))
+            .mockReturnValueOnce(query([
+                { id: "season-current", slug: "2025-26", starts_on: "2025-08-01", ends_on: "2026-07-31" },
+            ]))
+            .mockReturnValueOnce(query([]))
             .mockReturnValueOnce(query([]));
 
         const ballot = await loadPollBallot("men_team_overall", "user-1");
 
-        expect(mocks.from).toHaveBeenCalledWith("poll_spi_snapshots");
         expect(ballot.candidates[0]).toMatchObject({
-            programId: "program-49",
-            teamId: 49,
-            teamName: "Boston College",
-            spi: 112.5,
+            currentSpi: 112.5,
+            previousSpi: null,
             spiRank: 1,
-            powerRating: 90,
         });
-        expect(ballot.rankings).toEqual([]);
-        expect(ballot.prerequisite).toBe("ready");
     });
 
     it("selects the effective open period when a category exists in multiple months", async () => {

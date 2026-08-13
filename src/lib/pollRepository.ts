@@ -11,6 +11,8 @@ import type {
 } from '../types/polls';
 
 type Relation<T> = T | T[] | null;
+type SeasonRow = { id: string; slug: string; starts_on: string; ends_on: string };
+type SpiResultRow = { season_id: string; program_id: string; spi: number };
 
 function client() {
     if (!supabase) throw new Error('Poll data requires a configured Supabase project');
@@ -106,7 +108,7 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
         .eq('weapon', category.weapon)
         .order('spi_rank');
     if (snapshot.error) throw snapshot.error;
-    const candidates = (snapshot.data ?? []).flatMap((row) => {
+    const snapshotCandidates = (snapshot.data ?? []).flatMap((row) => {
         const program = one(row.programs as Relation<{ legacy_team_id: number; schools: Relation<{ name: string; logo_url: string | null }> }>);
         const school = one(program?.schools ?? null);
         if (!program || !school || (category.scope === 'DIII' && Number(row.division) !== 3)) return [];
@@ -118,11 +120,48 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
             division: Number(row.division),
             conference: row.conference,
             region: row.region,
-            spi: Number(row.spi),
-            spiRank: Number(row.spi_rank),
+            snapshotSpi: Number(row.spi),
             powerRating: row.power_rating == null ? null : Number(row.power_rating),
         }];
     });
+
+    let candidates: PollBallotView['candidates'] = [];
+    if (snapshotCandidates.length) {
+        const seasonsResult = await db.from('seasons')
+            .select('id, slug, starts_on, ends_on')
+            .order('ends_on', { ascending: false });
+        if (seasonsResult.error) throw seasonsResult.error;
+        const seasons = (seasonsResult.data ?? []) as SeasonRow[];
+        const currentSeasonIndex = seasons.findIndex((season) => season.slug === period.seasonSlug);
+        if (currentSeasonIndex < 0) throw new Error(`Could not resolve poll season ${period.seasonSlug}.`);
+        const currentSeason = seasons[currentSeasonIndex];
+        const previousSeason = seasons[currentSeasonIndex + 1];
+        const seasonIds = [currentSeason.id, previousSeason?.id].filter((id): id is string => Boolean(id));
+        const programIds = snapshotCandidates.map((candidate) => candidate.programId);
+        const spiResult = await db.from('spi_results')
+            .select('season_id, program_id, spi')
+            .in('season_id', seasonIds)
+            .in('program_id', programIds)
+            .eq('weapon', category.weapon);
+        if (spiResult.error) throw spiResult.error;
+        const spiBySeasonAndProgram = new Map(
+            ((spiResult.data ?? []) as SpiResultRow[]).map((result) => [
+                `${result.season_id}:${result.program_id}`,
+                Number(result.spi),
+            ]),
+        );
+
+        candidates = snapshotCandidates.map((candidate) => ({
+            ...candidate,
+            currentSpi: spiBySeasonAndProgram.get(`${currentSeason.id}:${candidate.programId}`) ?? candidate.snapshotSpi,
+            previousSpi: previousSeason
+                ? spiBySeasonAndProgram.get(`${previousSeason.id}:${candidate.programId}`) ?? null
+                : null,
+        })).sort((a, b) => b.currentSpi - a.currentSpi || a.teamName.localeCompare(b.teamName)).map((candidate, index) => {
+            const { snapshotSpi: _snapshotSpi, ...publicCandidate } = candidate;
+            return { ...publicCandidate, spiRank: index + 1 };
+        });
+    }
 
     const ballotResult = await db.from('ballots')
         .select('id, status, ballot_rankings(rank, programs!inner(legacy_team_id))')
