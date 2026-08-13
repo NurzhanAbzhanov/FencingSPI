@@ -116,7 +116,7 @@ export default function App() {
         route.page === "admin" && user?.role === "admin" ? <AdminPage user={user} programs={programs} season={season} onProgramAdded={(program) => setPrograms((current) => [...current, program])} /> :
         route.page === "admin-polls" && user?.role === "admin" ? <PollManagementPage season={season} /> :
         route.page === "admin-coaches" && user?.role === "admin" ? <CoachManagementPage /> :
-        route.page === "admin-participation" && user?.role === "admin" ? <PollParticipationPage periodId={route.periodId} /> :
+        route.page === "admin-participation" && user?.role === "admin" ? <PollParticipationPage periodId={route.periodId} season={season} /> :
         ["admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page) ? <AccessDenied title="Admin access required" message="Only administrators can change poll settings." /> : null}
     </main></>;
 }

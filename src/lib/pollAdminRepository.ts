@@ -60,17 +60,16 @@ export async function publishPoll(periodId: string): Promise<void> {
 
 export async function loadParticipation(periodId: string): Promise<PollParticipationRow[]> {
     const db = client();
-    const [profiles, definitions, ballots] = await Promise.all([
+    const [profiles, definitions] = await Promise.all([
         db.from('profiles').select('id, display_name').eq('active', true).eq('can_vote', true),
         db.from('ballot_definitions').select('id, slug').eq('period_id', periodId).eq('hidden', false).is('archived_at', null),
-        db.from('ballots').select('voter_id, definition_id, status, profiles!ballots_voter_id_fkey(id, display_name)').in('definition_id', []),
     ]);
     if (profiles.error) throw profiles.error;
     if (definitions.error) throw definitions.error;
     const definitionRows = definitions.data ?? [];
     const ballotResult = definitionRows.length
         ? await db.from('ballots').select('voter_id, definition_id, status').in('definition_id', definitionRows.map((item) => item.id))
-        : ballots;
+        : { data: [], error: null };
     if (ballotResult.error) throw ballotResult.error;
     const statuses = new Map((ballotResult.data ?? []).map((item) => [`${item.voter_id}:${item.definition_id}`, item.status]));
     return (profiles.data ?? []).map((profile) => ({

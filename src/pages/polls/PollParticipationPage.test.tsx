@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ loadParticipation: vi.fn() }));
+const mocks = vi.hoisted(() => ({ loadParticipation: vi.fn(), loadPollPeriods: vi.fn() }));
 vi.mock("../../lib/pollAdminRepository", () => mocks);
 import PollParticipationPage from "./PollParticipationPage";
 
