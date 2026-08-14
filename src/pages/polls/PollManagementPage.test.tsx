@@ -8,7 +8,7 @@ describe("PollManagementPage", () => {
     it("shows state-specific controls", async () => {
         mocks.loadPollPeriods.mockResolvedValue([{ id: "p1", label: "October", seasonSlug: "2025-26", status: "draft", opensAt: null, closesAt: null, effectivelyOpen: false, snapshotCapturedAt: null }]);
         render(<PollManagementPage season="2025-26" />);
-        expect(await screen.findByRole("button", { name: "Open poll" })).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: "Create Poll" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Manage Polls" })).toBeInTheDocument();
     });
 });

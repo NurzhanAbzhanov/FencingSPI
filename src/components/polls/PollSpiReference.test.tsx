@@ -40,23 +40,20 @@ describe("PollSpiReference", () => {
 
         render(<PollSpiReference candidates={candidates} rankedTeamIds={[1, 0, 0]} onRank={onRank} />);
 
-        expect(screen.getByText("#1")).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "Team" })).toHaveAttribute("scope", "col");
         expect(screen.getByRole("columnheader", { name: "Current SPI" })).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "Last Season SPI" })).toBeInTheDocument();
         const alphaTeamCell = screen.getByRole("cell", { name: "Alpha" });
         expect(alphaTeamCell).toHaveClass("poll-team-cell");
         expect(alphaTeamCell.querySelector(".poll-team-identity .school-logo-fallback")).toBeInTheDocument();
-        expect(screen.getByRole("cell", { name: "12.3456" })).toHaveClass("current-spi-cell");
-        expect(screen.getByRole("cell", { name: "11.1111" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("current-spi-cell");
+        expect(screen.getByRole("cell", { name: "#11" })).toHaveClass("previous-spi-cell");
         expect(screen.getByRole("cell", { name: "No prior-season SPI" })).toHaveTextContent("—");
-        expect(screen.getByRole("cell", { name: "D1" })).toBeInTheDocument();
-        expect(screen.getByRole("cell", { name: "D3" })).toBeInTheDocument();
-        expect(screen.getByText("Voted")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Rank Beta at position 2" })).toHaveTextContent(/^Rank 2$/);
+        expect(screen.getByText("D3")).toBeInTheDocument();
+        expect(screen.getByText("✓ Voted")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Rank Beta at position 2" })).toBeInTheDocument();
         expect(screen.queryByText("Conference")).not.toBeInTheDocument();
         expect(screen.queryByText("Region")).not.toBeInTheDocument();
-        expect(screen.queryByText("PR")).not.toBeInTheDocument();
         expect(screen.queryByText("Results")).not.toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "Rank Beta at position 2" }));

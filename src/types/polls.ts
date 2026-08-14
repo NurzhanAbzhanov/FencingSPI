@@ -97,6 +97,7 @@ export type PollCategoryResults = {
 export type IndividualPollBallot = {
     ballotId: string;
     voterName: string;
+    voterEmail?: string;
     rankings: Array<{ rank: number; teamId: number; teamName: string }>;
 };
 

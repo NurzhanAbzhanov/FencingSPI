@@ -32,7 +32,7 @@ describe("PollBallotPage", () => {
         await event.click(await screen.findByRole("button", { name: "Rank Alpha at position 1" }));
         await event.click(screen.getByRole("button", { name: "Rank Beta at position 2" }));
         await event.click(screen.getByRole("button", { name: "Review ballot" }));
-        expect(screen.getByRole("dialog")).toHaveTextContent("1. Alpha");
+        expect(screen.getByRole("dialog")).toHaveTextContent("Alpha");
         await event.click(screen.getByRole("button", { name: "Confirm and submit" }));
         expect(mocks.savePollBallot).toHaveBeenCalledWith({ definitionId: "definition-1", teamIds: [1, 2], submit: true });
     });

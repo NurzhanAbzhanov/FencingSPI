@@ -35,17 +35,24 @@ export default function App() {
     const [matchSubmissions, setMatchSubmissions] = useState<MatchSubmission[]>(readMatchSubmissions);
 
     useEffect(() => {
-        const onHashChange = () => setRoute(getRouteFromHash());
+        const onHashChange = () => {
+            setRoute(getRouteFromHash());
+            window.scrollTo(0, 0);
+        };
         window.addEventListener("hashchange", onHashChange);
         return () => window.removeEventListener("hashchange", onHashChange);
     }, []);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [route.page]);
 
     useEffect(() => {
         let active = true;
         Promise.all([loadPrograms(season), loadMatches(season), loadStandings(season), loadPollResults(season)])
             .then(([loadedPrograms, loadedMatches, loadedStandings, loadedPollResults]) => {
                 if (!active) return;
-                setPrograms([...loadedPrograms, ...readLocalPrograms().filter((local) => !loadedPrograms.some((item) => item.id === local.id))]);
+                setPrograms([...loadedPrograms, ...readLocalPrograms().filter((local: Program) => !loadedPrograms.some((item: Program) => item.id === local.id))]);
                 setMatches(loadedMatches); setStandings(loadedStandings); setPollResults(loadedPollResults); setStatus("ready");
             }).catch(() => active && setStatus("error"));
         return () => { active = false; };
@@ -56,8 +63,23 @@ export default function App() {
         const client = supabase;
         client.auth.getUser().then(async ({ data }) => {
             if (!data.user) return;
-            const profile = await client.from("profiles").select("display_name, role, can_vote").eq("id", data.user.id).single();
-            if (profile.data) setUser({ id: data.user.id, name: profile.data.display_name, role: profile.data.role, canVote: profile.data.can_vote });
+            const email = data.user.email?.toLowerCase().trim();
+            const [profileRes, coachRes] = await Promise.all([
+                client.from("profiles").select("display_name, role, can_vote").eq("id", data.user.id).maybeSingle(),
+                email ? client.from("coaches").select("is_admin, can_vote").eq("email", email).maybeSingle() : Promise.resolve({ data: null }),
+            ]);
+
+            const profile = profileRes.data;
+            const coach = coachRes.data;
+            const isAdmin = profile?.role === "admin" || coach?.is_admin === true;
+            const canVote = coach?.can_vote !== false && profile?.can_vote !== false;
+
+            setUser({
+                id: data.user.id,
+                name: profile?.display_name || data.user.email || "Coach",
+                role: isAdmin ? "admin" : "coach",
+                canVote,
+            });
         });
     }, [user]);
 
@@ -65,7 +87,7 @@ export default function App() {
         if (user?.role !== "admin") return;
         let active = true;
         loadDatabaseMatchSubmissions(season)
-            .then((rows) => {
+            .then((rows: MatchSubmission[] | null) => {
                 if (!active || rows === null) return;
                 setMatchSubmissions(rows);
                 saveMatchSubmissions(rows);
@@ -105,8 +127,8 @@ export default function App() {
         route.page === "school-results" ? <SchoolResultsPage teamId={route.teamId} season={route.season} programs={programs} matches={matches} /> :
         route.page === "enter-results" && user?.role === "admin" ? <ResultsEntryPage submissions={matchSubmissions} teams={TEAMS} onSaveSubmission={handleMatchSave} onDeleteSubmission={handleMatchDelete} /> :
         route.page === "enter-results" ? <AccessDenied title="Admin access required" message="Only administrators can upload or edit match results." /> :
-        route.page === "set-password" ? <SetPasswordPage onCompleted={(signedIn) => { setUser(signedIn); window.location.hash = "#/polls"; }} /> :
-        route.page === "sign-in" ? <SignInPage onSignedIn={(signedIn) => { setUser(signedIn); window.location.hash = "#/polls"; }} /> :
+        route.page === "set-password" ? <SetPasswordPage onCompleted={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :
+        route.page === "sign-in" ? <SignInPage onSignedIn={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :
         route.page === "polls" && user ? <PollDashboardPage user={user} /> :
         route.page === "poll-ballot" && user?.canVote ? <PollBallotPage slug={route.slug} user={user} /> :
         route.page === "poll-ballot" ? <AccessDenied title="Voting access required" message="This account is not assigned a coaches poll ballot." /> :

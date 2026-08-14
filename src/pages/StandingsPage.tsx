@@ -24,7 +24,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
     const [division, setDivision] = useState<"All" | "1" | "3">("All");
     const [region, setRegion] = useState("All");
     const [conference, setConference] = useState("All");
-    const [sorts, setSorts] = useState<Sort[]>([{ key: "spi", direction: "desc" }]);
+    const [sort, setSort] = useState<Sort>({ key: "spi", direction: "desc" });
     const mode = selection === "Team" ? "Team" : "Squad";
 
     const rows: Array<{ standing: Standing; program: Program; rank: number }> = useMemo(() => {
@@ -38,12 +38,22 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 (region === "All" || program.region === region) &&
                 (conference === "All" || program.conference === conference)
             );
-        joined.sort((a, b) => compareRows(a, b, sorts));
+        joined.sort((a, b) => compareRows(a, b, sort));
         return joined.map((row, index) => ({ ...row, rank: index + 1 }));
-    }, [conference, division, gender, programs, region, selection, sorts, standings]);
+    }, [conference, division, gender, programs, region, selection, sort, standings]);
 
     const regions = unique(programs.map((program) => program.region));
     const conferences = unique(programs.map((program) => program.conference));
+
+    function handleSort(key: SortKey) {
+        setSort((current) => {
+            if (current.key === key) {
+                return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+            }
+            const initial = ["spi", "rank"].includes(key) ? "desc" : "asc";
+            return { key, direction: initial };
+        });
+    }
 
     function downloadSelection() {
         const csv = createStandingsCsv({
@@ -64,6 +74,8 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
         URL.revokeObjectURL(link.href);
     }
 
+    const unitLabel = selection === "Team" ? "teams" : "squads";
+
     return (
         <section className="page-section standings-page">
             <div className="page-title-row">
@@ -82,31 +94,44 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 <Filter label="Conference" value={conference} onChange={setConference} options={["All", ...conferences]} />
             </div>
 
-            <div className="data-summary"><strong>{rows.length}</strong> programs <span>Click another heading to add a secondary sort.</span></div>
+            <div className="data-summary"><strong>{rows.length}</strong> total {unitLabel}</div>
             <div className="platform-table-wrap">
-                <table className="platform-table standings-table">
+                <table className="platform-table standings-table" style={{ tableLayout: "fixed" }}>
                     <thead><tr>
-                        <SortHeader label="Rank" sortKey="rank" sorts={sorts} setSorts={setSorts} />
-                        <th aria-label="Logo" />
-                        <SortHeader label="School" sortKey="school" sorts={sorts} setSorts={setSorts} />
-                        <SortHeader label="Division" sortKey="division" sorts={sorts} setSorts={setSorts} />
-                        <SortHeader label="Conference" sortKey="conference" sorts={sorts} setSorts={setSorts} />
-                        <SortHeader label="Region" sortKey="region" sorts={sorts} setSorts={setSorts} />
-                        {POLL_MONTHS.map((month) => <th key={month}>{month.slice(0, 3)} poll</th>)}
-                        <SortHeader label="SPI" sortKey="spi" sorts={sorts} setSorts={setSorts} />
-                        <th>Results</th>
+                        <SortHeader label="Rank" sortKey="rank" sort={sort} onSort={handleSort} align="center" width="60px" />
+                        <SortHeader label="School" sortKey="school" sort={sort} onSort={handleSort} align="left" width="300px" />
+                        <SortHeader label="Division" sortKey="division" sort={sort} onSort={handleSort} align="center" width="85px" />
+                        <SortHeader label="Conference" sortKey="conference" sort={sort} onSort={handleSort} align="left" width="160px" />
+                        <SortHeader label="Region" sortKey="region" sort={sort} onSort={handleSort} align="left" width="160px" />
+                        {POLL_MONTHS.map((month) => <th key={month} style={{ width: "75px", textAlign: "center" }}>{month.slice(0, 3)} poll</th>)}
+                        <SortHeader label="SPI" sortKey="spi" sort={sort} onSort={handleSort} align="right" width="105px" />
+                        <th style={{ textAlign: "center", width: "85px" }}>Results</th>
                     </tr></thead>
                     <tbody>{rows.length ? rows.map(({ rank, standing, program }) => (
                         <tr key={`${standing.teamId}-${standing.weapon}`}>
-                            <td className="numeric rank-cell">{rank}</td><td><SchoolLogo program={program} size="small" /></td>
-                            <td className="school-cell">{program.name}</td>
-                            <td>{formatDivision(program.division)}</td>
-                            <td>{program.conference}</td><td>{program.region}</td>
-                            {POLL_MONTHS.map((month) => <td className="numeric muted" key={month}>{pollResults.find((result) => result.teamId === program.id && result.month === month && result.gender === standing.gender && result.weapon === standing.weapon && result.scope === (division === "3" ? "DIII" : "Overall"))?.rank ?? "—"}</td>)}
-                            <td className="numeric spi-cell">{formatNumber(standing.spi)}</td>
-                            <td><a className="icon-text-link" href={`#/schools/${program.id}/results?season=${season}`}><List size={16} /> View</a></td>
+                            <td className="rank-cell text-center" style={{ textAlign: "center" }}>{rank}</td>
+                            <td className="school-cell" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                                    <SchoolLogo program={program} size="small" />
+                                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{program.name}</span>
+                                </div>
+                            </td>
+                            <td className="text-center" style={{ textAlign: "center" }}>{formatDivision(program.division)}</td>
+                            <td style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{program.conference}</td>
+                            <td style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{program.region}</td>
+                            {POLL_MONTHS.map((month) => (
+                                <td className="numeric muted text-center" style={{ textAlign: "center" }} key={month}>
+                                    {pollResults.find((result) => result.teamId === program.id && result.month === month && result.gender === standing.gender && result.weapon === standing.weapon && result.scope === (division === "3" ? "DIII" : "Overall"))?.rank ?? "—"}
+                                </td>
+                            ))}
+                            <td className="numeric spi-cell" style={{ textAlign: "right" }}>{formatNumber(standing.spi)}</td>
+                            <td style={{ textAlign: "center" }}>
+                                <a className="icon-text-link" href={`#/schools/${program.id}/results?season=${season}`}>
+                                    <List size={15} /> View
+                                </a>
+                            </td>
                         </tr>
-                    )) : <tr><td className="empty-table" colSpan={12}>No standings are loaded for this selection.</td></tr>}</tbody>
+                    )) : <tr><td className="empty-table" colSpan={11}>No standings are loaded for this selection.</td></tr>}</tbody>
                 </table>
             </div>
         </section>
@@ -120,27 +145,27 @@ function Filter({ label, value, onChange, options }: { label: string; value: str
     })}</select></label>;
 }
 
-function SortHeader({ label, sortKey, sorts, setSorts }: { label: string; sortKey: SortKey; sorts: Sort[]; setSorts: React.Dispatch<React.SetStateAction<Sort[]>> }) {
-    const index = sorts.findIndex((sort) => sort.key === sortKey);
-    return <th><button className="table-sort" type="button" onClick={() => setSorts((current) => nextSort(current, sortKey))}>
-        {label}{index >= 0 && <span>{index + 1}{sorts[index].direction === "asc" ? "▲" : "▼"}</span>}
-    </button></th>;
+function SortHeader({ label, sortKey, sort, onSort, align = "left", width }: { label: string; sortKey: SortKey; sort: Sort; onSort: (key: SortKey) => void; align?: "left" | "center" | "right"; width?: string }) {
+    const isActive = sort.key === sortKey;
+    const justify = align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
+    return <th style={{ width, textAlign: align }}>
+        <button 
+            className="table-sort" 
+            style={{ justifyContent: justify }}
+            type="button" 
+            onClick={() => onSort(sortKey)}
+        >
+            {label}
+            {isActive && <span className="sort-arrow">{sort.direction === "asc" ? "▲" : "▼"}</span>}
+        </button>
+    </th>;
 }
 
-function nextSort(sorts: Sort[], key: SortKey): Sort[] {
-    const current = sorts.find((sort) => sort.key === key);
-    const initial = ["spi", "rank"].includes(key) ? "desc" : "asc";
-    if (!current) return [{ key, direction: initial }, ...sorts];
-    if (current.direction === initial) return [{ key, direction: initial === "asc" ? "desc" : "asc" }, ...sorts.filter((sort) => sort.key !== key)];
-    return sorts.filter((sort) => sort.key !== key);
-}
-
-function compareRows(a: { standing: Standing; program: Program }, b: { standing: Standing; program: Program }, sorts: Sort[]) {
-    for (const sort of sorts) {
-        const av = valueForSort(a, sort.key); const bv = valueForSort(b, sort.key);
-        const comparison = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
-        if (comparison) return sort.direction === "asc" ? comparison : -comparison;
-    }
+function compareRows(a: { standing: Standing; program: Program }, b: { standing: Standing; program: Program }, sort: Sort) {
+    const av = valueForSort(a, sort.key); 
+    const bv = valueForSort(b, sort.key);
+    const comparison = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
+    if (comparison !== 0) return sort.direction === "asc" ? comparison : -comparison;
     return a.program.name.localeCompare(b.program.name);
 }
 

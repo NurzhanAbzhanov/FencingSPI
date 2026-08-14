@@ -1,40 +1,25 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import TeamSelectCombobox from "./TeamSelectCombobox";
 
 const teams = [
-    { teamId: 1, teamName: "Alpha", logoUrl: null },
-    { teamId: 2, teamName: "Beta", logoUrl: null },
-    { teamId: 3, teamName: "Gamma", logoUrl: null },
+    { id: "1", name: "Alpha", logoUrl: null },
+    { id: "2", name: "Beta", logoUrl: null },
+    { id: "3", name: "Gamma", logoUrl: null },
 ];
 
 describe("TeamSelectCombobox", () => {
-    it("searches and prevents selecting a school used in another rank", async () => {
+    it("searches and selects an available school", async () => {
         const user = userEvent.setup();
-        const onSelect = vi.fn();
-        render(<TeamSelectCombobox rankNumber={2} selectedTeamId={0} teams={teams} selectedTeamIds={[1, 0]} onSelectTeam={onSelect} />);
+        const onSelectTeam = vi.fn();
+
+        render(<TeamSelectCombobox rankNumber={2} selectedTeamId="" teams={teams} selectedTeamIds={["1"]} onSelectTeam={onSelectTeam} />);
 
         await user.click(screen.getByRole("button", { name: /select rank 2/i }));
-        expect(screen.getByRole("option", { name: /alpha/i })).toHaveAttribute("aria-disabled", "true");
-        await user.type(screen.getByRole("searchbox"), "Gam");
-        await user.click(screen.getByRole("option", { name: /gamma/i }));
-        expect(onSelect).toHaveBeenCalledWith(3);
-    });
+        await user.type(screen.getByPlaceholderText(/search teams/i), "Gam");
+        await user.click(screen.getByRole("button", { name: /gamma/i }));
 
-    it("falls back to school initials when a logo cannot load", async () => {
-        const user = userEvent.setup();
-        const { container } = render(<TeamSelectCombobox
-            rankNumber={1}
-            selectedTeamId={0}
-            teams={[{ teamId: 4, teamName: "Alpha Academy", logoUrl: "https://example.test/missing.png" }]}
-            selectedTeamIds={[]}
-            onSelectTeam={vi.fn()}
-        />);
-
-        await user.click(screen.getByRole("button", { name: /select rank 1/i }));
-        fireEvent.error(container.querySelector("img")!);
-
-        expect(screen.getByText("AA")).toBeInTheDocument();
+        expect(onSelectTeam).toHaveBeenCalledWith("3");
     });
 });

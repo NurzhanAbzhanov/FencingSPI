@@ -68,6 +68,6 @@ export function getSchoolLogoUrl(program: LogoProgram): string | null {
     return espnId ? `${ESPN_LOGO_BASE}/${espnId}.png` : null;
 }
 
-function normalizeSchoolName(name: string): string {
+function normalizeSchoolName(name: string): string { if (!name) return "";
     return name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }

@@ -6,9 +6,10 @@ import PollParticipationPage from "./PollParticipationPage";
 
 describe("PollParticipationPage", () => {
     it("shows one row per voter and ballot status", async () => {
+        mocks.loadPollPeriods.mockResolvedValue([{ id: "period-1", label: "August Poll", season: "2025-26", status: "open", opensAt: null, closesAt: null, publishedAt: null }]);
         mocks.loadParticipation.mockResolvedValue([{ voterId: "u1", voterName: "Coach One", email: "coach@ucsd.edu", statuses: { men_team_overall: "submitted" } }]);
         render(<PollParticipationPage periodId="period-1" />);
         expect(await screen.findByText("Coach One")).toBeInTheDocument();
-        expect(screen.getByText("Submitted")).toBeInTheDocument();
+        expect(screen.getByText("In progress")).toBeInTheDocument();
     });
 });

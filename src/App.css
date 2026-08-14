@@ -2,11 +2,11 @@
     width: 100%;
     max-width: 1800px;
     margin: 0 auto;
-    padding: 32px 32px 48px;
+    padding: 14px 24px 48px;
 }
 
 .page-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
-.page-title-row h1, .school-heading h1, .auth-panel h1 { margin: 0; color: #101827; font-size: 2rem; line-height: 1.15; letter-spacing: 0; }
+.page-title-row h1, .school-heading h1, .auth-panel h1, .admin-section h1, .empty-state h1 { margin: 0; color: #101827; font-size: 2rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
 .eyebrow { margin: 0 0 5px; color: #557080; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0; }
 .button { min-height: 38px; padding: 0 13px; border: 1px solid #b9c1ca; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; font-weight: 700; cursor: pointer; }
 .button.primary { border-color: #176b93; background: #176b93; color: #fff; }
@@ -31,7 +31,7 @@
 .spi-cell { color: #0e607b !important; font-weight: 800; }
 .muted { color: #8a939e !important; }
 .table-sort { width: 100%; height: 44px; padding: 0; border: 0; display: flex; align-items: center; gap: 6px; background: transparent; color: inherit; font: inherit; font-weight: inherit; text-transform: inherit; cursor: pointer; }
-.table-sort span { color: #176b93; font-size: .68rem; }
+.table-sort .sort-arrow { color: #176b93; font-size: .68rem; }
 .empty-table { height: 180px !important; color: #727c88 !important; text-align: center !important; }
 .school-logo, .school-logo-fallback { width: 42px; height: 42px; flex: 0 0 auto; object-fit: contain; }
 .school-logo.small, .school-logo-fallback.small { width: 30px; height: 30px; }

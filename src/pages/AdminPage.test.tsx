@@ -1,5 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+vi.mock("../lib/pollAdminRepository", () => ({
+    loadCommitteeAccess: vi.fn().mockResolvedValue([]),
+    saveCommitteeAccess: vi.fn(),
+}));
+
 import AdminPage from "./AdminPage";
 
 vi.mock("../lib/adminRepository", () => ({
@@ -21,6 +26,6 @@ describe("AdminPage", () => {
         />);
 
         expect(screen.getByRole("region", { name: "Power Rating Overrides" })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /poll management/i })).toHaveAttribute("href", "#/admin/polls");
+        expect(screen.getByRole("heading", { name: /add a school program/i })).toBeInTheDocument();
     });
 });

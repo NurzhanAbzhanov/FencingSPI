@@ -168,7 +168,8 @@ describe("pollRepository", () => {
 
     it("calculates tied aggregate results for authenticated users after close", async () => {
         mocks.from
-            .mockReturnValueOnce(query([]))
+            .mockReturnValueOnce(query([]))  // published_poll_results (loadResults short-circuit)
+            .mockReturnValueOnce(query([{ id: "period-1", status: "open", opens_at: new Date().toISOString() }]))  // poll_periods (period resolution)
             .mockReturnValueOnce(query([{ id: "definition-1", slug: "men_team_overall", rank_limit: 3 }]))
             .mockReturnValueOnce(query([
                 {

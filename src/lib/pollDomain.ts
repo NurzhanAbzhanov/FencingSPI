@@ -38,14 +38,42 @@ const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
 
 export const POLL_CATEGORY_SPECS: PollCategorySpec[] = CATEGORY_DEFINITIONS;
 
+export function normalizeCategorySlug(rawSlug: string): PollCategorySlug {
+    let s = rawSlug;
+    if (s.endsWith('_epee') || s.endsWith('_foil') || s.endsWith('_sabre')) {
+        s = `${s}_overall`;
+    }
+    return s as PollCategorySlug;
+}
+
 export function getPollCategorySpec(slug: string): PollCategorySpec {
-    const category = POLL_CATEGORY_SPECS.find((item) => item.slug === slug);
+    const normalized = normalizeCategorySlug(slug);
+    const category = POLL_CATEGORY_SPECS.find((item) => item.slug === normalized || item.slug === slug);
 
     if (!category) {
         throw new Error(`Unknown poll category: ${slug}`);
     }
 
     return category;
+}
+
+export function deriveLockedD3TeamIds(
+    overallRankedTeamIds: number[],
+    availableD3TeamIds: Set<number>,
+    limit = 8,
+): number[] {
+    const locked: number[] = [];
+
+    for (const teamId of overallRankedTeamIds) {
+        if (availableD3TeamIds.has(teamId)) {
+            locked.push(teamId);
+            if (locked.length === limit) {
+                break;
+            }
+        }
+    }
+
+    return locked;
 }
 
 export function computePollStandings(
@@ -74,63 +102,61 @@ export function computePollStandings(
             if (index === 0) {
                 standing.firstPlaceVotes += 1;
             }
+
             standings.set(teamId, standing);
         });
     }
 
-    const ordered = [...standings.values()]
-        .sort((left, right) => (
-            right.points - left.points
-            || canonicalSchoolName(left.teamName).localeCompare(canonicalSchoolName(right.teamName))
-            || left.teamId - right.teamId
-        ));
-
-    let previousPoints: number | null = null;
-    let currentRank = 0;
-    return ordered.map((standing, index) => {
-        if (standing.points !== previousPoints) currentRank = index + 1;
-        previousPoints = standing.points;
-        return { ...standing, rank: currentRank };
+    const sorted = [...standings.values()].sort((a, b) => {
+        return (
+            b.points - a.points ||
+            a.teamName.localeCompare(b.teamName)
+        );
     });
-}
 
-export function deriveLockedD3TeamIds(
-    overallTeamIds: number[],
-    d3TeamIds: Set<number>,
-    rankLimit: number,
-): number[] {
-    return overallTeamIds.filter((teamId) => d3TeamIds.has(teamId)).slice(0, rankLimit);
+    let currentRank = 1;
+
+    return sorted.map((standing, index) => {
+        if (index > 0) {
+            const previous = sorted[index - 1];
+            const isTied = previous.points === standing.points;
+
+            if (!isTied) {
+                currentRank = index + 1;
+            }
+        }
+
+        return {
+            ...standing,
+            rank: currentRank,
+        };
+    });
 }
 
 export function validateBallotTeamIds(
     teamIds: number[],
     rankLimit: number,
-    eligibleTeamIds: Set<number>,
-    lockedPrefix: number[] = [],
+    eligibleTeamIds?: Set<number>,
+    lockedPrefix?: number[],
 ): string | null {
     if (teamIds.length !== rankLimit) {
-        return `Ballot must contain exactly ${rankLimit} teams.`;
+        return `Ballot must rank exactly ${rankLimit} teams.`;
     }
-
-    if (teamIds.some((teamId) => teamId === 0)) {
-        return 'Ballot rankings cannot contain zero team IDs.';
+    if (teamIds.some((id) => !id || id === 0)) {
+        return 'Ballot cannot contain zero or empty rankings.';
     }
-
     if (new Set(teamIds).size !== teamIds.length) {
         return 'Ballot rankings must be unique.';
     }
-
-    if (teamIds.some((teamId) => !eligibleTeamIds.has(teamId))) {
-        return 'Ballot rankings must contain only eligible teams.';
+    if (eligibleTeamIds && teamIds.some((id) => !eligibleTeamIds.has(id))) {
+        return 'Ballot contains non-eligible teams.';
     }
-
-    if (lockedPrefix.some((teamId, index) => teamIds[index] !== teamId)) {
-        return 'Ballot rankings must preserve the locked prefix.';
+    if (lockedPrefix) {
+        for (let i = 0; i < lockedPrefix.length; i++) {
+            if (teamIds[i] !== lockedPrefix[i]) {
+                return 'Ballot must keep locked prefix teams.';
+            }
+        }
     }
-
     return null;
-}
-
-function canonicalSchoolName(teamName: string): string {
-    return teamName.trim().toLocaleLowerCase('en-US');
 }
