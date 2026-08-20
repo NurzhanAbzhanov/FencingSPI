@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../lib/pollRepository", () => mocks);
+vi.mock("../../lib/supabase", () => ({ supabase: null }));
 import PollResultsPage from "./PollResultsPage";
 
 describe("PollResultsPage", () => {

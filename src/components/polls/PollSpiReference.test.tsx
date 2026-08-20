@@ -41,13 +41,15 @@ describe("PollSpiReference", () => {
         render(<PollSpiReference candidates={candidates} rankedTeamIds={[1, 0, 0]} onRank={onRank} />);
 
         expect(screen.getByRole("columnheader", { name: "Team" })).toHaveAttribute("scope", "col");
+        expect(screen.getByRole("columnheader", { name: "SPI Rank" })).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "Current SPI" })).toBeInTheDocument();
         expect(screen.getByRole("columnheader", { name: "Last Season SPI" })).toBeInTheDocument();
         const alphaTeamCell = screen.getByRole("cell", { name: "Alpha" });
         expect(alphaTeamCell).toHaveClass("poll-team-cell");
         expect(alphaTeamCell.querySelector(".poll-team-identity .school-logo-fallback")).toBeInTheDocument();
-        expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("current-spi-cell");
-        expect(screen.getByRole("cell", { name: "#11" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("spi-rank-cell");
+        expect(screen.getByRole("cell", { name: "12.3456" })).toHaveClass("current-spi-cell");
+        expect(screen.getByRole("cell", { name: "11.1111" })).toHaveClass("previous-spi-cell");
         expect(screen.getByRole("cell", { name: "No prior-season SPI" })).toHaveTextContent("—");
         expect(screen.getByText("D3")).toBeInTheDocument();
         expect(screen.getByText("✓ Voted")).toBeInTheDocument();

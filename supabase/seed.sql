@@ -322,6 +322,8 @@ join public.schools s on s.id = p.school_id
 where ps.program_id = p.id
   and s.conference <> 'Unassigned';
 
+select public.sync_program_conference_memberships('2025-26');
+
 insert into public.matches (source_id, season_id, fenced_on, gender, left_program_id, right_program_id, left_sabre, left_foil, left_epee, right_sabre, right_foil, right_epee, host)
 select seed.source_id, s.id, seed.fenced_on::date, seed.gender::public.fencing_gender, lp.id, rp.id, seed.left_sabre, seed.left_foil, seed.left_epee, seed.right_sabre, seed.right_foil, seed.right_epee, seed.host
 from (values

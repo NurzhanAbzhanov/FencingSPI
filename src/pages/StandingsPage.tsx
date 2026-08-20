@@ -36,14 +36,14 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 standing.gender === gender &&
                 (division === "All" || program.division === division) &&
                 (region === "All" || program.region === region) &&
-                (conference === "All" || program.conference === conference)
+                (conference === "All" || program.conferences.includes(conference))
             );
         joined.sort((a, b) => compareRows(a, b, sort));
         return joined.map((row, index) => ({ ...row, rank: index + 1 }));
     }, [conference, division, gender, programs, region, selection, sort, standings]);
 
     const regions = unique(programs.map((program) => program.region));
-    const conferences = unique(programs.map((program) => program.conference));
+    const conferences = unique(programs.flatMap((program) => program.conferences));
 
     function handleSort(key: SortKey) {
         setSort((current) => {
@@ -62,7 +62,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 rank,
                 school: program.name,
                 division: program.division,
-                conference: program.conference,
+                conference: program.conferences.join(", "),
                 region: program.region,
                 spi: standing.spi,
             })),
@@ -117,7 +117,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                                 </div>
                             </td>
                             <td className="text-center" style={{ textAlign: "center" }}>{formatDivision(program.division)}</td>
-                            <td style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{program.conference}</td>
+                            <td style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{program.conferences.join(", ")}</td>
                             <td style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{program.region}</td>
                             {POLL_MONTHS.map((month) => (
                                 <td className="numeric muted text-center" style={{ textAlign: "center" }} key={month}>
@@ -172,6 +172,7 @@ function compareRows(a: { standing: Standing; program: Program }, b: { standing:
 function valueForSort(row: { standing: Standing; program: Program }, key: SortKey): string | number {
     if (key === "spi" || key === "rank") return row.standing.spi;
     if (key === "school") return row.program.name;
+    if (key === "conference") return row.program.conferences.join(", ");
     return row.program[key];
 }
 

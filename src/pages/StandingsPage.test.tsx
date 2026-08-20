@@ -10,6 +10,7 @@ const programs: Program[] = [{
     gender: "Men",
     division: "1",
     conference: "Test Conference",
+    conferences: ["Test Conference", "Second Conference"],
     region: "Test Region",
     logoUrl: null,
 }];
@@ -59,6 +60,24 @@ describe("StandingsPage", () => {
 
         expect(screen.getByRole("heading", { name: "Squad SPI" })).toBeInTheDocument();
         expect(screen.getByLabelText("Team/Squad")).toHaveValue("Epee");
+    });
+
+    it("filters a program by any of its conference memberships", async () => {
+        const user = userEvent.setup();
+        render(<StandingsPage
+            programs={programs}
+            standings={standings}
+            pollResults={[]}
+            season="2025-26"
+            onSeasonChange={() => undefined}
+        />);
+
+        const conferenceFilter = screen.getByLabelText("Conference");
+        expect(within(conferenceFilter).getByRole("option", { name: "Second Conference" })).toBeInTheDocument();
+
+        await user.selectOptions(conferenceFilter, "Second Conference");
+
+        expect(screen.getByRole("cell", { name: "Test University" })).toBeInTheDocument();
     });
 
     it("updates the selection when legacy hash navigation changes the initial weapon", () => {

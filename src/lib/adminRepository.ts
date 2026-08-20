@@ -31,6 +31,8 @@ export async function createProgram(program: Program) {
     if (school.error) throw school.error;
     const createdProgram = await supabase.from("programs").insert({ school_id: school.data.id, legacy_team_id: program.id, gender: program.gender }).select("id").single();
     if (createdProgram.error) throw createdProgram.error;
-    const programSeason = await supabase.from("program_seasons").insert({ season_id: season.data.id, program_id: createdProgram.data.id, division: Number(program.division), conference: program.conference, region: program.region });
+    const programSeason = await supabase.from("program_seasons").insert({ season_id: season.data.id, program_id: createdProgram.data.id, division: Number(program.division), conference: program.conference, region: program.region }).select("id").single();
     if (programSeason.error) throw programSeason.error;
+    const memberships = await supabase.from("program_season_conferences").insert(program.conferences.map((conference) => ({ program_season_id: programSeason.data.id, conference })));
+    if (memberships.error) throw memberships.error;
 }

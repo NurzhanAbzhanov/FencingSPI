@@ -12,6 +12,7 @@ export type Program = {
     gender: Gender;
     division: string;
     conference: string;
+    conferences: string[];
     region: string;
     logoUrl: string | null;
 };

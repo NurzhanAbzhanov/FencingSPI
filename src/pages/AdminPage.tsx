@@ -19,7 +19,8 @@ export default function AdminPage({ user, programs, season, onProgramAdded }: { 
     async function addSchool(event: React.FormEvent) {
         event.preventDefault();
         const nextId = Math.max(0, ...programs.map((program) => program.id)) + 1;
-        const program: Program = { id: nextId, name: name.trim(), gender, division, region: region.trim() || "Unassigned", conference: conference.trim() || "Unassigned", logoUrl: null };
+        const primaryConference = conference.trim() || "Unassigned";
+        const program: Program = { id: nextId, name: name.trim(), gender, division, region: region.trim() || "Unassigned", conference: primaryConference, conferences: [primaryConference], logoUrl: null };
         try { 
             await createProgram(program); 
             onProgramAdded(program); 

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ loadPollPeriods: vi.fn(), openPoll: vi.fn(), closePoll: vi.fn(), publishPoll: vi.fn(), schedulePoll: vi.fn() }));
 vi.mock("../../lib/pollAdminRepository", () => mocks);
+vi.mock("../../lib/supabase", () => ({ supabase: null }));
 import PollManagementPage from "./PollManagementPage";
 
 describe("PollManagementPage", () => {

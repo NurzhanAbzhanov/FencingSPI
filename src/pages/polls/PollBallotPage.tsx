@@ -7,14 +7,6 @@ import type { PlatformUser } from '../../types/platform'
 import TeamLogo from '../../components/polls/TeamLogo'
 import TeamSelectCombobox from '../../components/polls/TeamSelectCombobox'
 
-function getPrevSeasonLabel(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
-  const prevStartYear = month >= 7 ? year - 1 : year - 2
-  return `SPI ${prevStartYear}/${prevStartYear + 1}`
-}
-
 export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug; user: PlatformUser }) {
   const [view, setView] = useState<PollBallotView | null>(null)
   const [slots, setSlots] = useState<string[]>([])
@@ -27,7 +19,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
   type SortKey = 'team' | 'currentSpi' | 'lastSeasonSpi' | 'powerRating'
   type SortDirection = 'asc' | 'desc'
   const [sortKey, setSortKey] = useState<SortKey>('currentSpi')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   useEffect(() => {
     loadPollBallot(slug, user.id)
@@ -76,7 +68,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortKey(key)
-      setSortDirection(key === 'powerRating' ? 'desc' : 'asc')
+      setSortDirection(key === 'currentSpi' || key === 'powerRating' ? 'desc' : 'asc')
     }
   }
 
@@ -186,7 +178,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
   const sortedCandidates = [...teams].sort((a, b) => {
     let comp = 0
     if (sortKey === 'team') comp = a.name.localeCompare(b.name)
-    else if (sortKey === 'currentSpi') comp = a.spiRank - b.spiRank
+    else if (sortKey === 'currentSpi') comp = a.currentSpi - b.currentSpi
     else if (sortKey === 'lastSeasonSpi') comp = (a.previousSpi ?? 999) - (b.previousSpi ?? 999)
     else if (sortKey === 'powerRating') comp = (a.powerRating ?? 0) - (b.powerRating ?? 0)
     return sortDirection === 'asc' ? comp : -comp
@@ -318,6 +310,13 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                     <tr>
                       <th
                         scope="col"
+                        aria-label="SPI Rank"
+                        className="py-2 px-1 font-semibold text-[11px] text-gray-400 uppercase tracking-wider text-center whitespace-nowrap w-12"
+                      >
+                        SPI<br />Rank
+                      </th>
+                      <th
+                        scope="col"
                         onClick={() => handleSort('team')}
                         className="py-2 px-1.5 font-semibold text-[11px] text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none text-left"
                       >
@@ -346,7 +345,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                         className="py-2 px-1.5 font-semibold text-[11px] text-gray-400 uppercase tracking-wider text-center whitespace-nowrap cursor-pointer hover:text-gray-700 select-none"
                       >
                         <div className="flex items-center justify-center gap-1">
-                          <span>{getPrevSeasonLabel().toUpperCase()}</span>
+                          <span>LAST SEASON SPI</span>
                           <span className="text-[10px]">
                             {sortKey === 'lastSeasonSpi' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                           </span>
@@ -376,6 +375,9 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
 
                       return (
                         <tr key={item.id} className="hover:bg-gray-50/75 transition-colors">
+                          <td className="py-1.5 px-1 text-xs font-medium text-gray-400 tabular-nums text-center whitespace-nowrap spi-rank-cell">
+                            #{item.spiRank}
+                          </td>
                           <td className="py-1.5 px-1.5 text-xs font-medium text-gray-900">
                             <div className="flex items-center gap-2">
                               <TeamLogo name={item.name} logoUrl={item.logoUrl} size={18} />
@@ -387,11 +389,11 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                               )}
                             </div>
                           </td>
-                          <td className="py-1.5 px-1.5 text-xs font-semibold text-gray-600 tabular-nums text-center whitespace-nowrap">
-                            #{item.spiRank}
+                          <td className="py-1.5 px-1.5 text-xs font-semibold text-sky-700 tabular-nums text-center whitespace-nowrap current-spi-cell">
+                            {item.currentSpi.toFixed(4)}
                           </td>
-                          <td className="py-1.5 px-1.5 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap">
-                            {item.previousSpi != null ? `#${Math.round(item.previousSpi)}` : '—'}
+                          <td className="py-1.5 px-1.5 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap previous-spi-cell">
+                            {item.previousSpi != null ? item.previousSpi.toFixed(4) : '—'}
                           </td>
                           <td className="py-1.5 px-1.5 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap">
                             {item.powerRating != null ? item.powerRating.toFixed(1) : '—'}

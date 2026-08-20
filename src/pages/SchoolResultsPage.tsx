@@ -30,7 +30,7 @@ export default function SchoolResultsPage({ teamId, season, programs, matches }:
         <a className="back-link" href="#/spi"><ArrowLeft size={16} /> SPI standings</a>
         <div className="school-heading">
             <SchoolLogo program={currentProgram} />
-            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {formatDivision(currentProgram.division)} · {currentProgram.region} · {currentProgram.conference}</p></div>
+            <div><p className="eyebrow">{season} match results</p><h1>{currentProgram.name}</h1><p>{currentProgram.gender} · {formatDivision(currentProgram.division)} · {currentProgram.region} · {currentProgram.conferences.join(", ")}</p></div>
             <button className="button secondary" onClick={download} disabled={!rows.length}><Download size={17} /> Download matches</button>
         </div>
         <div className="platform-table-wrap"><table className="platform-table matches-table"><thead><tr>

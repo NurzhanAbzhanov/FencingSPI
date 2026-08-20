@@ -29,6 +29,11 @@ describe("PollBallotPage", () => {
         const event = userEvent.setup();
         render(<PollBallotPage slug="men_squad_epee_overall" user={user} />);
 
+        expect(await screen.findByRole("columnheader", { name: "SPI Rank" })).toBeInTheDocument();
+        expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("spi-rank-cell");
+        expect(screen.getByRole("cell", { name: "100.0000" })).toHaveClass("current-spi-cell");
+        expect(screen.getByRole("cell", { name: "95.0000" })).toHaveClass("previous-spi-cell");
+
         await event.click(await screen.findByRole("button", { name: "Rank Alpha at position 1" }));
         await event.click(screen.getByRole("button", { name: "Rank Beta at position 2" }));
         await event.click(screen.getByRole("button", { name: "Review ballot" }));

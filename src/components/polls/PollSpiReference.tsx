@@ -2,14 +2,6 @@ import { useMemo, useState } from 'react'
 import type { PollCandidate } from '../../types/polls'
 import SchoolLogo from '../SchoolLogo'
 
-function getPrevSeasonLabel(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
-  const prevStartYear = month >= 7 ? year - 1 : year - 2
-  return `SPI ${prevStartYear}/${prevStartYear + 1}`
-}
-
 type SortKey = 'team' | 'currentSpi' | 'lastSeasonSpi' | 'powerRating'
 type SortDirection = 'asc' | 'desc'
 
@@ -23,7 +15,7 @@ export default function PollSpiReference({
   rankedTeamIds: number[]
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('currentSpi')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const nextRank = rankedTeamIds.findIndex((teamId) => teamId === 0) + 1
 
@@ -32,7 +24,7 @@ export default function PollSpiReference({
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortKey(key)
-      setSortDirection(key === 'powerRating' ? 'desc' : 'asc')
+      setSortDirection(key === 'currentSpi' || key === 'powerRating' ? 'desc' : 'asc')
     }
   }
 
@@ -40,7 +32,7 @@ export default function PollSpiReference({
     return [...candidates].sort((a, b) => {
       let comp = 0
       if (sortKey === 'team') comp = a.teamName.localeCompare(b.teamName)
-      else if (sortKey === 'currentSpi') comp = a.spiRank - b.spiRank
+      else if (sortKey === 'currentSpi') comp = a.currentSpi - b.currentSpi
       else if (sortKey === 'lastSeasonSpi')
         comp = (a.previousSpi ?? 999) - (b.previousSpi ?? 999)
       else if (sortKey === 'powerRating')
@@ -60,6 +52,13 @@ export default function PollSpiReference({
         <table className="w-full text-left text-xs border-collapse platform-table poll-reference-table">
           <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
             <tr>
+              <th
+                scope="col"
+                aria-label="SPI Rank"
+                className="px-2 py-2 font-medium text-gray-500 uppercase tracking-wider text-center whitespace-nowrap w-14"
+              >
+                SPI<br />Rank
+              </th>
               <th
                 scope="col"
                 aria-label="Team"
@@ -93,7 +92,7 @@ export default function PollSpiReference({
                 className="px-2 py-2 font-medium text-gray-500 uppercase tracking-wider text-center whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors select-none"
               >
                 <div className="flex items-center justify-center gap-1">
-                  <span>{getPrevSeasonLabel()}</span>
+                  <span>Last Season SPI</span>
                   <span className="text-[10px] text-gray-400">
                     {sortKey === 'lastSeasonSpi' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                   </span>
@@ -126,12 +125,16 @@ export default function PollSpiReference({
                 gender: 'Men' as const,
                 division: String(candidate.division),
                 conference: candidate.conference,
+                conferences: candidate.conference ? [candidate.conference] : [],
                 region: candidate.region,
                 logoUrl: candidate.logoUrl ?? null,
               }
 
               return (
                 <tr key={candidate.teamId} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-2 py-2 text-xs font-medium text-gray-400 tabular-nums text-center whitespace-nowrap spi-rank-cell numeric">
+                    #{candidate.spiRank}
+                  </td>
                   <td className="px-3 py-2 text-xs font-medium text-gray-900 poll-team-cell">
                     <div className="flex items-center gap-2.5 min-w-0 poll-team-identity">
                       <SchoolLogo program={program} size="small" />
@@ -143,14 +146,14 @@ export default function PollSpiReference({
                       )}
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-xs font-semibold text-gray-600 tabular-nums text-center whitespace-nowrap current-spi-cell numeric">
-                    #{candidate.spiRank}
+                  <td className="px-2 py-2 text-xs font-semibold text-sky-700 tabular-nums text-center whitespace-nowrap current-spi-cell numeric">
+                    {candidate.currentSpi.toFixed(4)}
                   </td>
                   <td
                     className="px-2 py-2 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap previous-spi-cell numeric"
                     aria-label={candidate.previousSpi == null ? 'No prior-season SPI' : undefined}
                   >
-                    {candidate.previousSpi != null ? `#${Math.round(candidate.previousSpi)}` : '—'}
+                    {candidate.previousSpi != null ? candidate.previousSpi.toFixed(4) : '—'}
                   </td>
                   <td className="px-2 py-2 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap numeric">
                     {candidate.powerRating != null ? candidate.powerRating.toFixed(1) : '—'}

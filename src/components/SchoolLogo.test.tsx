@@ -8,6 +8,7 @@ const program = {
     gender: "Men" as const,
     division: "1",
     conference: "ACC",
+    conferences: ["ACC"],
     region: "Midwest",
     logoUrl: null,
 };

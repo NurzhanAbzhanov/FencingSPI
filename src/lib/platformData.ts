@@ -15,9 +15,9 @@ export async function loadPrograms(season: string): Promise<Program[]> {
     if (!supabase) return [];
     if (season !== "2025-26") return [];
 
-    const result = await supabase.from("programs").select("legacy_team_id, gender, schools!inner(name, logo_url, conference, region), program_seasons(division, conference, region, seasons!inner(slug))");
+    const result = await supabase.from("programs").select("legacy_team_id, gender, schools!inner(name, logo_url, conference, region), program_seasons(division, conference, region, seasons!inner(slug), program_season_conferences(conference))");
     if (result.error || !result.data) return [];
-    type DatabaseProgram = { legacy_team_id: number; gender: Gender; schools: { name: string; logo_url: string | null; conference: string; region: string } | Array<{ name: string; logo_url: string | null; conference: string; region: string }>; program_seasons: Array<{ division: number; conference: string; region: string; seasons: { slug: string } | Array<{ slug: string }> }> };
+    type DatabaseProgram = { legacy_team_id: number; gender: Gender; schools: { name: string; logo_url: string | null; conference: string; region: string } | Array<{ name: string; logo_url: string | null; conference: string; region: string }>; program_seasons: Array<{ division: number; conference: string; region: string; seasons: { slug: string } | Array<{ slug: string }>; program_season_conferences: Array<{ conference: string }> }> };
     return (result.data as unknown as DatabaseProgram[]).flatMap((row) => {
         const school = Array.isArray(row.schools) ? row.schools[0] : row.schools;
         const programSeason = row.program_seasons.find((item) => {
@@ -25,7 +25,12 @@ export async function loadPrograms(season: string): Promise<Program[]> {
             return linkedSeason?.slug === season;
         });
         if (!school || !programSeason) return [];
-        return [{ id: Number(row.legacy_team_id), name: school.name, gender: row.gender, division: String(programSeason.division), conference: programSeason.conference || school.conference, region: programSeason.region || school.region, logoUrl: school.logo_url }];
+        const primaryConference = programSeason.conference || school.conference;
+        const conferences = [...new Set([
+            primaryConference,
+            ...programSeason.program_season_conferences.map((membership) => membership.conference),
+        ].filter((value) => value && value !== "Unassigned"))];
+        return [{ id: Number(row.legacy_team_id), name: school.name, gender: row.gender, division: String(programSeason.division), conference: primaryConference, conferences: conferences.length ? conferences : ["Unassigned"], region: programSeason.region || school.region, logoUrl: school.logo_url }];
     });
 }
 
@@ -170,7 +175,11 @@ export function addLocalProgram(program: Program) {
 
 export function readLocalPrograms(): Program[] {
     try {
-        return JSON.parse(localStorage.getItem("spi-local-programs") ?? "[]") as Program[];
+        const programs = JSON.parse(localStorage.getItem("spi-local-programs") ?? "[]") as Array<Omit<Program, "conferences"> & { conferences?: string[] }>;
+        return programs.map((program) => ({
+            ...program,
+            conferences: program.conferences?.length ? program.conferences : [program.conference || "Unassigned"],
+        }));
     } catch {
         return [];
     }
