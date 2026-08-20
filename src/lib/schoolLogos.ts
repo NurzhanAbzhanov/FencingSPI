@@ -19,6 +19,7 @@ const LOCAL_LOGOS = new Map<string, string>([
     ["Stevens Institute of Technology", "stevens"],
     ["Tufts University", "tufts"],
     ["Vassar College", "vassar"],
+    ["Wayne State University (Michigan)", "wayne-state"],
     ["Wellesley College", "wellesley"],
     ["Wheaton College (Massachusetts)", "wheaton-ma"],
     ["Yeshiva University", "yeshiva"],

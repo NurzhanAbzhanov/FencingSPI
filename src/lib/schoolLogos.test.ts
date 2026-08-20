@@ -54,8 +54,9 @@ describe("getSchoolLogoUrl", () => {
         expect(getSchoolLogoUrl({ name, logoUrl: null })).toBe(`/school-logos/${slug}.webp`);
     });
 
-    it("keeps the fallback for Wayne State rather than using another school's logo", () => {
-        expect(getSchoolLogoUrl({ name: "Wayne State University (Michigan)", logoUrl: null })).toBeNull();
+    it("resolves Wayne State's official local logo", () => {
+        expect(getSchoolLogoUrl({ name: "Wayne State University (Michigan)", logoUrl: null }))
+            .toBe("/school-logos/wayne-state.webp");
     });
 
     it("returns null when no stored or imported logo exists", () => {
