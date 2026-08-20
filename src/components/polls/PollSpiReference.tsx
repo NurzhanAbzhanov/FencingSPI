@@ -155,8 +155,8 @@ export default function PollSpiReference({
                   >
                     {candidate.previousSpi != null ? candidate.previousSpi.toFixed(4) : '—'}
                   </td>
-                  <td className="px-2 py-2 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap numeric">
-                    {candidate.powerRating != null ? candidate.powerRating.toFixed(1) : '—'}
+                  <td className="px-2 py-2 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap power-rating-cell numeric">
+                    {candidate.powerRating != null ? candidate.powerRating.toFixed(0) : '—'}
                   </td>
                   <td className="px-3 py-2 text-right whitespace-nowrap">
                     {ranked ? (

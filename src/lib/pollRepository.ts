@@ -345,6 +345,11 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                 }
             }
 
+            if (category.gender === 'Men' && category.weapon === 'Team') {
+                const pennState = snapshotCandidates.find((candidate) => candidate.teamId === 26);
+                if (pennState) powerRatingByProgram.set(pennState.programId, 90);
+            }
+
             if (currentSeason?.id) {
                 try {
                     const overridesRes = await db.from('power_rating_overrides')

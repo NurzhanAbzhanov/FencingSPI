@@ -395,8 +395,8 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                           <td className="py-1.5 px-1.5 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap previous-spi-cell">
                             {item.previousSpi != null ? item.previousSpi.toFixed(4) : '—'}
                           </td>
-                          <td className="py-1.5 px-1.5 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap">
-                            {item.powerRating != null ? item.powerRating.toFixed(1) : '—'}
+                          <td className="py-1.5 px-1.5 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap power-rating-cell">
+                            {item.powerRating != null ? item.powerRating.toFixed(0) : '—'}
                           </td>
                           <td className="py-1.5 px-1.5 text-right whitespace-nowrap">
                             {isSelected ? (

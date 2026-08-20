@@ -16,7 +16,7 @@ const candidates: PollCandidate[] = [
         currentSpi: 12.3456,
         previousSpi: 11.1111,
         spiRank: 1,
-        powerRating: 10,
+        powerRating: 90,
     },
     {
         programId: "beta-program",
@@ -50,6 +50,8 @@ describe("PollSpiReference", () => {
         expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("spi-rank-cell");
         expect(screen.getByRole("cell", { name: "12.3456" })).toHaveClass("current-spi-cell");
         expect(screen.getByRole("cell", { name: "11.1111" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("cell", { name: "90" })).toHaveClass("power-rating-cell");
+        expect(screen.queryByRole("cell", { name: "90.0" })).not.toBeInTheDocument();
         expect(screen.getByRole("cell", { name: "No prior-season SPI" })).toHaveTextContent("—");
         expect(screen.getByText("D3")).toBeInTheDocument();
         expect(screen.getByText("✓ Voted")).toBeInTheDocument();

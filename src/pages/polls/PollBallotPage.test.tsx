@@ -33,6 +33,8 @@ describe("PollBallotPage", () => {
         expect(screen.getByRole("cell", { name: "#1" })).toHaveClass("spi-rank-cell");
         expect(screen.getByRole("cell", { name: "100.0000" })).toHaveClass("current-spi-cell");
         expect(screen.getByRole("cell", { name: "95.0000" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("cell", { name: "90" })).toHaveClass("power-rating-cell");
+        expect(screen.queryByRole("cell", { name: "90.0" })).not.toBeInTheDocument();
 
         await event.click(await screen.findByRole("button", { name: "Rank Alpha at position 1" }));
         await event.click(screen.getByRole("button", { name: "Rank Beta at position 2" }));

@@ -34,7 +34,7 @@ describe("pollRepository", () => {
             { id: "season-previous", slug: "2024-25", starts_on: "2024-08-01", ends_on: "2025-07-31" },
         ]);
         const resultsQuery = query([
-            { season_id: "season-current", program_id: "program-49", spi: 110 },
+            { season_id: "season-current", program_id: "program-26", spi: 110 },
             { season_id: "season-current", program_id: "program-50", spi: 120 },
             { season_id: "season-previous", program_id: "program-50", spi: 98 },
         ]);
@@ -52,14 +52,14 @@ describe("pollRepository", () => {
             }]))
             .mockReturnValueOnce(query([
                 {
-                    program_id: "program-49",
+                    program_id: "program-26",
                     spi: 112.5,
                     spi_rank: 1,
-                    power_rating: 90,
+                    power_rating: 70,
                     division: 1,
                     conference: "ACC",
                     region: "Northeast",
-                    programs: { legacy_team_id: 49, schools: { name: "Boston College", logo_url: null } },
+                    programs: { legacy_team_id: 26, schools: { name: "Penn State", logo_url: null } },
                 },
                 {
                     program_id: "program-50",
@@ -81,11 +81,11 @@ describe("pollRepository", () => {
         expect(mocks.from).toHaveBeenCalledWith("poll_spi_snapshots");
         expect(ballot.candidates).toMatchObject([
             { programId: "program-50", teamId: 50, currentSpi: 120, previousSpi: 98, spiRank: 1 },
-            { programId: "program-49", teamId: 49, currentSpi: 110, previousSpi: null, spiRank: 2 },
+            { programId: "program-26", teamId: 26, currentSpi: 110, previousSpi: null, spiRank: 2, powerRating: 90 },
         ]);
         expect(seasonsQuery.order).toHaveBeenCalledWith("ends_on", { ascending: false });
         expect(resultsQuery.in).toHaveBeenCalledWith("season_id", ["season-current", "season-previous"]);
-        expect(resultsQuery.in).toHaveBeenCalledWith("program_id", ["program-49", "program-50"]);
+        expect(resultsQuery.in).toHaveBeenCalledWith("program_id", ["program-26", "program-50"]);
         expect(resultsQuery.eq).toHaveBeenCalledWith("weapon", "Team");
         expect(ballot.rankings).toEqual([]);
         expect(ballot.prerequisite).toBe("ready");
