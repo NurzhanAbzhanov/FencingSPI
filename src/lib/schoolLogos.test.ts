@@ -34,25 +34,28 @@ describe("getSchoolLogoUrl", () => {
     });
 
     it.each([
-        "Brandeis University",
-        "The City College of New York",
-        "Denison University",
-        "Drew University",
-        "Haverford College",
-        "Hunter College",
-        "Johns Hopkins University",
-        "Lawrence University",
-        "Massachusetts Institute of Technology",
-        "New York University",
-        "Stevens Institute of Technology",
-        "Tufts University",
-        "Vassar College",
-        "Wayne State University (Michigan)",
-        "Wellesley College",
-        "Wheaton College (Massachusetts)",
-        "Yeshiva University",
-    ])("does not display another school's logo for %s", (name) => {
-        expect(getSchoolLogoUrl({ name, logoUrl: null })).toBeNull();
+        ["Brandeis University", "brandeis"],
+        ["The City College of New York", "ccny"],
+        ["Denison University", "denison"],
+        ["Drew University", "drew"],
+        ["Haverford College", "haverford"],
+        ["Hunter College", "hunter"],
+        ["Johns Hopkins University", "johns-hopkins"],
+        ["Lawrence University", "lawrence"],
+        ["Massachusetts Institute of Technology", "mit"],
+        ["New York University", "nyu"],
+        ["Stevens Institute of Technology", "stevens"],
+        ["Tufts University", "tufts"],
+        ["Vassar College", "vassar"],
+        ["Wellesley College", "wellesley"],
+        ["Wheaton College (Massachusetts)", "wheaton-ma"],
+        ["Yeshiva University", "yeshiva"],
+    ])("resolves the official local DIII logo for %s", (name, slug) => {
+        expect(getSchoolLogoUrl({ name, logoUrl: null })).toBe(`/school-logos/${slug}.webp`);
+    });
+
+    it("keeps the fallback for Wayne State rather than using another school's logo", () => {
+        expect(getSchoolLogoUrl({ name: "Wayne State University (Michigan)", logoUrl: null })).toBeNull();
     });
 
     it("returns null when no stored or imported logo exists", () => {

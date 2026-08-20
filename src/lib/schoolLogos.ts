@@ -5,6 +5,25 @@ type LogoProgram = {
 
 const ESPN_LOGO_BASE = "https://a.espncdn.com/i/teamlogos/ncaa/500";
 
+const LOCAL_LOGOS = new Map<string, string>([
+    ["Brandeis University", "brandeis"],
+    ["The City College of New York", "ccny"],
+    ["Denison University", "denison"],
+    ["Drew University", "drew"],
+    ["Haverford College", "haverford"],
+    ["Hunter College", "hunter"],
+    ["Johns Hopkins University", "johns-hopkins"],
+    ["Lawrence University", "lawrence"],
+    ["Massachusetts Institute of Technology", "mit"],
+    ["New York University", "nyu"],
+    ["Stevens Institute of Technology", "stevens"],
+    ["Tufts University", "tufts"],
+    ["Vassar College", "vassar"],
+    ["Wellesley College", "wellesley"],
+    ["Wheaton College (Massachusetts)", "wheaton-ma"],
+    ["Yeshiva University", "yeshiva"],
+].map(([name, slug]) => [normalizeSchoolName(name), `/school-logos/${slug}.webp`]));
+
 const SCHOOL_ESPN_IDS = new Map<string, string>([
     ["Air Force", "2005"],
     ["U.S. Air Force Academy", "2005"],
@@ -44,7 +63,10 @@ const SCHOOL_ESPN_IDS = new Map<string, string>([
 
 export function getSchoolLogoUrl(program: LogoProgram): string | null {
     if (program.logoUrl) return program.logoUrl;
-    const espnId = SCHOOL_ESPN_IDS.get(normalizeSchoolName(program.name));
+    const normalizedName = normalizeSchoolName(program.name);
+    const localLogo = LOCAL_LOGOS.get(normalizedName);
+    if (localLogo) return localLogo;
+    const espnId = SCHOOL_ESPN_IDS.get(normalizedName);
     return espnId ? `${ESPN_LOGO_BASE}/${espnId}.png` : null;
 }
 
