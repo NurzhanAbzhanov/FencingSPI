@@ -34,8 +34,8 @@ describe("pollRepository", () => {
             { id: "season-previous", slug: "2024-25", starts_on: "2024-08-01", ends_on: "2025-07-31" },
         ]);
         const resultsQuery = query([
-            { season_id: "season-current", program_id: "program-26", spi: 110 },
-            { season_id: "season-current", program_id: "program-50", spi: 120 },
+            { season_id: "season-current", program_id: "program-26", spi: 110, power_rating: 80 },
+            { season_id: "season-current", program_id: "program-50", spi: 120, power_rating: 90 },
             { season_id: "season-previous", program_id: "program-50", spi: 98 },
         ]);
         mocks.from
@@ -74,14 +74,14 @@ describe("pollRepository", () => {
             ]))
             .mockReturnValueOnce(seasonsQuery)
             .mockReturnValueOnce(resultsQuery)
-            .mockReturnValueOnce(query([]));
+            .mockReturnValueOnce(query([{ program_id: "program-50", adjusted_power_rating: 100 }]));
 
         const ballot = await loadPollBallot("men_team_overall", "user-1");
 
         expect(mocks.from).toHaveBeenCalledWith("poll_spi_snapshots");
         expect(ballot.candidates).toMatchObject([
-            { programId: "program-50", teamId: 50, currentSpi: 120, previousSpi: 98, spiRank: 1 },
-            { programId: "program-26", teamId: 26, currentSpi: 110, previousSpi: null, spiRank: 2, powerRating: 90 },
+            { programId: "program-50", teamId: 50, currentSpi: 120, previousSpi: 98, spiRank: 1, powerRating: 100 },
+            { programId: "program-26", teamId: 26, currentSpi: 110, previousSpi: null, spiRank: 2, powerRating: 80 },
         ]);
         expect(seasonsQuery.order).toHaveBeenCalledWith("ends_on", { ascending: false });
         expect(resultsQuery.in).toHaveBeenCalledWith("season_id", ["season-current", "season-previous"]);

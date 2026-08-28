@@ -1,0 +1,329 @@
+teamId,team,gender,weapon,fencerCount,topThree,rawPowerRating,calculatedPR,overridePR,effectivePR,validatedPR,status
+49,Boston College,Men,Team,21,,93.333333,90,,90,90,MATCH
+49,Boston College,Men,Epee,5,110 | 80 | 80,90,90,,90,90,MATCH
+49,Boston College,Men,Foil,7,110 | 80 | 80,90,90,,90,90,MATCH
+49,Boston College,Men,Sabre,9,110 | 110 | 80,100,100,,100,100,MATCH
+50,Brandeis University,Men,Team,22,,82.222222,80,,80,80,MATCH
+50,Brandeis University,Men,Epee,9,80 | 80 | 60,73.333333,70,,70,70,MATCH
+50,Brandeis University,Men,Foil,7,80 | 80 | 80,80,80,,80,80,MATCH
+50,Brandeis University,Men,Sabre,6,120 | 80 | 80,93.333333,90,,90,90,MATCH
+51,Cleveland State University,Men,Team,13,,50,50,,50,50,MATCH
+51,Cleveland State University,Men,Epee,5,80 | 80 | 60,73.333333,70,,70,70,MATCH
+51,Cleveland State University,Men,Foil,4,60 | 30 | 20,36.666667,30,,30,30,MATCH
+51,Cleveland State University,Men,Sabre,4,50 | 40 | 30,40,40,,40,40,MATCH
+52,Columbia University-Barnard College,Men,Team,28,,103.333333,100,,100,100,MATCH
+52,Columbia University-Barnard College,Men,Epee,7,110 | 100 | 100,103.333333,100,,100,100,MATCH
+52,Columbia University-Barnard College,Men,Foil,12,110 | 110 | 90,103.333333,100,,100,100,MATCH
+52,Columbia University-Barnard College,Men,Sabre,9,130 | 100 | 80,103.333333,100,,100,100,MATCH
+92,Denison University,Men,Team,0,,0,0,,0,0,MATCH
+92,Denison University,Men,Epee,0,,0,0,,0,0,MATCH
+92,Denison University,Men,Foil,0,,0,0,,0,0,MATCH
+92,Denison University,Men,Sabre,0,,0,0,,0,0,MATCH
+56,Drew University,Men,Team,23,,51.111111,50,,50,50,MATCH
+56,Drew University,Men,Epee,9,60 | 60 | 60,60,60,,60,60,MATCH
+56,Drew University,Men,Foil,7,50 | 50 | 50,50,50,,50,50,MATCH
+56,Drew University,Men,Sabre,7,50 | 40 | 40,43.333333,40,,40,40,MATCH
+57,Duke University,Men,Team,22,,86.666667,80,,80,80,MATCH
+57,Duke University,Men,Epee,8,80 | 80 | 80,80,80,,80,80,MATCH
+57,Duke University,Men,Foil,6,140 | 80 | 80,100,100,,100,100,MATCH
+57,Duke University,Men,Sabre,8,80 | 80 | 80,80,80,,80,80,MATCH
+55,Harvard University,Men,Team,15,,107.777778,100,,100,100,MATCH
+55,Harvard University,Men,Epee,4,120 | 110 | 80,103.333333,100,,100,100,MATCH
+55,Harvard University,Men,Foil,5,120 | 110 | 110,113.333333,110,,110,110,MATCH
+55,Harvard University,Men,Sabre,6,140 | 100 | 80,106.666667,100,,100,100,MATCH
+54,Haverford College,Men,Team,23,,65.555556,60,,60,60,MATCH
+54,Haverford College,Men,Epee,8,80 | 80 | 80,80,80,,80,80,MATCH
+54,Haverford College,Men,Foil,9,80 | 80 | 80,80,80,,80,80,MATCH
+54,Haverford College,Men,Sabre,6,40 | 40 | 30,36.666667,30,,30,30,MATCH
+58,Hunter College,Men,Team,16,,21.111111,20,,20,20,MATCH
+58,Hunter College,Men,Epee,5,20 | 20 | 20,20,20,,20,20,MATCH
+58,Hunter College,Men,Foil,5,30 | 20 | 20,23.333333,20,,20,20,MATCH
+58,Hunter College,Men,Sabre,6,20 | 20 | 20,20,20,,20,20,MATCH
+60,Johns Hopkins University,Men,Team,21,,75.555556,70,,70,70,MATCH
+60,Johns Hopkins University,Men,Epee,7,80 | 80 | 80,80,80,,80,80,MATCH
+60,Johns Hopkins University,Men,Foil,6,80 | 60 | 60,66.666667,60,,60,60,MATCH
+60,Johns Hopkins University,Men,Sabre,8,80 | 80 | 80,80,80,,80,80,MATCH
+62,Lafayette College,Men,Team,11,,47.777778,40,,40,40,MATCH
+62,Lafayette College,Men,Epee,4,80 | 80 | 50,70,70,,70,70,MATCH
+62,Lafayette College,Men,Foil,4,40 | 40 | 20,33.333333,30,,30,30,MATCH
+62,Lafayette College,Men,Sabre,3,50 | 50 | 20,40,40,,40,40,MATCH
+61,Lawrence University,Men,Team,22,,72.222222,70,,70,70,MATCH
+61,Lawrence University,Men,Epee,6,80 | 80 | 80,80,80,,80,80,MATCH
+61,Lawrence University,Men,Foil,9,80 | 50 | 40,56.666667,50,,50,50,MATCH
+61,Lawrence University,Men,Sabre,7,80 | 80 | 80,80,80,,80,80,MATCH
+63,Long Island University,Men,Team,20,,70,70,,70,70,MATCH
+63,Long Island University,Men,Epee,5,140 | 110 | 60,103.333333,100,,100,100,MATCH
+63,Long Island University,Men,Foil,10,40 | 40 | 30,36.666667,30,,30,30,MATCH
+63,Long Island University,Men,Sabre,5,80 | 70 | 60,70,70,,70,70,MATCH
+64,Massachusetts Institute of Technology,Men,Team,20,,75.555556,70,,70,70,MATCH
+64,Massachusetts Institute of Technology,Men,Epee,5,80 | 80 | 80,80,80,,80,80,MATCH
+64,Massachusetts Institute of Technology,Men,Foil,8,100 | 80 | 80,86.666667,80,,80,80,MATCH
+64,Massachusetts Institute of Technology,Men,Sabre,7,60 | 60 | 60,60,60,,60,60,MATCH
+65,New Jersey Institute of Technology,Men,Team,13,,70,70,,70,70,MATCH
+65,New Jersey Institute of Technology,Men,Epee,4,110 | 110 | 60,93.333333,90,,90,90,MATCH
+65,New Jersey Institute of Technology,Men,Foil,5,80 | 60 | 60,66.666667,60,,60,60,MATCH
+65,New Jersey Institute of Technology,Men,Sabre,4,80 | 50 | 20,50,50,,50,50,MATCH
+30,New York University,Men,Team,22,,91.111111,90,,90,90,MATCH
+30,New York University,Men,Epee,10,120 | 80 | 80,93.333333,90,,90,90,MATCH
+30,New York University,Men,Foil,6,100 | 90 | 80,90,90,,90,90,MATCH
+30,New York University,Men,Sabre,6,110 | 80 | 80,90,90,,90,90,MATCH
+26,Penn State,Men,Team,22,,98.888889,90,90,90,90,MATCH
+26,Penn State,Men,Epee,7,120 | 100 | 80,100,100,,100,100,MATCH
+26,Penn State,Men,Foil,8,120 | 100 | 100,106.666667,100,,100,100,MATCH
+26,Penn State,Men,Sabre,7,110 | 100 | 60,90,90,,90,90,MATCH
+25,Princeton University,Men,Team,24,,111.111111,110,,110,110,MATCH
+25,Princeton University,Men,Epee,8,120 | 100 | 100,106.666667,100,,100,100,MATCH
+25,Princeton University,Men,Foil,9,140 | 120 | 110,123.333333,120,,120,120,MATCH
+25,Princeton University,Men,Sabre,7,120 | 110 | 80,103.333333,100,,100,100,MATCH
+24,Sacred Heart University,Men,Team,22,,76.666667,70,,70,70,MATCH
+24,Sacred Heart University,Men,Epee,6,80 | 60 | 60,66.666667,60,,60,60,MATCH
+24,Sacred Heart University,Men,Foil,6,80 | 80 | 60,73.333333,70,,70,70,MATCH
+24,Sacred Heart University,Men,Sabre,10,110 | 80 | 80,90,90,,90,90,MATCH
+23,St. John's University (New York),Men,Team,16,,96.666667,90,,90,90,MATCH
+23,St. John's University (New York),Men,Epee,6,130 | 80 | 80,96.666667,90,,90,90,MATCH
+23,St. John's University (New York),Men,Foil,4,80 | 70 | 60,70,70,,70,70,MATCH
+23,St. John's University (New York),Men,Sabre,6,130 | 120 | 120,123.333333,120,,120,120,MATCH
+22,Stanford University,Men,Team,13,,78.888889,70,,70,70,MATCH
+22,Stanford University,Men,Epee,3,80 | 80 | 60,73.333333,70,,70,70,MATCH
+22,Stanford University,Men,Foil,4,110 | 80 | 80,90,90,,90,90,MATCH
+22,Stanford University,Men,Sabre,6,90 | 70 | 60,73.333333,70,,70,70,MATCH
+81,Stevens Institute of Technology,Men,Team,27,,62.222222,60,,60,60,MATCH
+81,Stevens Institute of Technology,Men,Epee,10,80 | 80 | 60,73.333333,70,,70,70,MATCH
+81,Stevens Institute of Technology,Men,Foil,11,80 | 80 | 60,73.333333,70,,70,70,MATCH
+81,Stevens Institute of Technology,Men,Sabre,6,60 | 30 | 30,40,40,,40,40,MATCH
+34,The Ohio State University,Men,Team,19,,90,90,,90,90,MATCH
+34,The Ohio State University,Men,Epee,6,100 | 100 | 90,96.666667,90,,90,90,MATCH
+34,The Ohio State University,Men,Foil,6,90 | 90 | 80,86.666667,80,,80,80,MATCH
+34,The Ohio State University,Men,Sabre,7,90 | 90 | 80,86.666667,80,,80,80,MATCH
+48,U.S. Air Force Academy,Men,Team,11,,87.777778,80,,80,80,MATCH
+48,U.S. Air Force Academy,Men,Epee,3,80 | 80 | 80,80,80,,80,80,MATCH
+48,U.S. Air Force Academy,Men,Foil,3,140 | 90 | 80,103.333333,100,,100,100,MATCH
+48,U.S. Air Force Academy,Men,Sabre,5,80 | 80 | 80,80,80,,80,80,MATCH
+21,"University of California, San Diego",Men,Team,16,,86.666667,80,,80,80,MATCH
+21,"University of California, San Diego",Men,Epee,5,110 | 80 | 80,90,90,,90,90,MATCH
+21,"University of California, San Diego",Men,Foil,5,80 | 80 | 80,80,80,,80,80,MATCH
+21,"University of California, San Diego",Men,Sabre,6,110 | 80 | 80,90,90,,90,90,MATCH
+53,University of Detroit Mercy,Men,Team,10,,44.444444,40,,40,40,MATCH
+53,University of Detroit Mercy,Men,Epee,4,80 | 30 | 20,43.333333,40,,40,40,MATCH
+53,University of Detroit Mercy,Men,Foil,3,80 | 30 | 30,46.666667,40,,40,40,MATCH
+53,University of Detroit Mercy,Men,Sabre,3,80 | 30 | 20,43.333333,40,,40,40,MATCH
+66,"University of North Carolina, Chapel Hill",Men,Team,25,,91.111111,90,,90,90,MATCH
+66,"University of North Carolina, Chapel Hill",Men,Epee,9,130 | 80 | 80,96.666667,90,,90,90,MATCH
+66,"University of North Carolina, Chapel Hill",Men,Foil,9,110 | 80 | 80,90,90,,90,90,MATCH
+66,"University of North Carolina, Chapel Hill",Men,Sabre,7,100 | 80 | 80,86.666667,80,,80,80,MATCH
+67,University of Notre Dame,Men,Team,34,,114.444444,110,,110,110,MATCH
+67,University of Notre Dame,Men,Epee,10,110 | 110 | 110,110,110,,110,110,MATCH
+67,University of Notre Dame,Men,Foil,14,120 | 120 | 110,116.666667,110,,110,110,MATCH
+67,University of Notre Dame,Men,Sabre,10,130 | 130 | 90,116.666667,110,,110,110,MATCH
+28,University of Pennsylvania,Men,Team,18,,95.555556,90,,90,90,MATCH
+28,University of Pennsylvania,Men,Epee,6,130 | 80 | 80,96.666667,90,,90,90,MATCH
+28,University of Pennsylvania,Men,Foil,6,90 | 90 | 80,86.666667,80,,80,80,MATCH
+28,University of Pennsylvania,Men,Sabre,6,130 | 100 | 80,103.333333,100,,100,100,MATCH
+59,University of the Incarnate Word,Men,Team,27,,70,70,,70,70,MATCH
+59,University of the Incarnate Word,Men,Epee,9,80 | 60 | 60,66.666667,60,,60,60,MATCH
+59,University of the Incarnate Word,Men,Foil,8,60 | 50 | 50,53.333333,50,,50,50,MATCH
+59,University of the Incarnate Word,Men,Sabre,10,110 | 110 | 50,90,90,,90,90,MATCH
+20,Vassar College,Men,Team,25,,55.555556,50,,50,50,MATCH
+20,Vassar College,Men,Epee,7,80 | 60 | 60,66.666667,60,,60,60,MATCH
+20,Vassar College,Men,Foil,7,50 | 50 | 20,40,40,,40,40,MATCH
+20,Vassar College,Men,Sabre,11,60 | 60 | 60,60,60,,60,60,MATCH
+89,Wagner College,Men,Team,14,,65.555556,60,,60,60,MATCH
+89,Wagner College,Men,Epee,5,80 | 80 | 50,70,70,,70,70,MATCH
+89,Wagner College,Men,Foil,4,80 | 60 | 50,63.333333,60,,60,60,MATCH
+89,Wagner College,Men,Sabre,5,90 | 50 | 50,63.333333,60,,60,60,MATCH
+33,Wayne State University (Michigan),Men,Team,19,,82.222222,80,,80,80,MATCH
+33,Wayne State University (Michigan),Men,Epee,6,140 | 80 | 80,100,100,,100,100,MATCH
+33,Wayne State University (Michigan),Men,Foil,7,80 | 80 | 80,80,80,,80,80,MATCH
+33,Wayne State University (Michigan),Men,Sabre,6,100 | 50 | 50,66.666667,60,,60,60,MATCH
+90,Wheaton College (Massachusetts),Men,Team,11,,42.222222,40,,40,40,MATCH
+90,Wheaton College (Massachusetts),Men,Epee,3,80 | 20 | 20,40,40,,40,40,MATCH
+90,Wheaton College (Massachusetts),Men,Foil,5,80 | 50 | 40,56.666667,50,,50,50,MATCH
+90,Wheaton College (Massachusetts),Men,Sabre,3,40 | 30 | 20,30,30,,30,30,MATCH
+79,Yale University,Men,Team,20,,84.444444,80,,80,80,MATCH
+79,Yale University,Men,Epee,6,80 | 80 | 80,80,80,,80,80,MATCH
+79,Yale University,Men,Foil,6,110 | 90 | 80,93.333333,90,,90,90,MATCH
+79,Yale University,Men,Sabre,8,80 | 80 | 80,80,80,,80,80,MATCH
+41,Yeshiva University,Men,Team,20,,20,20,,20,20,MATCH
+41,Yeshiva University,Men,Epee,10,20 | 20 | 20,20,20,,20,20,MATCH
+41,Yeshiva University,Men,Foil,4,20 | 20 | 20,20,20,,20,20,MATCH
+41,Yeshiva University,Men,Sabre,6,20 | 20 | 20,20,20,,20,20,MATCH
+15,Boston College,Women,Team,17,,80,80,,80,80,MATCH
+15,Boston College,Women,Epee,6,80 | 80 | 80,80,80,,80,80,MATCH
+15,Boston College,Women,Foil,4,80 | 80 | 80,80,80,,80,80,MATCH
+15,Boston College,Women,Sabre,7,80 | 80 | 80,80,80,,80,80,MATCH
+82,Brandeis University,Women,Team,19,,52.222222,60,,60,60,MATCH
+82,Brandeis University,Women,Epee,6,60 | 60 | 50,56.666667,60,,60,60,MATCH
+82,Brandeis University,Women,Foil,6,60 | 50 | 50,53.333333,60,,60,60,MATCH
+82,Brandeis University,Women,Sabre,7,60 | 40 | 40,46.666667,50,,50,50,MATCH
+2,Brown University,Women,Team,18,,77.777778,80,,80,80,MATCH
+2,Brown University,Women,Epee,6,80 | 80 | 80,80,80,,80,80,MATCH
+2,Brown University,Women,Foil,6,80 | 80 | 60,73.333333,80,,80,80,MATCH
+2,Brown University,Women,Sabre,6,80 | 80 | 80,80,80,,80,80,MATCH
+8,Cleveland State University,Women,Team,6,,33.333333,40,,40,40,MATCH
+8,Cleveland State University,Women,Epee,2,70 | 70,46.666667,50,,50,50,MATCH
+8,Cleveland State University,Women,Foil,2,50 | 30,26.666667,30,,30,30,MATCH
+8,Cleveland State University,Women,Sabre,2,40 | 40,26.666667,30,,30,30,MATCH
+32,Columbia University-Barnard College,Women,Team,34,,111.111111,120,,120,120,MATCH
+32,Columbia University-Barnard College,Women,Epee,11,120 | 110 | 110,113.333333,120,,120,120,MATCH
+32,Columbia University-Barnard College,Women,Foil,12,130 | 120 | 120,123.333333,130,,130,130,MATCH
+32,Columbia University-Barnard College,Women,Sabre,11,110 | 90 | 90,96.666667,100,,100,100,MATCH
+1,Cornell University,Women,Team,24,,98.888889,100,,100,100,MATCH
+1,Cornell University,Women,Epee,10,120 | 90 | 90,100,100,,100,100,MATCH
+1,Cornell University,Women,Foil,5,120 | 80 | 80,93.333333,100,,100,100,MATCH
+1,Cornell University,Women,Sabre,9,120 | 100 | 90,103.333333,110,,110,110,MATCH
+83,Denison University,Women,Team,18,,61.111111,70,,70,70,MATCH
+83,Denison University,Women,Epee,7,80 | 80 | 60,73.333333,80,,80,80,MATCH
+83,Denison University,Women,Foil,4,80 | 60 | 50,63.333333,70,,70,70,MATCH
+83,Denison University,Women,Sabre,7,60 | 40 | 40,46.666667,50,,50,50,MATCH
+43,Drew University,Women,Team,19,,35.555556,40,,40,40,MATCH
+43,Drew University,Women,Epee,5,40 | 20 | 20,26.666667,30,,30,30,MATCH
+43,Drew University,Women,Foil,8,40 | 40 | 40,40,40,,40,40,MATCH
+43,Drew University,Women,Sabre,6,40 | 40 | 40,40,40,,40,40,MATCH
+6,Duke University,Women,Team,20,,83.333333,90,,90,90,MATCH
+6,Duke University,Women,Epee,6,80 | 80 | 80,80,80,,80,80,MATCH
+6,Duke University,Women,Foil,8,110 | 80 | 80,90,90,,90,90,MATCH
+6,Duke University,Women,Sabre,6,80 | 80 | 80,80,80,,80,80,MATCH
+11,"Fairleigh Dickinson University, Metropolitan Campus",Women,Team,12,,36.666667,40,,40,40,MATCH
+11,"Fairleigh Dickinson University, Metropolitan Campus",Women,Epee,4,60 | 50 | 40,50,50,,50,50,MATCH
+11,"Fairleigh Dickinson University, Metropolitan Campus",Women,Foil,5,60 | 40 | 20,40,40,,40,40,MATCH
+11,"Fairleigh Dickinson University, Metropolitan Campus",Women,Sabre,3,20 | 20 | 20,20,20,,20,20,MATCH
+12,Harvard University,Women,Team,14,,123.333333,130,,130,130,MATCH
+12,Harvard University,Women,Epee,5,140 | 120 | 120,126.666667,130,,130,130,MATCH
+12,Harvard University,Women,Foil,4,140 | 130 | 120,130,130,,130,130,MATCH
+12,Harvard University,Women,Sabre,5,120 | 120 | 100,113.333333,120,,120,120,MATCH
+10,Haverford College,Women,Team,19,,26.666667,30,,30,30,MATCH
+10,Haverford College,Women,Epee,6,40 | 40 | 30,36.666667,40,,40,40,MATCH
+10,Haverford College,Women,Foil,6,20 | 20 | 20,20,20,,20,20,MATCH
+10,Haverford College,Women,Sabre,7,30 | 20 | 20,23.333333,30,,30,30,MATCH
+42,Hunter College,Women,Team,22,,22.222222,30,,30,30,MATCH
+42,Hunter College,Women,Epee,7,20 | 20 | 20,20,20,,20,20,MATCH
+42,Hunter College,Women,Foil,8,30 | 30 | 20,26.666667,30,,30,30,MATCH
+42,Hunter College,Women,Sabre,7,20 | 20 | 20,20,20,,20,20,MATCH
+9,Johns Hopkins University,Women,Team,23,,67.777778,70,,70,70,MATCH
+9,Johns Hopkins University,Women,Epee,6,80 | 60 | 60,66.666667,70,,70,70,MATCH
+9,Johns Hopkins University,Women,Foil,7,60 | 60 | 50,56.666667,60,,60,60,MATCH
+9,Johns Hopkins University,Women,Sabre,10,100 | 80 | 60,80,80,,80,80,MATCH
+29,Lafayette College,Women,Team,6,,17.777778,20,,20,20,MATCH
+29,Lafayette College,Women,Epee,2,40 | 20,20,20,,20,20,MATCH
+29,Lafayette College,Women,Foil,3,40 | 20 | 20,26.666667,30,,30,30,MATCH
+29,Lafayette College,Women,Sabre,1,20,6.666667,10,,10,10,MATCH
+36,Lawrence University,Women,Team,19,,47.777778,50,,50,50,MATCH
+36,Lawrence University,Women,Epee,7,80 | 50 | 50,60,60,,60,60,MATCH
+36,Lawrence University,Women,Foil,5,50 | 30 | 30,36.666667,40,,40,40,MATCH
+36,Lawrence University,Women,Sabre,7,80 | 40 | 20,46.666667,50,,50,50,MATCH
+84,Long Island University,Women,Team,21,,40,40,,40,40,MATCH
+84,Long Island University,Women,Epee,8,80 | 50 | 50,60,60,,60,60,MATCH
+84,Long Island University,Women,Foil,8,40 | 20 | 20,26.666667,30,,30,30,MATCH
+84,Long Island University,Women,Sabre,5,40 | 40 | 20,33.333333,40,,40,40,MATCH
+85,Massachusetts Institute of Technology,Women,Team,17,,68.888889,70,,70,70,MATCH
+85,Massachusetts Institute of Technology,Women,Epee,5,80 | 70 | 70,73.333333,80,,80,80,MATCH
+85,Massachusetts Institute of Technology,Women,Foil,6,80 | 60 | 60,66.666667,70,,70,70,MATCH
+85,Massachusetts Institute of Technology,Women,Sabre,6,80 | 60 | 60,66.666667,70,,70,70,MATCH
+86,New Jersey Institute of Technology,Women,Team,10,,34.444444,40,,40,40,MATCH
+86,New Jersey Institute of Technology,Women,Epee,3,80 | 20 | 20,40,40,,40,40,MATCH
+86,New Jersey Institute of Technology,Women,Foil,3,50 | 20 | 20,30,30,,30,30,MATCH
+86,New Jersey Institute of Technology,Women,Sabre,4,60 | 20 | 20,33.333333,40,,40,40,MATCH
+5,New York University,Women,Team,24,,86.666667,90,,90,90,MATCH
+5,New York University,Women,Epee,9,110 | 90 | 80,93.333333,100,,100,100,MATCH
+5,New York University,Women,Foil,8,80 | 80 | 80,80,80,,80,80,MATCH
+5,New York University,Women,Sabre,7,100 | 80 | 80,86.666667,90,,90,90,MATCH
+46,Northwestern University,Women,Team,26,,92.222222,100,,100,100,MATCH
+46,Northwestern University,Women,Epee,9,120 | 80 | 80,93.333333,100,,100,100,MATCH
+46,Northwestern University,Women,Foil,8,120 | 80 | 80,93.333333,100,,100,100,MATCH
+46,Northwestern University,Women,Sabre,9,110 | 80 | 80,90,90,,90,90,MATCH
+44,Penn State,Women,Team,18,,80,80,70,70,70,MATCH
+44,Penn State,Women,Epee,6,120 | 60 | 50,76.666667,80,,80,80,MATCH
+44,Penn State,Women,Foil,6,110 | 80 | 60,83.333333,90,,90,90,MATCH
+44,Penn State,Women,Sabre,6,100 | 80 | 60,80,80,,80,80,MATCH
+45,Princeton University,Women,Team,23,,121.111111,130,,130,130,MATCH
+45,Princeton University,Women,Epee,8,140 | 140 | 130,136.666667,140,,140,140,MATCH
+45,Princeton University,Women,Foil,7,130 | 110 | 80,106.666667,110,,110,110,MATCH
+45,Princeton University,Women,Sabre,8,130 | 120 | 110,120,120,,120,120,MATCH
+35,Sacred Heart University,Women,Team,8,,22.222222,30,,30,30,MATCH
+35,Sacred Heart University,Women,Epee,4,60 | 40 | 20,40,40,,40,40,MATCH
+35,Sacred Heart University,Women,Foil,3,20 | 20 | 20,20,20,,20,20,MATCH
+35,Sacred Heart University,Women,Sabre,1,20,6.666667,10,,10,10,MATCH
+17,St. John's University (New York),Women,Team,12,,70,70,,70,70,MATCH
+17,St. John's University (New York),Women,Epee,5,80 | 80 | 80,80,80,,80,80,MATCH
+17,St. John's University (New York),Women,Foil,3,80 | 80 | 50,70,70,,70,70,MATCH
+17,St. John's University (New York),Women,Sabre,4,80 | 50 | 50,60,60,,60,60,MATCH
+75,Stanford University,Women,Team,18,,80,80,,80,80,MATCH
+75,Stanford University,Women,Epee,8,80 | 80 | 20,60,60,,60,60,MATCH
+75,Stanford University,Women,Foil,5,120 | 100 | 80,100,100,,100,100,MATCH
+75,Stanford University,Women,Sabre,5,80 | 80 | 80,80,80,,80,80,MATCH
+31,Stevens Institute of Technology,Women,Team,15,,35.555556,40,,40,40,MATCH
+31,Stevens Institute of Technology,Women,Epee,6,60 | 60 | 40,53.333333,60,,60,60,MATCH
+31,Stevens Institute of Technology,Women,Foil,4,30 | 30 | 30,30,30,,30,30,MATCH
+31,Stevens Institute of Technology,Women,Sabre,5,30 | 20 | 20,23.333333,30,,30,30,MATCH
+27,Temple University,Women,Team,21,,68.888889,70,,70,70,MATCH
+27,Temple University,Women,Epee,7,80 | 80 | 60,73.333333,80,,80,80,MATCH
+27,Temple University,Women,Foil,7,60 | 60 | 60,60,60,,60,60,MATCH
+27,Temple University,Women,Sabre,7,80 | 80 | 60,73.333333,80,,80,80,MATCH
+38,The City College of New York,Women,Team,12,,20,20,,20,20,MATCH
+38,The City College of New York,Women,Epee,3,20 | 20 | 20,20,20,,20,20,MATCH
+38,The City College of New York,Women,Foil,4,20 | 20 | 20,20,20,,20,20,MATCH
+38,The City College of New York,Women,Sabre,5,20 | 20 | 20,20,20,,20,20,MATCH
+4,The Ohio State University,Women,Team,21,,84.444444,90,,90,90,MATCH
+4,The Ohio State University,Women,Epee,9,100 | 80 | 80,86.666667,90,,90,90,MATCH
+4,The Ohio State University,Women,Foil,6,80 | 80 | 60,73.333333,80,,80,80,MATCH
+4,The Ohio State University,Women,Sabre,6,120 | 80 | 80,93.333333,100,,100,100,MATCH
+13,Tufts University,Women,Team,16,,60,60,,60,60,MATCH
+13,Tufts University,Women,Epee,4,80 | 80 | 40,66.666667,70,,70,70,MATCH
+13,Tufts University,Women,Foil,8,60 | 50 | 50,53.333333,60,,60,60,MATCH
+13,Tufts University,Women,Sabre,4,80 | 50 | 50,60,60,,60,60,MATCH
+37,U.S. Air Force Academy,Women,Team,12,,51.111111,60,,60,60,MATCH
+37,U.S. Air Force Academy,Women,Epee,5,80 | 60 | 60,66.666667,70,,70,70,MATCH
+37,U.S. Air Force Academy,Women,Foil,5,60 | 50 | 50,53.333333,60,,60,60,MATCH
+37,U.S. Air Force Academy,Women,Sabre,2,80 | 20,33.333333,40,,40,40,MATCH
+76,"University of California, San Diego",Women,Team,19,,81.111111,90,,90,90,MATCH
+76,"University of California, San Diego",Women,Epee,7,80 | 80 | 80,80,80,,80,80,MATCH
+76,"University of California, San Diego",Women,Foil,7,110 | 80 | 80,90,90,,90,90,MATCH
+76,"University of California, San Diego",Women,Sabre,5,80 | 80 | 60,73.333333,80,,80,80,MATCH
+39,University of Detroit Mercy,Women,Team,12,,41.111111,50,,50,50,MATCH
+39,University of Detroit Mercy,Women,Epee,5,50 | 30 | 30,36.666667,40,,40,40,MATCH
+39,University of Detroit Mercy,Women,Foil,3,80 | 30 | 20,43.333333,50,,50,50,MATCH
+39,University of Detroit Mercy,Women,Sabre,4,80 | 30 | 20,43.333333,50,,50,50,MATCH
+87,"University of North Carolina, Chapel Hill",Women,Team,21,,72.222222,80,,80,80,MATCH
+87,"University of North Carolina, Chapel Hill",Women,Epee,8,100 | 80 | 80,86.666667,90,,90,90,MATCH
+87,"University of North Carolina, Chapel Hill",Women,Foil,7,60 | 60 | 60,60,60,,60,60,MATCH
+87,"University of North Carolina, Chapel Hill",Women,Sabre,6,90 | 60 | 60,70,70,,70,70,MATCH
+18,University of Notre Dame,Women,Team,30,,114.444444,120,,120,120,MATCH
+18,University of Notre Dame,Women,Epee,10,140 | 120 | 80,113.333333,120,,120,120,MATCH
+18,University of Notre Dame,Women,Foil,12,110 | 110 | 110,110,110,,110,110,MATCH
+18,University of Notre Dame,Women,Sabre,8,120 | 120 | 120,120,120,,120,120,MATCH
+3,University of Pennsylvania,Women,Team,24,,91.111111,100,,100,100,MATCH
+3,University of Pennsylvania,Women,Epee,9,80 | 80 | 80,80,80,,80,80,MATCH
+3,University of Pennsylvania,Women,Foil,8,120 | 80 | 80,93.333333,100,,100,100,MATCH
+3,University of Pennsylvania,Women,Sabre,7,120 | 90 | 90,100,100,,100,100,MATCH
+80,University of the Incarnate Word,Women,Team,14,,44.444444,50,,50,50,MATCH
+80,University of the Incarnate Word,Women,Epee,5,60 | 50 | 50,53.333333,60,,60,60,MATCH
+80,University of the Incarnate Word,Women,Foil,5,50 | 50 | 20,40,40,,40,40,MATCH
+80,University of the Incarnate Word,Women,Sabre,4,60 | 40 | 20,40,40,,40,40,MATCH
+7,Vassar College,Women,Team,21,,41.111111,50,,50,50,MATCH
+7,Vassar College,Women,Epee,6,50 | 50 | 50,50,50,,50,50,MATCH
+7,Vassar College,Women,Foil,8,30 | 30 | 20,26.666667,30,,30,30,MATCH
+7,Vassar College,Women,Sabre,7,60 | 50 | 30,46.666667,50,,50,50,MATCH
+14,Wagner College,Women,Team,15,,60,60,,60,60,MATCH
+14,Wagner College,Women,Epee,5,80 | 80 | 60,73.333333,80,,80,80,MATCH
+14,Wagner College,Women,Foil,5,60 | 30 | 20,36.666667,40,,40,40,MATCH
+14,Wagner College,Women,Sabre,5,80 | 80 | 50,70,70,,70,70,MATCH
+47,Wayne State University (Michigan),Women,Team,15,,46.666667,50,,50,50,MATCH
+47,Wayne State University (Michigan),Women,Epee,5,80 | 80 | 20,60,60,,60,60,MATCH
+47,Wayne State University (Michigan),Women,Foil,6,80 | 80 | 20,60,60,,60,60,MATCH
+47,Wayne State University (Michigan),Women,Sabre,4,20 | 20 | 20,20,20,,20,20,MATCH
+40,Wellesley College,Women,Team,23,,63.333333,70,,70,70,MATCH
+40,Wellesley College,Women,Epee,8,80 | 60 | 60,66.666667,70,,70,70,MATCH
+40,Wellesley College,Women,Foil,7,80 | 60 | 60,66.666667,70,,70,70,MATCH
+40,Wellesley College,Women,Sabre,8,60 | 60 | 50,56.666667,60,,60,60,MATCH
+91,Wheaton College (Massachusetts),Women,Team,2,,7.777778,10,,10,10,MATCH
+91,Wheaton College (Massachusetts),Women,Epee,1,20,6.666667,10,,10,10,MATCH
+91,Wheaton College (Massachusetts),Women,Foil,1,50,16.666667,20,,20,20,MATCH
+91,Wheaton College (Massachusetts),Women,Sabre,0,,0,0,,0,0,MATCH
+19,Yale University,Women,Team,12,,91.111111,100,,100,100,MATCH
+19,Yale University,Women,Epee,4,80 | 80 | 80,80,80,,80,80,MATCH
+19,Yale University,Women,Foil,4,130 | 100 | 80,103.333333,110,,110,110,MATCH
+19,Yale University,Women,Sabre,4,110 | 80 | 80,90,90,,90,90,MATCH
+88,Yeshiva University,Women,Team,12,,20,20,,20,20,MATCH
+88,Yeshiva University,Women,Epee,4,20 | 20 | 20,20,20,,20,20,MATCH
+88,Yeshiva University,Women,Foil,4,20 | 20 | 20,20,20,,20,20,MATCH
+88,Yeshiva University,Women,Sabre,4,20 | 20 | 20,20,20,,20,20,MATCH

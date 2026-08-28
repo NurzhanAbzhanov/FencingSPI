@@ -13,11 +13,11 @@ vi.mock("../lib/adminRepository", () => ({
 }));
 
 vi.mock("./PowerRatingsPage", () => ({
-    default: () => <section aria-label="Power Rating Overrides" />,
+    default: () => <section aria-label="Power Ratings" />,
 }));
 
 describe("AdminPage", () => {
-    it("contains power-rating overrides in the admin dashboard", () => {
+    it("contains power ratings in the admin dashboard", () => {
         render(<AdminPage
             user={{ id: "admin", name: "Admin User", role: "admin", canVote: true }}
             programs={[]}
@@ -25,7 +25,7 @@ describe("AdminPage", () => {
             onProgramAdded={() => undefined}
         />);
 
-        expect(screen.getByRole("region", { name: "Power Rating Overrides" })).toBeInTheDocument();
+        expect(screen.getByRole("region", { name: "Power Ratings" })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: /add a school program/i })).toBeInTheDocument();
     });
 });

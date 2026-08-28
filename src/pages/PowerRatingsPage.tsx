@@ -1,8 +1,10 @@
 import {
     Pencil,
+    RefreshCw,
     RotateCcw,
     Save,
     ShieldCheck,
+    Upload,
     X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +13,9 @@ import {
     deletePowerRatingOverride,
     loadPowerRatingOverrides,
     loadPowerRatingRecords,
+    loadPowerRatingSeasons,
+    parseFencerRatingFile,
+    recalculatePowerRatings,
     savePowerRatingOverride,
 } from "../lib/powerRatingOverrides";
 import type {
@@ -45,17 +50,28 @@ export default function PowerRatingsPage({
     const [draftReason, setDraftReason] = useState("");
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [message, setMessage] = useState("");
+    const [ratingFiles, setRatingFiles] = useState<Partial<Record<Gender, File>>>({});
+    const [recalculating, setRecalculating] = useState(false);
+    const [fileInputKey, setFileInputKey] = useState(0);
+    const [recalculationSeason, setRecalculationSeason] = useState(season);
+    const [seasonOptions, setSeasonOptions] = useState<string[]>([season]);
 
     useEffect(() => {
         let active = true;
         Promise.all([
             loadPowerRatingRecords(season),
             loadPowerRatingOverrides(season),
+            loadPowerRatingSeasons(),
         ])
-            .then(([loadedRecords, loadedOverrides]) => {
+            .then(([loadedRecords, loadedOverrides, loadedSeasons]) => {
                 if (!active) return;
                 setRecords(loadedRecords);
                 setOverrides(loadedOverrides);
+                const availableSeasons = loadedSeasons.length ? loadedSeasons : [season];
+                setSeasonOptions(availableSeasons);
+                setRecalculationSeason((current) =>
+                    availableSeasons.includes(current) ? current : availableSeasons[0]
+                );
                 setStatus("ready");
             })
             .catch((error: unknown) => {
@@ -98,7 +114,7 @@ export default function PowerRatingsPage({
             <section className="empty-state">
                 <ShieldCheck size={24} />
                 <h1>Admin access required</h1>
-                <p>Only administrators can change power-rating overrides.</p>
+                <p>Only administrators can manage power ratings.</p>
             </section>
         );
     }
@@ -175,17 +191,110 @@ export default function PowerRatingsPage({
         }
     }
 
+    async function handleRecalculation() {
+        const uploads = (["Men", "Women"] as Gender[]).flatMap((uploadGender) => {
+            const file = ratingFiles[uploadGender];
+            return file ? [{ gender: uploadGender, file }] : [];
+        });
+        if (!uploads.length) {
+            setMessage("Select at least one fencer-rating file.");
+            return;
+        }
+        const targetSeason = recalculationSeason.trim();
+        if (!targetSeason) {
+            setMessage("Enter a season.");
+            return;
+        }
+        const uploadNames = uploads.map(({ gender: uploadGender }) => uploadGender).join(" and ");
+        if (!window.confirm(
+            `Replace ${uploadNames} fencer ratings for ${targetSeason} and recalculate power ratings? Manual overrides will remain unchanged.`
+        )) return;
+
+        setRecalculating(true);
+        setMessage("");
+        try {
+            for (const upload of uploads) {
+                const rows = await parseFencerRatingFile(upload.file);
+                await recalculatePowerRatings(
+                    targetSeason,
+                    upload.gender,
+                    rows,
+                    upload.file.name
+                );
+            }
+            if (targetSeason === season) {
+                setRecords(await loadPowerRatingRecords(season));
+            }
+            setRatingFiles({});
+            setFileInputKey((current) => current + 1);
+            setMessage(`Power ratings recalculated for ${uploadNames}, ${targetSeason}.`);
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : "Could not recalculate power ratings.");
+        } finally {
+            setRecalculating(false);
+        }
+    }
+
     return (
-        <section className={`${embedded ? "admin-section" : "page-section"} power-ratings-page`} aria-label={embedded ? "Power Rating Overrides" : undefined}>
-            {embedded ? <h2>Power Rating Overrides</h2> : <div className="page-title-row">
+        <section className={`${embedded ? "admin-section" : "page-section"} power-ratings-page`} aria-label={embedded ? "Power Ratings" : undefined}>
+            {embedded ? <h2>Power Ratings</h2> : <div className="page-title-row">
                 <div>
                     <p className="eyebrow">Calculation controls</p>
-                    <h1>Power Rating Overrides</h1>
+                    <h1>Power Ratings</h1>
                 </div>
                 <div className="session-user">
                     <ShieldCheck size={16} /> {user.name}
                 </div>
             </div>}
+
+            <section className="power-rating-recalculation" aria-labelledby="power-rating-recalculation-title">
+                <div>
+                    <h3 id="power-rating-recalculation-title">Recalculate from fencer ratings</h3>
+                    <p>Required columns: School, Weapon, Power Rating. Manual overrides remain unchanged.</p>
+                </div>
+                <div className="power-rating-upload-fields" key={fileInputKey}>
+                    <fieldset className="season-choice-field">
+                        <legend>Season</legend>
+                        <div className="season-toggle" aria-label="Recalculation season">
+                            {seasonOptions.map((seasonOption) => (
+                                <button
+                                    key={seasonOption}
+                                    aria-pressed={recalculationSeason === seasonOption}
+                                    className={recalculationSeason === seasonOption ? "selected" : ""}
+                                    type="button"
+                                    onClick={() => setRecalculationSeason(seasonOption)}
+                                >
+                                    {seasonOption}
+                                </button>
+                            ))}
+                        </div>
+                    </fieldset>
+                    {(["Men", "Women"] as Gender[]).map((uploadGender) => (
+                        <label key={uploadGender}>
+                            {uploadGender} fencer ratings
+                            <input
+                                aria-label={`${uploadGender} fencer ratings`}
+                                accept=".xlsx,.xls,.csv,.tsv"
+                                type="file"
+                                onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    setRatingFiles((current) => ({ ...current, [uploadGender]: file }));
+                                    setMessage("");
+                                }}
+                            />
+                        </label>
+                    ))}
+                    <button
+                        className="button primary"
+                        disabled={recalculating}
+                        type="button"
+                        onClick={handleRecalculation}
+                    >
+                        {recalculating ? <RefreshCw className="spin" size={17} /> : <Upload size={17} />}
+                        {recalculating ? "Recalculating" : "Recalculate power ratings"}
+                    </button>
+                </div>
+            </section>
 
             <div className="power-rating-filters">
                 <label>

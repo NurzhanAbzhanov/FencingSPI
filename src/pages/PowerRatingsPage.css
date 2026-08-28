@@ -7,6 +7,112 @@
     flex-direction: column;
 }
 
+.power-rating-recalculation {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.7fr) minmax(420px, 1.3fr);
+    gap: 20px;
+    align-items: end;
+    padding: 16px 0;
+    border-top: 1px solid #d8dde3;
+    border-bottom: 1px solid #d8dde3;
+}
+
+.power-rating-recalculation h3 {
+    margin: 0 0 4px;
+    color: #172033;
+    font-size: 1rem;
+}
+
+.power-rating-recalculation p {
+    margin: 0;
+    color: #66717d;
+    font-size: 0.8rem;
+}
+
+.power-rating-upload-fields {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+}
+
+.season-choice-field {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.season-choice-field legend {
+    margin-bottom: 5px;
+    color: #4b5563;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.season-toggle {
+    display: flex;
+    width: max-content;
+    max-width: 100%;
+    border: 1px solid #bfc7d0;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+.season-toggle button {
+    min-width: 78px;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-right: 1px solid #d8dde3;
+    background: #fff;
+    color: #4b5563;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.season-toggle button:last-child {
+    border-right: 0;
+}
+
+.season-toggle button:hover {
+    background: #f2f5f7;
+}
+
+.season-toggle button.selected {
+    background: #176f91;
+    color: #fff;
+}
+
+.power-rating-upload-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #4b5563;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.power-rating-upload-fields input {
+    min-width: 0;
+    min-height: 38px;
+    padding: 6px;
+    border: 1px solid #bfc7d0;
+    border-radius: 3px;
+    background: #fff;
+    color: #202a37;
+    font-size: 0.75rem;
+    text-transform: none;
+}
+
+.power-rating-upload-fields button {
+    min-height: 38px;
+    white-space: nowrap;
+}
+
 .power-rating-filters {
     display: grid;
     grid-template-columns: 150px 150px minmax(240px, 1fr) auto;
@@ -177,6 +283,18 @@
 }
 
 @media (max-width: 760px) {
+    .power-rating-recalculation {
+        grid-template-columns: 1fr;
+    }
+
+    .power-rating-upload-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .power-rating-upload-fields button {
+        grid-column: 1 / -1;
+    }
+
     .power-rating-filters {
         grid-template-columns: 1fr 1fr;
     }
@@ -191,6 +309,14 @@
 }
 
 @media (max-width: 440px) {
+    .power-rating-upload-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .power-rating-upload-fields button {
+        grid-column: auto;
+    }
+
     .power-rating-filters {
         grid-template-columns: 1fr;
     }

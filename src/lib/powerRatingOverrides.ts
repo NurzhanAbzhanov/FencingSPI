@@ -11,48 +11,120 @@ import { supabase } from "./supabase";
 
 const STORAGE_KEY = "spi-power-rating-overrides-v1";
 
+export type FencerRatingUploadRow = {
+    teamName: string;
+    weapon: Exclude<Weapon, "Team">;
+    powerRating: number;
+};
+
+export async function loadPowerRatingSeasons(): Promise<string[]> {
+    if (!supabase) return [];
+    const result = await supabase
+        .from("seasons")
+        .select("slug, starts_on")
+        .order("starts_on", { ascending: false });
+    if (result.error) throw result.error;
+    return (result.data as Array<{ slug: string }>).map((row) => row.slug).slice(0, 6);
+}
+
 export async function loadPowerRatingRecords(
     season: string
 ): Promise<PowerRatingRecord[]> {
-    if (season !== "2025-26") {
+    if (!supabase) {
         return [];
     }
 
-    const response = await fetch("/spi-results.csv");
-    if (!response.ok) {
-        throw new Error("Could not load current power ratings.");
-    }
+    const result = await supabase
+        .from("spi_results")
+        .select(
+            "power_rating, weapon, seasons!inner(slug), programs!inner(legacy_team_id, gender, schools!inner(name))"
+        )
+        .eq("seasons.slug", season);
 
-    const lines = (await response.text()).trim().split(/\r?\n/);
-    const headers = splitCsvLine(lines[0]);
-    const records = new Map<string, PowerRatingRecord>();
+    if (result.error) throw result.error;
 
-    for (const line of lines.slice(1)) {
-        const values = splitCsvLine(line);
-        const row = Object.fromEntries(
-            headers.map((header, index) => [header, values[index] ?? ""])
+    type DatabaseRating = {
+        power_rating: number | null;
+        weapon: Weapon;
+        programs:
+            | { legacy_team_id: number; gender: Gender; schools: { name: string } | Array<{ name: string }> }
+            | Array<{ legacy_team_id: number; gender: Gender; schools: { name: string } | Array<{ name: string }> }>;
+    };
+
+    return (result.data as unknown as DatabaseRating[]).flatMap((row) => {
+        if (row.power_rating == null) return [];
+        const program = Array.isArray(row.programs) ? row.programs[0] : row.programs;
+        const school = program && (Array.isArray(program.schools) ? program.schools[0] : program.schools);
+        if (!program || !school) return [];
+        return [{
+            teamId: Number(program.legacy_team_id),
+            teamName: school.name,
+            gender: program.gender,
+            weapon: row.weapon,
+            calculatedPowerRating: Number(row.power_rating),
+        } satisfies PowerRatingRecord];
+    });
+}
+
+export async function parseFencerRatingFile(file: File): Promise<FencerRatingUploadRow[]> {
+    const XLSX = await import("xlsx");
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) throw new Error(`${file.name} does not contain a worksheet.`);
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
+        defval: "",
+    });
+    return normalizeFencerRatingUploadRows(rows);
+}
+
+export function normalizeFencerRatingUploadRows(
+    rows: Array<Record<string, unknown>>
+): FencerRatingUploadRow[] {
+    if (rows.length === 0) throw new Error("The fencer-rating file has no data rows.");
+
+    return rows.map((row, index) => {
+        const normalized = new Map(
+            Object.entries(row).map(([key, value]) => [normalizeHeader(key), value])
         );
-        const gender = row.gender as Gender;
-        const weapon = row.weapon as Weapon;
+        const teamName = cleanCell(readAlias(normalized, ["teamname", "schoolname", "school", "team"]));
+        const weaponValue = cleanCell(readAlias(normalized, ["weapon"]));
+        const ratingValue = readAlias(normalized, ["powerrating", "rating", "pr"]);
+        const rowNumber = index + 2;
 
-        if (
-            !["Men", "Women"].includes(gender) ||
-            !["Team", "Epee", "Foil", "Sabre"].includes(weapon)
-        ) {
-            continue;
+        if (!teamName) throw new Error(`Row ${rowNumber} is missing a team name.`);
+        if (!weaponValue) throw new Error(`Row ${rowNumber} is missing a weapon.`);
+        if (ratingValue === undefined || cleanCell(ratingValue) === "") {
+            throw new Error(`Row ${rowNumber} is missing a power rating.`);
         }
 
-        const record: PowerRatingRecord = {
-            teamId: Number(row.teamId),
-            teamName: row.teamName,
-            gender,
-            weapon,
-            calculatedPowerRating: Number((Number(row.prc) * 20).toFixed(6)),
-        };
-        records.set(createOverrideKey(record), record);
-    }
+        const weapon = normalizeWeapon(weaponValue);
+        const powerRating = Number(cleanCell(ratingValue));
+        if (!Number.isFinite(powerRating) || powerRating < 0) {
+            throw new Error(`Row ${rowNumber} has an invalid power rating.`);
+        }
 
-    return [...records.values()];
+        return { teamName, weapon, powerRating };
+    });
+}
+
+export async function recalculatePowerRatings(
+    season: string,
+    gender: Gender,
+    rows: FencerRatingUploadRow[],
+    sourceFile: string
+): Promise<void> {
+    if (!supabase) throw new Error("Supabase is not configured.");
+    const result = await supabase.rpc("replace_fencer_ratings_and_recalculate", {
+        p_season_slug: season,
+        p_gender: gender,
+        p_rows: rows.map((row) => ({
+            team_name: row.teamName,
+            weapon: row.weapon,
+            power_rating: row.powerRating,
+        })),
+        p_source_file: sourceFile,
+    });
+    if (result.error) throw result.error;
 }
 
 export async function loadPowerRatingOverrides(
@@ -233,6 +305,35 @@ export function createOverrideKey(value: {
     return `${value.teamId}:${value.gender}:${value.weapon}`;
 }
 
+function normalizeHeader(value: string): string {
+    return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function readAlias(
+    row: Map<string, unknown>,
+    aliases: string[]
+): unknown {
+    for (const alias of aliases) {
+        if (row.has(alias)) return row.get(alias);
+    }
+    return undefined;
+}
+
+function cleanCell(value: unknown): string {
+    return String(value ?? "")
+        .trim()
+        .replace(/^['"]|['"]$/g, "")
+        .trim();
+}
+
+function normalizeWeapon(value: string): Exclude<Weapon, "Team"> {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "epee" || normalized === "épée") return "Epee";
+    if (normalized === "foil") return "Foil";
+    if (normalized === "sabre" || normalized === "saber") return "Sabre";
+    throw new Error(`Invalid weapon: ${value}`);
+}
+
 function readLocalOverrides(): PowerRatingOverride[] {
     try {
         const value = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as unknown;
@@ -294,29 +395,4 @@ function isPowerRatingOverride(value: unknown): value is PowerRatingOverride {
         typeof row.updatedAt === "string" &&
         typeof row.updatedBy === "string"
     );
-}
-
-function splitCsvLine(line: string): string[] {
-    const values: string[] = [];
-    let value = "";
-    let quoted = false;
-
-    for (let index = 0; index < line.length; index += 1) {
-        const character = line[index];
-        if (character === '"') {
-            if (quoted && line[index + 1] === '"') {
-                value += '"';
-                index += 1;
-            } else {
-                quoted = !quoted;
-            }
-        } else if (character === "," && !quoted) {
-            values.push(value);
-            value = "";
-        } else {
-            value += character;
-        }
-    }
-    values.push(value);
-    return values;
 }
