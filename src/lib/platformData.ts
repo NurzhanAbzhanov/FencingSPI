@@ -7,13 +7,13 @@ export const SEASONS = [
     { slug: "2024-25", name: "2024-25" },
     { slug: "2023-24", name: "2023-24" },
     { slug: "2022-23", name: "2022-23" },
+    { slug: "2021-22", name: "2021-22" },
 ] as const;
 
 export const POLL_MONTHS = ["October", "November", "December", "January"] as const;
 
 export async function loadPrograms(season: string): Promise<Program[]> {
     if (!supabase) return [];
-    if (season !== "2025-26") return [];
 
     let result = await supabase.from("programs").select("legacy_team_id, gender, schools!inner(name, logo_url, conference, region), program_seasons(division, conference, region, seasons!inner(slug), program_season_conferences(conference))");
     if (result.error) {
@@ -39,65 +39,87 @@ export async function loadPrograms(season: string): Promise<Program[]> {
 }
 
 export async function loadMatches(season: string): Promise<SeasonMatch[]> {
-    if (season !== "2025-26") return [];
-    return [];
+    if (!supabase) return [];
+
+    type DatabaseMatch = {
+        id: number;
+        source_id: number | null;
+        fenced_on: string;
+        gender: Gender;
+        left_sabre: number;
+        left_foil: number;
+        left_epee: number;
+        right_sabre: number;
+        right_foil: number;
+        right_epee: number;
+        host: string;
+        left_program: { legacy_team_id: number } | Array<{ legacy_team_id: number }>;
+        right_program: { legacy_team_id: number } | Array<{ legacy_team_id: number }>;
+    };
+
+    const pageSize = 1000;
+    const databaseRows: DatabaseMatch[] = [];
+    for (let start = 0; ; start += pageSize) {
+        const result = await supabase
+            .from("matches")
+            .select(
+                "id, source_id, fenced_on, gender, left_sabre, left_foil, left_epee, right_sabre, right_foil, right_epee, host, seasons!inner(slug), left_program:programs!matches_left_program_id_fkey(legacy_team_id), right_program:programs!matches_right_program_id_fkey(legacy_team_id)"
+            )
+            .eq("seasons.slug", season)
+            .order("fenced_on", { ascending: true })
+            .range(start, start + pageSize - 1);
+
+        if (result.error || !result.data) return [];
+        const page = result.data as unknown as DatabaseMatch[];
+        databaseRows.push(...page);
+        if (page.length < pageSize) break;
+    }
+
+    return databaseRows.flatMap((row) => {
+        const leftProgram = Array.isArray(row.left_program) ? row.left_program[0] : row.left_program;
+        const rightProgram = Array.isArray(row.right_program) ? row.right_program[0] : row.right_program;
+        if (!leftProgram || !rightProgram) return [];
+
+        return [{
+            id: Number(row.source_id ?? row.id),
+            date: row.fenced_on,
+            gender: row.gender,
+            leftTeamId: Number(leftProgram.legacy_team_id),
+            rightTeamId: Number(rightProgram.legacy_team_id),
+            leftSabre: Number(row.left_sabre),
+            leftFoil: Number(row.left_foil),
+            leftEpee: Number(row.left_epee),
+            rightSabre: Number(row.right_sabre),
+            rightFoil: Number(row.right_foil),
+            rightEpee: Number(row.right_epee),
+            host: row.host,
+        } satisfies SeasonMatch];
+    });
 }
 
 export async function loadStandings(
     season: string,
-    programs?: Program[]
+    _programs?: Program[]
 ): Promise<Standing[]> {
-    if (season !== "2025-26") return [];
-    const baseRankings = [
-        { teamName: "University of Notre Dame", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 113.8884 },
-        { teamName: "Columbia University-Barnard College", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 109.9821 },
-        { teamName: "Yale University", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 108.6724 },
-        { teamName: "St. John's University (New York)", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 106.4202 },
-        { teamName: "University of Pennsylvania", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 104.7385 },
-        { teamName: "University of North Carolina, Chapel Hill", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 100.1524 },
-        { teamName: "Boston College", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 96.8106 },
-        { teamName: "Duke University", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 94.4861 },
-        { teamName: "Stanford University", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 92.4444 },
-        { teamName: "Princeton University", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 90.2179 },
-        { teamName: "The Ohio State University", gender: "Men" as Gender, weapon: "Team" as Weapon, spi: 87.1669 },
-        { teamName: "University of Notre Dame", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 128.2862 },
-        { teamName: "Columbia University-Barnard College", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 123.5028 },
-        { teamName: "Harvard University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 108.3129 },
-        { teamName: "Duke University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 105.8469 },
-        { teamName: "Northwestern University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 103.1821 },
-        { teamName: "University of North Carolina, Chapel Hill", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 101.5108 },
-        { teamName: "Princeton University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 99.5803 },
-        { teamName: "Yale University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 95.3025 },
-        { teamName: "Cornell University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 94.4858 },
-        { teamName: "Brown University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 91.5928 },
-        { teamName: "Temple University", gender: "Women" as Gender, weapon: "Team" as Weapon, spi: 86.0573 },
-    ];
+    void _programs;
 
-    if (programs && programs.length > 0) {
-        return baseRankings.flatMap((r) => {
-            const prog = programs.find((p) => p.name.toLowerCase() === r.teamName.toLowerCase() && p.gender === r.gender);
-            if (!prog) return [];
-            return [{ teamId: prog.id, teamName: prog.name, gender: r.gender, weapon: r.weapon, spi: r.spi }];
-        });
-    }
+    if (!supabase) return [];
 
-    const response = await fetch("/spi-results.csv").catch(() => null);
-    if (!response || !response.ok) {
-        return baseRankings.map((r, i) => ({ teamId: i + 1, teamName: r.teamName, gender: r.gender, weapon: r.weapon, spi: r.spi }));
-    }
-    const lines = (await response.text()).trim().split(/\r?\n/);
-    const headers = splitCsvLine(lines[0]);
-    return lines.slice(1).map((line) => {
-        const values = splitCsvLine(line);
-        const row = Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
-        return {
-            teamId: Number(row.teamId),
-            teamName: row.teamName,
-            gender: row.gender as Gender,
-            weapon: row.weapon as Weapon,
-            spi: Number(row.spi),
-        };
-    });
+    const result = await supabase
+        .from("public_spi_standings")
+        .select("team_id, team_name, gender, weapon, spi")
+        .eq("season_slug", season)
+        .order("spi", { ascending: false });
+
+    if (result.error || !result.data) return [];
+
+    return result.data.map((row) => ({
+        teamId: Number(row.team_id),
+        teamName: String(row.team_name),
+        gender: row.gender as Gender,
+        weapon: row.weapon as Weapon,
+        spi: Number(row.spi),
+    }));
 }
 
 function resolvePollMonth(label: string, monthNum?: number | null, opensAt?: string | null): string {
@@ -187,28 +209,4 @@ export function readLocalPrograms(): Program[] {
     } catch {
         return [];
     }
-}
-
-function splitCsvLine(line: string): string[] {
-    const values: string[] = [];
-    let value = "";
-    let quoted = false;
-    for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        if (char === '"') {
-            if (quoted && line[index + 1] === '"') {
-                value += '"';
-                index += 1;
-            } else {
-                quoted = !quoted;
-            }
-        } else if (char === "," && !quoted) {
-            values.push(value);
-            value = "";
-        } else {
-            value += char;
-        }
-    }
-    values.push(value);
-    return values;
 }
