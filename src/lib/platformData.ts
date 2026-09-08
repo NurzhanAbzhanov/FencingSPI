@@ -67,6 +67,7 @@ export async function loadMatches(season: string): Promise<SeasonMatch[]> {
             )
             .eq("seasons.slug", season)
             .order("fenced_on", { ascending: true })
+            .order("id", { ascending: true })
             .range(start, start + pageSize - 1);
 
         if (result.error || !result.data) return [];

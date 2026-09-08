@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import { getRouteFromHash, type Route } from "./lib/appRoute";
 import { loadMatches, loadPollResults, loadPrograms, loadStandings, readDemoUser, readLocalPrograms, signOutDemo } from "./lib/platformData";
-import { readMatchSubmissions, saveMatchSubmissions } from "./lib/matchResultsStore";
 import { deleteDatabaseMatchSubmission, loadDatabaseMatchSubmissions, saveDatabaseMatchSubmission } from "./lib/matchRepository";
 import { isInitialPasswordSetup, supabase } from "./lib/supabase";
-import { TEAMS } from "./lib/teams";
 import AdminPage from "./pages/AdminPage";
 import ResultsEntryPage from "./pages/ResultsEntryPage";
 import SchoolResultsPage from "./pages/SchoolResultsPage";
@@ -32,7 +30,9 @@ export default function App() {
     const [pollResults, setPollResults] = useState<PollResult[]>([]);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [user, setUser] = useState<PlatformUser | null>(readDemoUser);
-    const [matchSubmissions, setMatchSubmissions] = useState<MatchSubmission[]>(readMatchSubmissions);
+    const [matchSubmissions, setMatchSubmissions] = useState<MatchSubmission[]>([]);
+    const [dataRevision, setDataRevision] = useState(0);
+    const [entryStatus, setEntryStatus] = useState<"loading" | "ready" | "error">("loading");
 
     useEffect(() => {
         const onHashChange = () => {
@@ -56,7 +56,7 @@ export default function App() {
                 setMatches(loadedMatches); setStandings(loadedStandings); setPollResults(loadedPollResults); setStatus("ready");
             }).catch(() => active && setStatus("error"));
         return () => { active = false; };
-    }, [season]);
+    }, [season, dataRevision]);
 
     useEffect(() => {
         if (!supabase || user) return;
@@ -86,34 +86,36 @@ export default function App() {
     useEffect(() => {
         if (user?.role !== "admin") return;
         let active = true;
+        setEntryStatus("loading");
         loadDatabaseMatchSubmissions(season)
             .then((rows: MatchSubmission[] | null) => {
-                if (!active || rows === null) return;
+                if (!active) return;
+                if (rows === null) { setEntryStatus("error"); return; }
                 setMatchSubmissions(rows);
-                saveMatchSubmissions(rows);
+                setEntryStatus("ready");
             })
-            .catch(() => undefined);
+            .catch(() => { if (active) setEntryStatus("error"); });
         return () => { active = false; };
     }, [season, user?.id, user?.role]);
 
-    function changeSeason(nextSeason: string) { setStatus("loading"); setSeason(nextSeason); }
+    function changeSeason(nextSeason: string) { if (nextSeason === season) return; setMatchSubmissions([]); setEntryStatus("loading"); setStatus("loading"); setSeason(nextSeason); }
     async function handleMatchSave(submission: MatchSubmission) {
         await saveDatabaseMatchSubmission(season, submission);
         setMatchSubmissions((current) => {
             const rows = current.some((row) => row.id === submission.id)
                 ? current.map((row) => row.id === submission.id ? submission : row)
                 : [...current, submission];
-            saveMatchSubmissions(rows);
             return rows;
         });
+        setDataRevision((value) => value + 1);
     }
     async function handleMatchDelete(submission: MatchSubmission) {
         await deleteDatabaseMatchSubmission(season, submission.id);
         setMatchSubmissions((current) => {
             const rows = current.filter((row) => row.id !== submission.id);
-            saveMatchSubmissions(rows);
             return rows;
         });
+        setDataRevision((value) => value + 1);
     }
     async function signOut() { signOutDemo(); if (supabase) await supabase.auth.signOut(); setUser(null); window.location.hash = "#/spi"; }
 
@@ -125,7 +127,7 @@ export default function App() {
         protectedPage && !user ? <SignInPage onSignedIn={setUser} /> :
         route.page === "spi" ? <StandingsPage key={route.initialWeapon ?? "Team"} initialWeapon={route.initialWeapon} programs={programs} standings={standings} pollResults={pollResults} season={season} onSeasonChange={changeSeason} /> :
         route.page === "school-results" ? <SchoolResultsPage teamId={route.teamId} season={route.season} programs={programs} matches={matches} /> :
-        route.page === "enter-results" && user?.role === "admin" ? <ResultsEntryPage submissions={matchSubmissions} teams={TEAMS} onSaveSubmission={handleMatchSave} onDeleteSubmission={handleMatchDelete} /> :
+        route.page === "enter-results" && user?.role === "admin" ? entryStatus !== "ready" ? <p role="status">{entryStatus === "loading" ? "Loading season matches" : "Could not load season matches. Refresh to retry."}</p> : <ResultsEntryPage key={season} season={season} onSeasonChange={changeSeason} submissions={matchSubmissions} teams={programs} onSaveSubmission={handleMatchSave} onDeleteSubmission={handleMatchDelete} /> :
         route.page === "enter-results" ? <AccessDenied title="Admin access required" message="Only administrators can upload or edit match results." /> :
         route.page === "set-password" ? <SetPasswordPage onCompleted={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :
         route.page === "sign-in" ? <SignInPage onSignedIn={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :

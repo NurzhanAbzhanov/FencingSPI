@@ -337,6 +337,11 @@ select is(
 );
 
 reset role;
+select set_config('test.opened_spi', (
+    select spi::text from public.spi_results
+    where season_id='11111111-1111-4111-8111-111111111111'
+      and program_id=md5('task-2-program-1')::uuid and weapon='Team'
+), true);
 update public.spi_results
 set spi = 1
 where season_id = '11111111-1111-4111-8111-111111111111'
@@ -364,7 +369,7 @@ select is(
           and program_id = md5('task-2-program-1')::uuid
           and weapon = 'Team'
     ),
-    1039::numeric,
+    current_setting('test.opened_spi')::numeric,
     'source SPI changes do not mutate an opened snapshot'
 );
 

@@ -31,17 +31,26 @@ export async function loadDatabaseMatchSubmissions(
     const auth = await supabase.auth.getUser();
     if (!auth.data.user) return null;
 
-    const result = await supabase
-        .from("matches")
-        .select(
-            "id, source_id, fenced_on, gender, left_sabre, left_foil, left_epee, right_sabre, right_foil, right_epee, host, submission_email, created_at, seasons!inner(slug), left_program:programs!matches_left_program_id_fkey(legacy_team_id), right_program:programs!matches_right_program_id_fkey(legacy_team_id)"
-        )
-        .eq("seasons.slug", season)
-        .order("fenced_on", { ascending: true });
+    const databaseRows: DatabaseMatch[] = [];
+    for (let start = 0; ; start += 1000) {
+        const result = await supabase
+            .from("matches")
+            .select(
+                "id, source_id, fenced_on, gender, left_sabre, left_foil, left_epee, right_sabre, right_foil, right_epee, host, submission_email, created_at, seasons!inner(slug), left_program:programs!matches_left_program_id_fkey(legacy_team_id), right_program:programs!matches_right_program_id_fkey(legacy_team_id)"
+            )
+            .eq("seasons.slug", season)
+            .order("fenced_on", { ascending: true })
+            .order("id", { ascending: true })
+            .range(start, start + 999);
 
-    if (result.error) throw result.error;
+        if (result.error) throw result.error;
 
-    return (result.data as unknown as DatabaseMatch[]).flatMap((row) => {
+        const page = result.data as unknown as DatabaseMatch[];
+        databaseRows.push(...page);
+        if (page.length < 1000) break;
+    }
+
+    return databaseRows.flatMap((row) => {
         const leftProgram = Array.isArray(row.left_program)
             ? row.left_program[0]
             : row.left_program;

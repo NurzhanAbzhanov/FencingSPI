@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { loadPowerRatingSeasons } from "../lib/powerRatingOverrides";
 import {
     createMatchId,
     downloadMatchSubmissions,
@@ -27,6 +28,8 @@ type EntryForm = {
 };
 
 type ResultsEntryPageProps = {
+    season: string;
+    onSeasonChange: (season: string) => void;
     teams: Team[];
     submissions: MatchSubmission[];
     onSaveSubmission: (submission: MatchSubmission) => Promise<void>;
@@ -40,11 +43,21 @@ const WEAPONS = [
 ] as const;
 
 export default function ResultsEntryPage({
+    season,
+    onSeasonChange,
     teams,
     submissions,
     onSaveSubmission,
     onDeleteSubmission,
 }: ResultsEntryPageProps) {
+    const [seasons, setSeasons] = useState<string[]>([season]);
+    useEffect(() => {
+        let active = true;
+        loadPowerRatingSeasons().then((rows) => {
+            if (active && rows.length) setSeasons([...new Set([season, ...rows])]);
+        }).catch(() => undefined);
+        return () => { active = false; };
+    }, [season]);
     const [form, setForm] = useState<EntryForm>(createInitialForm);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [status, setStatus] = useState("");
@@ -198,6 +211,11 @@ export default function ResultsEntryPage({
                     <p className="page-eyebrow">Match data</p>
                     <h1>Squad and Team Results</h1>
                 </div>
+                <label>Season
+                    <select aria-label="Season" value={season} disabled={saving} onChange={(event) => onSeasonChange(event.target.value)}>
+                        {seasons.map((value) => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                </label>
             </div>
 
             <form className="results-entry-form" onSubmit={handleSubmit} ref={formRef}>
