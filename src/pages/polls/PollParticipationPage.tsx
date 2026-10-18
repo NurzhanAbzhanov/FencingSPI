@@ -25,10 +25,14 @@ export default function PollParticipationPage({ periodId, season = '2025-26' }: 
         if ((!selectedPeriodId || selectedPeriodId === 'current') && loaded.length > 0) {
           const active = loaded.find((p) => p.status === 'open') ?? loaded[0]
           setSelectedPeriodId(active.id)
+        } else if (loaded.length === 0) {
+          setLoading(false)
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (!selectedPeriodId || selectedPeriodId === 'current') setSelectedPeriodId('period-1')
+        setError(err instanceof Error ? err.message : 'Could not load poll periods.')
+        setLoading(false)
       })
   }, [season])
 
@@ -107,6 +111,10 @@ export default function PollParticipationPage({ periodId, season = '2025-26' }: 
         ) : error ? (
           <div className="bg-white border border-red-200 rounded-lg p-6 text-center text-xs text-red-600">
             {error}
+          </div>
+        ) : periods.length === 0 ? (
+          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-xs text-gray-500 shadow-2xs">
+            No poll periods found.
           </div>
         ) : (
           <>
