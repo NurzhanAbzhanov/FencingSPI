@@ -5,6 +5,8 @@ import type { PlatformUser, Program } from "../types/platform";
 import type { Gender } from "../types/types";
 import PowerRatingsPage from "./PowerRatingsPage";
 import CoachManagementPage from "./polls/CoachManagementPage";
+import FeedbackInbox from "../components/FeedbackInbox";
+import SidRegistrations from "../components/SidRegistrations";
 
 export default function AdminPage({ user, programs, season, onProgramAdded }: { user: PlatformUser; programs: Program[]; season: string; onProgramAdded: (program: Program) => void }) {
     const [name, setName] = useState(""); 
@@ -42,6 +44,8 @@ export default function AdminPage({ user, programs, season, onProgramAdded }: { 
             </div>
         </div>
 
+        <FeedbackInbox />
+        <SidRegistrations />
         <section className="admin-section">
             <h2>Add a school program</h2>
             <form className="school-form" onSubmit={addSchool}>

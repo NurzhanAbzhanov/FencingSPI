@@ -1,0 +1,37 @@
+/* Loaded only by the WordPress frame; standalone styling is unchanged. */
+body { background: #fff; }
+.header-title { display: none; }
+.header-content { min-height: 48px; padding: 0 16px; gap: 12px; }
+.header nav { order: initial; flex-basis: auto; width: auto; }
+.header-account { margin-left: auto; }
+.nav-list a { min-height: 44px; }
+.app-shell { max-width: none; padding: 18px 16px 32px; }
+.page-section { gap: 14px; }
+.page-title-row h1 { font-size: 1.5rem; letter-spacing: 0; }
+.filter-bar { padding: 12px 0; border: 0; border-top: 1px solid #e2e6eb; border-bottom: 1px solid #e2e6eb; }
+.filter-bar label { min-width: 0; }
+.filter-bar select { width: 100%; min-width: 0; min-height: 36px; }
+.standings-table { min-width: 920px; font-size: .8rem; }
+.standings-table th, .standings-table td { padding: 7px 6px; height: 44px; white-space: normal; overflow-wrap: anywhere; }
+.standings-table th { font-size: .65rem; }
+.standings-table .table-sort { height: 32px; gap: 3px; }
+.standings-table th:nth-child(1) { width: 5% !important; }
+.standings-table th:nth-child(2) { width: 24% !important; }
+.standings-table th:nth-child(3) { width: 6% !important; }
+.standings-table th:nth-child(4) { width: 12% !important; }
+.standings-table th:nth-child(5) { width: 12% !important; }
+.standings-table th.poll-column { width: 6% !important; }
+.standings-table th:nth-last-child(2) { width: 9% !important; }
+.standings-table th:last-child { width: 8% !important; }
+.standings-table .school-cell { min-width: 0; }
+.standings-table .school-cell span, .standings-table .school-profile-link { white-space: normal !important; overflow: visible !important; }
+.standings-table .spi-cell { background: #eff8f8; white-space: nowrap; }
+.standings-table .school-logo.small, .standings-table .school-logo-fallback.small { width: 26px; height: 26px; }
+@media (max-width: 600px) {
+    .header-content { padding: 0 8px; }
+    .header nav { order: 3; flex-basis: 100%; width: 100%; }
+    .nav-list a { padding: 0 8px; font-size: .8rem; }
+    .app-shell { padding: 14px 10px 24px; }
+    .page-title-row { flex-wrap: wrap; gap: 12px; }
+    .filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

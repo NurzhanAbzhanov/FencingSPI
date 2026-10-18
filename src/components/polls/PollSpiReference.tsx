@@ -32,7 +32,12 @@ export default function PollSpiReference({
     return [...candidates].sort((a, b) => {
       let comp = 0
       if (sortKey === 'team') comp = a.teamName.localeCompare(b.teamName)
-      else if (sortKey === 'currentSpi') comp = a.currentSpi - b.currentSpi
+      else if (sortKey === 'currentSpi') {
+        if (a.currentSpi == null && b.currentSpi == null) return a.teamName.localeCompare(b.teamName)
+        if (a.currentSpi == null) return 1
+        if (b.currentSpi == null) return -1
+        comp = a.currentSpi - b.currentSpi
+      }
       else if (sortKey === 'lastSeasonSpi')
         comp = (a.previousSpi ?? 999) - (b.previousSpi ?? 999)
       else if (sortKey === 'powerRating')
@@ -133,7 +138,7 @@ export default function PollSpiReference({
               return (
                 <tr key={candidate.teamId} className="hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-2 text-xs font-medium text-gray-400 tabular-nums text-center whitespace-nowrap spi-rank-cell numeric">
-                    #{candidate.spiRank}
+                    {candidate.spiRank == null ? '—' : `#${candidate.spiRank}`}
                   </td>
                   <td className="px-3 py-2 text-xs font-medium text-gray-900 poll-team-cell">
                     <div className="flex items-center gap-2.5 min-w-0 poll-team-identity">
@@ -147,7 +152,7 @@ export default function PollSpiReference({
                     </div>
                   </td>
                   <td className="px-2 py-2 text-xs font-semibold text-sky-700 tabular-nums text-center whitespace-nowrap current-spi-cell numeric">
-                    {candidate.currentSpi.toFixed(4)}
+                    {candidate.currentSpi == null ? '—' : candidate.currentSpi.toFixed(4)}
                   </td>
                   <td
                     className="px-2 py-2 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap previous-spi-cell numeric"

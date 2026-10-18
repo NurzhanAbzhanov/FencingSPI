@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -8,7 +8,7 @@ vi.mock("../../lib/pollRepository", () => ({ loadPollBallot: mocks.loadPollBallo
 import PollBallotPage from "./PollBallotPage";
 
 const user = { id: "user-1", name: "Coach One", role: "coach" as const, canVote: true };
-const period = { id: "period-1", label: "October (Preseason)", seasonSlug: "2025-26", status: "open" as const, opensAt: null, closesAt: null, effectivelyOpen: true };
+const period = { id: "period-1", label: "November", seasonSlug: "2025-26", status: "open" as const, opensAt: null, closesAt: null, effectivelyOpen: true };
 
 describe("PollBallotPage", () => {
     it("blocks Team Division III until the overall ballot is submitted", async () => {
@@ -16,6 +16,30 @@ describe("PollBallotPage", () => {
         render(<PollBallotPage slug="men_team_diii" user={user} />);
         expect(await screen.findByText("Complete overall ballot first")).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /go to men's team overall/i })).toHaveAttribute("href", "#/polls/vote/men_team_overall");
+    });
+
+    it("uses only last season SPI and rank for October, with missing historical data last", async () => {
+        mocks.loadPollBallot.mockResolvedValue({ definitionId: "definition-1", period: { ...period, label: "October (Preseason)" },
+            category: { slug: "men_squad_epee_overall", label: "Men's Epee Overall", gender: "Men", weapon: "Epee", scope: "Overall", rankLimit: 15, hidden: false },
+            candidates: [
+                { programId: "p1", teamId: 1, teamName: "Alpha", logoUrl: null, division: 1, conference: "", region: "", currentSpi: 100, previousSpi: 95, spiRank: 1, powerRating: 90 },
+                { programId: "p2", teamId: 2, teamName: "Beta", logoUrl: null, division: 1, conference: "", region: "", currentSpi: 90, previousSpi: 105, spiRank: 2, powerRating: 80 },
+                { programId: "p3", teamId: 3, teamName: "Gamma", logoUrl: null, division: 1, conference: "", region: "", currentSpi: null, previousSpi: null, spiRank: null, powerRating: null },
+            ],
+            rankings: [], submitted: false, prerequisite: "ready", lockedTeamIds: [] });
+        render(<PollBallotPage slug="men_squad_epee_overall" user={user} />);
+        expect(await screen.findByRole("cell", { name: "95.0000" })).toHaveClass("previous-spi-cell");
+        expect(screen.getByRole("columnheader", { name: "Last Season Rank" })).toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: /CURRENT SPI/ })).not.toBeInTheDocument();
+        const rows = screen.getAllByRole("row");
+        expect(within(rows[1]).getByRole("cell", { name: "#1" })).toBeInTheDocument();
+        expect(rows[1]).toHaveTextContent("Beta");
+        expect(rows[1]).toHaveTextContent("105.0000");
+        expect(within(rows[2]).getByRole("cell", { name: "#2" })).toBeInTheDocument();
+        expect(rows[2]).toHaveTextContent("Alpha");
+        expect(rows[3]).toHaveTextContent("Gamma");
+        expect(screen.getByText("Preseason · Previous season SPI")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Rank Alpha at position 1" })).toBeEnabled();
     });
 
     it("quick-ranks a candidate and submits after review", async () => {

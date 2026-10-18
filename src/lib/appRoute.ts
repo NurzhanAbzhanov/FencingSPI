@@ -4,7 +4,7 @@ import type { Weapon } from "../types/types";
 
 export type Route =
     | { page: "spi"; initialWeapon?: Weapon }
-    | { page: "enter-results" | "polls" | "admin" | "sign-in" | "set-password" }
+    | { page: "enter-results" | "polls" | "admin" | "sign-in" | "set-password" | "change-password" }
     | { page: "school-results"; teamId: number; season: string }
     | { page: "poll-ballot"; slug: PollCategorySlug }
     | { page: "poll-results" | "public-poll-results"; periodId: string }
@@ -44,6 +44,6 @@ export function getRouteFromHash(): Route {
         const periodId = parts[2] || searchParams.get("period") || "current";
         return { page: "admin-participation", periodId };
     }
-    if (["spi", "enter-results", "polls", "admin", "sign-in", "set-password"].includes(parts[0])) return { page: parts[0] as Extract<Route, { page: string }>["page"] } as Route;
+    if (["spi", "enter-results", "polls", "admin", "sign-in", "set-password", "change-password"].includes(parts[0])) return { page: parts[0] as Extract<Route, { page: string }>["page"] } as Route;
     return { page: "spi" };
 }

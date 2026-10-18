@@ -3,6 +3,7 @@ import type { Gender, Weapon } from "../types/types";
 import { supabase } from "./supabase";
 
 export const SEASONS = [
+    { slug: "2026-27", name: "2026-27" },
     { slug: "2025-26", name: "2025-26" },
     { slug: "2024-25", name: "2024-25" },
     { slug: "2023-24", name: "2023-24" },
@@ -148,10 +149,24 @@ function resolvePollMonth(label: string, monthNum?: number | null, opensAt?: str
 
 export async function loadPollResults(season: string): Promise<PollResult[]> {
     if (!supabase) return [];
+    const archive = await supabase.from("archived_poll_results")
+        .select("id, team_id, gender, weapon, scope, period, rank, points, source_url")
+        .eq("season_slug", season).order("id");
+    if (archive.error) throw new Error("Could not load historical coaches polls.");
+    const archived: PollResult[] = (archive.data ?? []).map((row) => ({
+        definitionId: `archive-${row.id}`, teamId: Number(row.team_id), month: row.period,
+        gender: row.gender as Gender, weapon: row.weapon as Weapon, scope: row.scope,
+        rank: Number(row.rank), points: row.points == null ? null : Number(row.points), sourceUrl: row.source_url,
+    }));
+    // Some installations have migrated ballot storage and have no live results yet.
+    // Do not join a retired ballot table just to discover that the result set is empty.
+    const published = await supabase.from("published_poll_results").select("*").limit(1);
+    if (published.error) throw new Error("Could not load published coaches polls.");
+    if (!published.data?.length) return archived;
     const result = await supabase.from("published_poll_results").select("definition_id, rank, points, programs!inner(legacy_team_id), ballot_definitions!inner(gender, weapon, scope, poll_periods!inner(label, month, opens_at, seasons!inner(slug)))");
-    if (result.error || !result.data) return [];
+    if (result.error || !result.data) throw new Error("Could not load published coaches polls.");
     type DatabasePoll = { definition_id: string; rank: number; points: number; programs: { legacy_team_id: number } | Array<{ legacy_team_id: number }>; ballot_definitions: { gender: Gender; weapon: Weapon; scope: "Overall" | "DIII"; poll_periods: { label: string; month?: number; opens_at?: string; seasons: { slug: string } | Array<{ slug: string }> } | Array<{ label: string; month?: number; opens_at?: string; seasons: { slug: string } | Array<{ slug: string }> }> } | Array<{ gender: Gender; weapon: Weapon; scope: "Overall" | "DIII"; poll_periods: { label: string; month?: number; opens_at?: string; seasons: { slug: string } | Array<{ slug: string }> } | Array<{ label: string; month?: number; opens_at?: string; seasons: { slug: string } | Array<{ slug: string }> }> }> };
-    return (result.data as unknown as DatabasePoll[]).flatMap((row) => {
+    return [...archived, ...(result.data as unknown as DatabasePoll[]).flatMap((row) => {
         const program = Array.isArray(row.programs) ? row.programs[0] : row.programs;
         const definition = Array.isArray(row.ballot_definitions) ? row.ballot_definitions[0] : row.ballot_definitions;
         const period = Array.isArray(definition?.poll_periods) ? definition.poll_periods[0] : definition?.poll_periods;
@@ -159,7 +174,7 @@ export async function loadPollResults(season: string): Promise<PollResult[]> {
         if (!program || !definition || !period || linkedSeason?.slug !== season) return [];
         const month = resolvePollMonth(period.label, period.month, period.opens_at) as PollResult["month"];
         return [{ definitionId: row.definition_id, teamId: Number(program.legacy_team_id), month, gender: definition.gender, weapon: definition.weapon, scope: definition.scope, rank: row.rank, points: row.points }];
-    });
+    })];
 }
 
 const DEMO_USER_KEY = "spi-platform-demo-user";

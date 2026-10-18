@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
+import FeedbackDialog from "./components/FeedbackDialog";
+import SidSignupDialog from "./components/SidSignupDialog";
+import { safeFeedbackPageUrl, type FeedbackContext } from "./lib/feedbackRepository";
 import { getRouteFromHash, type Route } from "./lib/appRoute";
 import { loadMatches, loadPollResults, loadPrograms, loadStandings, readDemoUser, readLocalPrograms, signOutDemo } from "./lib/platformData";
 import { deleteDatabaseMatchSubmission, loadDatabaseMatchSubmissions, saveDatabaseMatchSubmission } from "./lib/matchRepository";
@@ -8,6 +12,7 @@ import AdminPage from "./pages/AdminPage";
 import ResultsEntryPage from "./pages/ResultsEntryPage";
 import SchoolResultsPage from "./pages/SchoolResultsPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import SignInPage from "./pages/SignInPage";
 import StandingsPage from "./pages/StandingsPage";
 import CoachManagementPage from "./pages/polls/CoachManagementPage";
@@ -33,6 +38,14 @@ export default function App() {
     const [matchSubmissions, setMatchSubmissions] = useState<MatchSubmission[]>([]);
     const [dataRevision, setDataRevision] = useState(0);
     const [entryStatus, setEntryStatus] = useState<"loading" | "ready" | "error">("loading");
+    const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null);
+    const [sidSignupOpen, setSidSignupOpen] = useState(false);
+    const [standingsFilters, setStandingsFilters] = useState<Record<string, string>>({});
+
+    function openFeedback() {
+        setFeedbackContext({ pageUrl: safeFeedbackPageUrl(window.location.href), season: route.page === "school-results" ? route.season : season,
+            ...(route.page === "spi" ? { filters: standingsFilters } : {}) });
+    }
 
     useEffect(() => {
         const onHashChange = () => {
@@ -119,17 +132,18 @@ export default function App() {
     }
     async function signOut() { signOutDemo(); if (supabase) await supabase.auth.signOut(); setUser(null); window.location.hash = "#/spi"; }
 
-    const protectedPage = ["enter-results", "polls", "poll-ballot", "poll-results", "admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page);
-    const dataIndependentPage = ["sign-in", "set-password", "polls", "poll-ballot", "poll-results", "public-poll-results", "admin-polls", "admin-coaches", "admin-participation", "invalid-ballot"].includes(route.page);
-    return <><Header activePage={route.page} user={user} onSignOut={signOut} /><main className="app-shell">
-        {status === "loading" && !dataIndependentPage ? <div className="page-loading">Loading season data</div> :
-        status === "error" && !dataIndependentPage ? <div className="empty-state"><h1>Season data unavailable</h1><p>Refresh the page or choose the active 2025-26 season.</p></div> :
+    const protectedPage = ["change-password", "enter-results", "polls", "poll-ballot", "poll-results", "admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page);
+    const dataIndependentPage = ["change-password", "sign-in", "set-password", "polls", "poll-ballot", "poll-results", "public-poll-results", "admin-polls", "admin-coaches", "admin-participation", "invalid-ballot"].includes(route.page);
+    return <><Header activePage={route.page} user={user} onSignOut={signOut} onFeedback={openFeedback} onSidSignup={() => setSidSignupOpen(true)} /><main className="app-shell">
+        {status === "loading" && !dataIndependentPage && route.page !== "spi" ? <div className="page-loading">Loading season data</div> :
+        status === "error" && !dataIndependentPage && route.page !== "spi" ? <div className="empty-state"><h1>Season data unavailable</h1><p>Refresh the page or choose the active 2025-26 season.</p></div> :
         protectedPage && !user ? <SignInPage onSignedIn={setUser} /> :
-        route.page === "spi" ? <StandingsPage key={route.initialWeapon ?? "Team"} initialWeapon={route.initialWeapon} programs={programs} standings={standings} pollResults={pollResults} season={season} onSeasonChange={changeSeason} /> :
+        route.page === "spi" ? <StandingsPage key={route.initialWeapon ?? "Team"} initialWeapon={route.initialWeapon} programs={programs} standings={status === "ready" ? standings : []} pollResults={status === "ready" ? pollResults : []} loading={status === "loading"} loadError={status === "error"} season={season} onSeasonChange={changeSeason} onFiltersChange={setStandingsFilters} /> :
         route.page === "school-results" ? <SchoolResultsPage teamId={route.teamId} season={route.season} programs={programs} matches={matches} /> :
         route.page === "enter-results" && user?.role === "admin" ? entryStatus !== "ready" ? <p role="status">{entryStatus === "loading" ? "Loading season matches" : "Could not load season matches. Refresh to retry."}</p> : <ResultsEntryPage key={season} season={season} onSeasonChange={changeSeason} submissions={matchSubmissions} teams={programs} onSaveSubmission={handleMatchSave} onDeleteSubmission={handleMatchDelete} /> :
         route.page === "enter-results" ? <AccessDenied title="Admin access required" message="Only administrators can upload or edit match results." /> :
         route.page === "set-password" ? <SetPasswordPage onCompleted={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :
+        route.page === "change-password" ? <ChangePasswordPage /> :
         route.page === "sign-in" ? <SignInPage onSignedIn={(signedIn) => { setUser(signedIn); window.location.hash = "#/spi"; }} /> :
         route.page === "polls" && user ? <PollDashboardPage user={user} /> :
         route.page === "poll-ballot" && user?.canVote ? <PollBallotPage slug={route.slug} user={user} /> :
@@ -142,7 +156,8 @@ export default function App() {
         route.page === "admin-coaches" && user?.role === "admin" ? <CoachManagementPage /> :
         route.page === "admin-participation" && user?.role === "admin" ? <PollParticipationPage periodId={route.periodId} season={season} /> :
         ["admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page) ? <AccessDenied title="Admin access required" message="Only administrators can change poll settings." /> : null}
-    </main></>;
+    </main><Footer />{feedbackContext && <FeedbackDialog context={feedbackContext} onClose={() => setFeedbackContext(null)} />}
+        {sidSignupOpen && <SidSignupDialog schools={programs.map((program) => program.name)} onClose={() => setSidSignupOpen(false)} />}</>;
 }
 
 function AccessDenied({ title, message }: { title: string; message: string }) {

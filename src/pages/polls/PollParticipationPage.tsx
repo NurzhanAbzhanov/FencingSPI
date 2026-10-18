@@ -10,42 +10,67 @@ export default function PollParticipationPage({ periodId, season = '2025-26' }: 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periodId && periodId !== 'current' ? periodId : '')
   const [rows, setRows] = useState<PollParticipationRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [periodsLoading, setPeriodsLoading] = useState(true)
+  const [retry, setRetry] = useState(0)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (periodId && periodId !== 'current') {
-      setSelectedPeriodId(periodId)
-    }
-  }, [periodId])
-
-  useEffect(() => {
+    let active = true
+    setPeriodsLoading(true)
+    setError('')
+    const timer = window.setTimeout(() => {
+      active = false
+      setError('Loading poll periods timed out. Please retry.')
+      setPeriodsLoading(false)
+      setLoading(false)
+    }, 15000)
     loadPollPeriods(season)
+      .then((loaded) => loaded.length || (periodId && periodId !== 'current') ? loaded : loadPollPeriods())
       .then((loaded) => {
+        if (!active) return
         setPeriods(loaded)
-        if ((!selectedPeriodId || selectedPeriodId === 'current') && loaded.length > 0) {
-          const active = loaded.find((p) => p.status === 'open') ?? loaded[0]
-          setSelectedPeriodId(active.id)
-        }
+        setSelectedPeriodId(periodId && periodId !== 'current' ? periodId :
+          (loaded.find((p) => p.status === 'open') ?? loaded[0])?.id ?? '')
+        setLoading(false)
       })
-      .catch(() => {
-        if (!selectedPeriodId || selectedPeriodId === 'current') setSelectedPeriodId('period-1')
+      .catch((err) => {
+        if (!active) return
+        setError(err instanceof Error ? err.message : err?.message ?? 'Could not load poll periods.')
+        setSelectedPeriodId('')
+        setLoading(false)
       })
-  }, [season])
+      .finally(() => {
+        window.clearTimeout(timer)
+        if (active) setPeriodsLoading(false)
+      })
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [season, periodId, retry])
 
   useEffect(() => {
-    if (!selectedPeriodId || selectedPeriodId === 'current') return
+    if (periodsLoading || !selectedPeriodId || selectedPeriodId === 'current') return
 
+    let active = true
     setLoading(true)
+    setError('')
+    const timer = window.setTimeout(() => {
+      active = false
+      setError('Loading participation timed out. Please retry.')
+      setLoading(false)
+    }, 15000)
     loadParticipation(selectedPeriodId)
       .then((loaded) => {
+        if (!active) return
         setRows(loaded)
         setLoading(false)
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Could not load participation data.')
+        if (!active) return
+        setError(err instanceof Error ? err.message : err?.message ?? 'Could not load participation data.')
         setLoading(false)
       })
-  }, [selectedPeriodId])
+      .finally(() => window.clearTimeout(timer))
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [selectedPeriodId, periodsLoading])
 
   const visibleCategories = CATEGORIES.filter((c) => !c.hidden)
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId)
@@ -95,19 +120,22 @@ export default function PollParticipationPage({ periodId, season = '2025-26' }: 
             >
               {periods.map((poll) => (
                 <option key={poll.id} value={poll.id}>
-                  {poll.label} {poll.status === 'open' ? '(Open)' : '(Closed)'}
+                  {poll.seasonSlug} {poll.label} ({poll.status})
                 </option>
               ))}
             </select>
           )}
         </div>
 
-        {loading ? (
+        {loading || periodsLoading ? (
           <p className="text-xs text-gray-500 py-8 text-center">Loading participation data…</p>
         ) : error ? (
           <div className="bg-white border border-red-200 rounded-lg p-6 text-center text-xs text-red-600">
             {error}
+            <button type="button" className="block mx-auto mt-3 underline" onClick={() => setRetry((value) => value + 1)}>Retry</button>
           </div>
+        ) : !selectedPeriodId ? (
+          <p className="text-xs text-gray-500 py-8 text-center">No polls found for {season}.</p>
         ) : (
           <>
             {/* Summary Stats Grid */}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getSchoolLogoUrl } from "../lib/schoolLogos";
+import { publicAsset } from "../lib/publicAsset";
 import type { Program } from "../types/platform";
 
 export default function SchoolLogo({ program, size = "normal" }: { program: Program; size?: "small" | "normal" }) {
@@ -7,7 +8,7 @@ export default function SchoolLogo({ program, size = "normal" }: { program: Prog
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
     if (logoUrl && failedUrl !== logoUrl) {
-        return <img className={`school-logo ${size}`} src={logoUrl} alt="" onError={() => setFailedUrl(logoUrl)} />;
+        return <img className={`school-logo ${size}`} src={publicAsset(logoUrl)} alt="" onError={() => setFailedUrl(logoUrl)} />;
     }
 
     const initials = program.name

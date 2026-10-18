@@ -1,0 +1,26 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select no_plan();
+delete from public.sid_registrations;
+insert into auth.users(id,email) values('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','sid-admin@example.com');
+insert into public.profiles(id,display_name,role,active) values('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','SID admin','admin',true)
+on conflict(id) do update set role='admin',active=true;
+set local role anon;
+select lives_ok($$select public.register_sid('11111111-1111-4111-8111-111111111111',' Taylor Smith ','Duke University','TAYLOR@example.edu')$$,'Anonymous SID can sign up');
+select lives_ok($$select public.register_sid(gen_random_uuid(),'Changed name','duke   university','taylor@example.edu')$$,'Repeated contact is deduplicated');
+select throws_ok('select * from public.sid_registrations','42501','permission denied for table sid_registrations','Visitors cannot read SID contacts');
+select throws_ok($$select public.register_sid(gen_random_uuid(),'Taylor Smith','Duke','invalid')$$,'P0001','Enter a valid email address.','Server validates email');
+select throws_ok($$select public.register_sid(gen_random_uuid(),' ','Duke','taylor@example.edu')$$,'P0001','Enter your name (2 to 120 characters).','Server requires name');
+reset role;
+select is((select count(*)::int from public.sid_registrations),1,'Only one registration is stored');
+select is((select name from public.sid_registrations limit 1),'Taylor Smith','Duplicate request cannot rewrite details');
+set local role authenticated;
+select is((select count(*)::int from public.sid_registrations),0,'Non-admin users cannot read contacts');
+select set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true);
+select is((select count(*)::int from public.sid_registrations),1,'Admins can read registrations');
+reset role;
+insert into public.sid_registrations(id,name,school,email) select gen_random_uuid(),'Fixture SID','Test school','fixture'||i||'@example.edu' from generate_series(1,29) i;
+select throws_ok($$select public.register_sid(gen_random_uuid(),'Taylor Smith','New school','new@example.edu')$$,'P0001','We are receiving a lot of registrations. Please try again later.','Enforces public registration quota');
+select * from finish();
+rollback;

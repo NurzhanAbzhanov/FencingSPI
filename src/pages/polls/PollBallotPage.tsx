@@ -25,6 +25,8 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
     loadPollBallot(slug, user.id)
       .then((loaded) => {
         setView(loaded)
+        setSortKey(/\boctober\b|\bpreseason\b/i.test(loaded.period.label) ? 'lastSeasonSpi' : 'currentSpi')
+        setSortDirection('desc')
         const initial = Array.from({ length: loaded.category.rankLimit }, (_, idx) => {
           const rankedId = loaded.rankings[idx] ?? loaded.lockedTeamIds[idx]
           return rankedId ? String(rankedId) : ''
@@ -42,6 +44,18 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
   }, [slug, user.id])
 
   const lockedCount = view?.lockedTeamIds.length ?? 0
+  const isPreseason = /\boctober\b|\bpreseason\b/i.test(view?.period.label ?? '')
+  const previousRanks = useMemo(() => {
+    const ranked = [...(view?.candidates ?? [])].filter((candidate) => candidate.previousSpi != null)
+      .sort((a, b) => b.previousSpi! - a.previousSpi!)
+    const ranks = new Map<string, number>()
+    let rank = 0
+    ranked.forEach((candidate, index) => {
+      if (index === 0 || candidate.previousSpi !== ranked[index - 1].previousSpi) rank = index + 1
+      ranks.set(String(candidate.teamId), rank)
+    })
+    return ranks
+  }, [view])
 
   const teams = useMemo(() => {
     return (view?.candidates ?? []).map((c) => ({
@@ -68,7 +82,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortKey(key)
-      setSortDirection(key === 'currentSpi' || key === 'powerRating' ? 'desc' : 'asc')
+      setSortDirection(key === 'team' ? 'asc' : 'desc')
     }
   }
 
@@ -178,8 +192,18 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
   const sortedCandidates = [...teams].sort((a, b) => {
     let comp = 0
     if (sortKey === 'team') comp = a.name.localeCompare(b.name)
-    else if (sortKey === 'currentSpi') comp = a.currentSpi - b.currentSpi
-    else if (sortKey === 'lastSeasonSpi') comp = (a.previousSpi ?? 999) - (b.previousSpi ?? 999)
+    else if (sortKey === 'currentSpi') {
+      if (a.currentSpi == null && b.currentSpi == null) return a.name.localeCompare(b.name)
+      if (a.currentSpi == null) return 1
+      if (b.currentSpi == null) return -1
+      comp = a.currentSpi - b.currentSpi
+    }
+    else if (sortKey === 'lastSeasonSpi') {
+      if (a.previousSpi == null && b.previousSpi == null) return a.name.localeCompare(b.name)
+      if (a.previousSpi == null) return 1
+      if (b.previousSpi == null) return -1
+      comp = a.previousSpi - b.previousSpi
+    }
     else if (sortKey === 'powerRating') comp = (a.powerRating ?? 0) - (b.powerRating ?? 0)
     return sortDirection === 'asc' ? comp : -comp
   })
@@ -302,7 +326,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
               <div className="mb-1">
                 <h2 className="text-sm font-bold text-gray-900">{view.category.label} SPI (Overall)</h2>
               </div>
-              <p className="text-xs text-gray-500 mb-2.5">Reference index & power ratings to guide your vote</p>
+              <p className="text-xs text-gray-500 mb-2.5">{isPreseason ? 'Preseason · Previous season SPI' : 'Reference index & power ratings to guide your vote'}</p>
 
               <div className="max-h-[640px] overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -310,10 +334,10 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                     <tr>
                       <th
                         scope="col"
-                        aria-label="SPI Rank"
+                        aria-label={isPreseason ? 'Last Season Rank' : 'SPI Rank'}
                         className="py-2 px-1 font-semibold text-[11px] text-gray-400 uppercase tracking-wider text-center whitespace-nowrap w-12"
                       >
-                        SPI<br />Rank
+                        {isPreseason ? 'Last Season' : 'SPI'}<br />Rank
                       </th>
                       <th
                         scope="col"
@@ -327,7 +351,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                           </span>
                         </div>
                       </th>
-                      <th
+                      {!isPreseason && <th
                         scope="col"
                         onClick={() => handleSort('currentSpi')}
                         className="py-2 px-1.5 font-semibold text-[11px] text-gray-400 uppercase tracking-wider text-center whitespace-nowrap cursor-pointer hover:text-gray-700 select-none"
@@ -338,7 +362,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                             {sortKey === 'currentSpi' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
                           </span>
                         </div>
-                      </th>
+                      </th>}
                       <th
                         scope="col"
                         onClick={() => handleSort('lastSeasonSpi')}
@@ -376,7 +400,7 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                       return (
                         <tr key={item.id} className="hover:bg-gray-50/75 transition-colors">
                           <td className="py-1.5 px-1 text-xs font-medium text-gray-400 tabular-nums text-center whitespace-nowrap spi-rank-cell">
-                            #{item.spiRank}
+                            {isPreseason ? (previousRanks.has(item.id) ? `#${previousRanks.get(item.id)}` : '—') : (item.spiRank == null ? '—' : `#${item.spiRank}`)}
                           </td>
                           <td className="py-1.5 px-1.5 text-xs font-medium text-gray-900">
                             <div className="flex items-center gap-2">
@@ -389,10 +413,10 @@ export default function PollBallotPage({ slug, user }: { slug: PollCategorySlug;
                               )}
                             </div>
                           </td>
-                          <td className="py-1.5 px-1.5 text-xs font-semibold text-sky-700 tabular-nums text-center whitespace-nowrap current-spi-cell">
-                            {item.currentSpi.toFixed(4)}
-                          </td>
-                          <td className="py-1.5 px-1.5 text-xs text-gray-400 tabular-nums text-center whitespace-nowrap previous-spi-cell">
+                          {!isPreseason && <td className="py-1.5 px-1.5 text-xs font-semibold text-sky-700 tabular-nums text-center whitespace-nowrap current-spi-cell">
+                            {item.currentSpi == null ? '—' : item.currentSpi.toFixed(4)}
+                          </td>}
+                          <td className={`py-1.5 px-1.5 text-xs ${isPreseason ? 'font-semibold text-sky-700' : 'text-gray-400'} tabular-nums text-center whitespace-nowrap previous-spi-cell`}>
                             {item.previousSpi != null ? item.previousSpi.toFixed(4) : '—'}
                           </td>
                           <td className="py-1.5 px-1.5 text-xs font-medium text-gray-700 tabular-nums text-center whitespace-nowrap power-rating-cell">

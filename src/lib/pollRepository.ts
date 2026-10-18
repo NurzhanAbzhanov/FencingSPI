@@ -1,4 +1,4 @@
-import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, normalizeCategorySlug } from './pollDomain';
+import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, normalizeCategorySlug, validateBallotTeamIds } from './pollDomain';
 import { supabase } from './supabase';
 import type {
     IndividualPollBallot,
@@ -30,6 +30,18 @@ const DEFAULT_CATEGORY_SLUGS: PollCategorySlug[] = [
 function client() {
     if (!supabase) throw new Error('Poll data requires a configured Supabase project');
     return supabase;
+}
+
+function missingSchemaObject(error: { code?: string; message?: string } | null | undefined, name: string): boolean {
+    return Boolean(error && ['PGRST205', 'PGRST202', '42P01', '42883'].includes(error.code ?? '') && error.message?.includes(name));
+}
+
+async function loadStoredVote(periodId: string, userId: string, category: PollCategorySlug) {
+    const result = await client().from('votes').select('id, rankings, status')
+        .eq('poll_id', periodId).eq('voter_id', userId)
+        .in('category', [category, category.replace('_overall', '')]).maybeSingle();
+    if (result.error) throw result.error;
+    return result.data;
 }
 
 function one<T>(value: Relation<T>): T | null {
@@ -149,37 +161,24 @@ export async function loadPollDashboard(userId: string): Promise<PollDashboard> 
     const ballotsTable = db.from('ballots');
     if (ballotsTable && typeof ballotsTable.select === 'function' && ids.length) {
         const bRes = await ballotsTable.select('definition_id, status').eq('voter_id', userId).in('definition_id', ids);
+        if (missingSchemaObject(bRes.error, 'ballots')) {
+            const votes = await db.from('votes').select('category, status')
+                .eq('poll_id', selectedPeriod.id).eq('voter_id', userId);
+            if (votes.error) throw votes.error;
+            for (const vote of votes.data ?? []) {
+                statuses.set(normalizeCategorySlug(vote.category as PollCategorySlug), vote.status);
+            }
+        } else if (bRes.error) throw bRes.error;
         for (const row of bRes.data ?? []) {
             statuses.set(row.definition_id, row.status);
         }
     }
 
-    const votesTable = db.from('votes');
-    if (votesTable && typeof votesTable.select === 'function') {
-        const votesRes = await votesTable
-            .select('category, status')
-            .eq('poll_id', selectedPeriod.id)
-            .eq('voter_id', userId);
-        for (const row of votesRes?.data ?? []) {
-            statuses.set(row.category, row.status);
-        }
-    }
-
-    let localSubmitted: Record<string, boolean> = {};
-    try {
-        if (typeof localStorage !== 'undefined' && userId) {
-            const userKey = `user_${userId}_submitted_ballots`;
-            localSubmitted = JSON.parse(localStorage.getItem(userKey) || '{}');
-        }
-    } catch {}
-
     return {
         period: selectedPeriod,
         categories: defRows.map((row: any) => {
             const spec = getPollCategorySpec(getCategorySlugFromRow(row));
-            const dbStatus = statuses.get(String(row.id)) || statuses.get(spec.slug) || statuses.get(row.slug);
-            const isSubmittedLocally = Boolean(userId && (localSubmitted[row.id] || localSubmitted[spec.slug] || localSubmitted[row.slug]));
-            const ballotStatus = (dbStatus || (isSubmittedLocally ? 'submitted' : 'not_started')) as 'not_started' | 'draft' | 'submitted';
+            const ballotStatus = (statuses.get(String(row.id)) || statuses.get(spec.slug) || 'not_started') as 'not_started' | 'draft' | 'submitted';
             return {
                 ...spec,
                 definitionId: String(row.id),
@@ -251,7 +250,6 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
         division: number;
         conference: string;
         region: string;
-        snapshotSpi: number;
         powerRating: number | null;
     }> = [];
 
@@ -278,7 +276,6 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                 division: isD3 ? 3 : 1,
                 conference: row.conference || '',
                 region: row.region || '',
-                snapshotSpi: Number(row.spi),
                 powerRating: row.power_rating == null ? null : Number(row.power_rating),
             }];
         });
@@ -292,7 +289,7 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                 .eq('gender', category.gender);
 
             const loadedProgs = (progRes?.data ?? []) as Array<Record<string, unknown>>;
-            snapshotCandidates = loadedProgs.flatMap((row, index) => {
+            snapshotCandidates = loadedProgs.flatMap((row) => {
                 const school = one(row.schools as Relation<{ name: string; logo_url: string | null; conference: string; region: string }>);
                 if (!school) return [];
                 const isD3 = isD3School(school.name);
@@ -305,7 +302,6 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                     division: isD3 ? 3 : 1,
                     conference: school.conference || 'NCAA',
                     region: school.region || 'NCAA',
-                    snapshotSpi: 100 - index,
                     powerRating: null,
                 }];
             });
@@ -320,13 +316,15 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
             .order('ends_on', { ascending: false }) : null;
         const seasons = (seasonsResult?.data ?? []) as SeasonRow[];
         const currentSeasonIndex = seasons.findIndex((season) => season.slug === period.seasonSlug);
-        const currentSeason = currentSeasonIndex >= 0 ? seasons[currentSeasonIndex] : seasons[0];
-        const previousSeason = currentSeasonIndex >= 0 ? seasons[currentSeasonIndex + 1] : seasons[1];
+        const currentSeason = currentSeasonIndex >= 0 ? seasons[currentSeasonIndex] : undefined;
+        const previousSeason = currentSeasonIndex >= 0 ? seasons[currentSeasonIndex + 1] : undefined;
         const seasonIds = [currentSeason?.id, previousSeason?.id].filter((id): id is string => Boolean(id));
         const programIds = snapshotCandidates.map((candidate) => candidate.programId);
 
         let spiBySeasonAndProgram = new Map<string, number>();
         let powerRatingByProgram = new Map<string, number>();
+        const previousPowerRatingByProgram = new Map<string, number>();
+        const isPreseason = /\boctober\b|\bpreseason\b/i.test(period.label);
 
         if (seasonIds.length && programIds.length) {
             const spiQuery = db.from('spi_results');
@@ -341,6 +339,9 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                     spiBySeasonAndProgram.set(`${result.season_id}:${result.program_id}`, Number(result.spi));
                     if (result.season_id === currentSeason?.id && result.power_rating != null) {
                         powerRatingByProgram.set(result.program_id, Number(result.power_rating));
+                    }
+                    if (result.season_id === previousSeason?.id && result.power_rating != null) {
+                        previousPowerRatingByProgram.set(result.program_id, Number(result.power_rating));
                     }
                 }
             }
@@ -359,19 +360,34 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
                     }
                 } catch {}
             }
+            if (isPreseason && previousSeason?.id) {
+                try {
+                    const previousOverrides = await db.from('power_rating_overrides')
+                        .select('program_id, adjusted_power_rating')
+                        .eq('season_id', previousSeason.id)
+                        .eq('weapon', category.weapon)
+                        .in('program_id', programIds);
+                    for (const rating of (previousOverrides?.data ?? []) as Array<{ program_id: string; adjusted_power_rating: number | null }>) {
+                        if (rating.adjusted_power_rating != null) {
+                            previousPowerRatingByProgram.set(rating.program_id, Number(rating.adjusted_power_rating));
+                        }
+                    }
+                } catch {}
+            }
         }
 
         candidates = snapshotCandidates.map((candidate) => {
-            const currentPr = powerRatingByProgram.get(candidate.programId) ?? candidate.powerRating ?? null;
+            const currentPr = powerRatingByProgram.get(candidate.programId) ?? candidate.powerRating
+                ?? (isPreseason ? previousPowerRatingByProgram.get(candidate.programId) : null) ?? null;
             return {
                 ...candidate,
-                currentSpi: (currentSeason && spiBySeasonAndProgram.get(`${currentSeason.id}:${candidate.programId}`)) ?? candidate.snapshotSpi,
+                currentSpi: (currentSeason && spiBySeasonAndProgram.get(`${currentSeason.id}:${candidate.programId}`)) ?? null,
                 previousSpi: previousSeason
                     ? spiBySeasonAndProgram.get(`${previousSeason.id}:${candidate.programId}`) ?? null
                     : null,
                 powerRating: currentPr,
             };
-        }).sort((a, b) => b.currentSpi - a.currentSpi || a.teamName.localeCompare(b.teamName)).map((candidate, index) => ({
+        }).sort((a, b) => (b.currentSpi ?? -Infinity) - (a.currentSpi ?? -Infinity) || a.teamName.localeCompare(b.teamName)).map((candidate, index) => ({
             programId: candidate.programId,
             teamId: candidate.teamId,
             teamName: candidate.teamName,
@@ -381,13 +397,14 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
             region: candidate.region,
             currentSpi: candidate.currentSpi,
             previousSpi: candidate.previousSpi,
-            spiRank: index + 1,
+            spiRank: candidate.currentSpi == null ? null : index + 1,
             powerRating: candidate.powerRating,
         }));
     }
 
     let rankings: number[] = [];
     let submitted = false;
+    let usesVotes = false;
 
     const ballotsTable = db.from('ballots');
     if (ballotsTable && typeof ballotsTable.select === 'function') {
@@ -395,50 +412,20 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
             .select('id, status, ballot_rankings(rank, programs!inner(legacy_team_id))')
             .eq('definition_id', String(definition.id))
             .eq('voter_id', userId);
+        usesVotes = missingSchemaObject(bResult?.error, 'ballots');
+        if (bResult?.error && !usesVotes) throw bResult.error;
         const bRow = (bResult?.data ?? [])[0];
         if (bRow) {
-            const bRankings = (bRow.ballot_rankings ?? []).map((r: any) => Number(one(r.programs)?.legacy_team_id)).filter(Boolean);
-            if (bRankings.length) {
-                rankings = bRankings;
-                submitted = bRow.status === 'submitted';
-            }
+            rankings = [...(bRow.ballot_rankings ?? [])].sort((a: any, b: any) => a.rank - b.rank)
+                .map((r: any) => Number(one(r.programs)?.legacy_team_id)).filter(Boolean);
+            submitted = bRow.status === 'submitted';
         }
     }
-
-    const votesTable = db.from('votes');
-    if (!rankings.length && votesTable && typeof votesTable.select === 'function') {
-        let q = votesTable.select('rankings, status').eq('poll_id', period.id).eq('voter_id', userId);
-        if (typeof (q as any).or === 'function') {
-            q = (q as any).or(`category.eq.${categorySlug},category.eq.${shortSlug},category.eq.${normalized}`);
-        } else {
-            q = q.eq('category', categorySlug);
-        }
-        const voteRes = await q.maybeSingle();
-        if (voteRes?.data) {
-            rankings = Array.isArray(voteRes.data.rankings) ? voteRes.data.rankings.map(Number) : [];
-            submitted = voteRes.data.status === 'submitted';
-        }
+    if (usesVotes) {
+        const vote = await loadStoredVote(period.id, userId, category.slug);
+        rankings = Array.isArray(vote?.rankings) ? vote.rankings.map(Number) : [];
+        submitted = vote?.status === 'submitted';
     }
-
-    try {
-        if (typeof localStorage !== 'undefined' && userId) {
-            const userPrefix = `user_${userId}_`;
-            const localSubmittedKey = `${userPrefix}submitted_ballots`;
-            const localSubmittedMap = JSON.parse(localStorage.getItem(localSubmittedKey) || '{}');
-
-            const rawLocal = localStorage.getItem(`${userPrefix}poll_ballot_${definition.id}`) ||
-                localStorage.getItem(`${userPrefix}poll_ballot_${category.slug}`) ||
-                localStorage.getItem(`${userPrefix}poll_ballot_${shortSlug}`);
-
-            if (rawLocal && (!rankings.length || !submitted)) {
-                const parsed = JSON.parse(rawLocal);
-                if (Array.isArray(parsed) && parsed.length) {
-                    rankings = parsed;
-                    submitted = Boolean(localSubmittedMap[String(definition.id)] || localSubmittedMap[category.slug] || localSubmittedMap[shortSlug]);
-                }
-            }
-        }
-    } catch {}
 
     let prerequisite: PollBallotView['prerequisite'] = 'ready';
     let lockedTeamIds: number[] = [];
@@ -447,34 +434,29 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
         const overallSlug = `${category.gender === 'Men' ? 'men' : 'women'}_team_overall` as PollCategorySlug;
         let overallRankingsIds: number[] = [];
 
-        if (votesTable && typeof votesTable.select === 'function') {
-            const overallVote = await votesTable
-                .select('rankings, status')
-                .eq('poll_id', period.id)
-                .eq('voter_id', userId)
-                .eq('category', overallSlug)
-                .maybeSingle();
-
-            if (overallVote?.data?.rankings) {
-                overallRankingsIds = Array.isArray(overallVote.data.rankings) ? overallVote.data.rankings.map(Number) : [];
+        let overallSubmitted = false;
+        if (usesVotes) {
+            const overallVote = await loadStoredVote(period.id, userId, overallSlug);
+            overallSubmitted = overallVote?.status === 'submitted';
+            if (overallSubmitted && Array.isArray(overallVote?.rankings)) overallRankingsIds = overallVote.rankings.map(Number);
+        } else {
+            const overallDefinition = await db.from('ballot_definitions').select('id')
+                .eq('period_id', period.id).eq('slug', overallSlug).maybeSingle();
+            if (overallDefinition.error) throw overallDefinition.error;
+            if (overallDefinition.data) {
+                const overallBallot = await db.from('ballots')
+                    .select('status, ballot_rankings(rank, programs!inner(legacy_team_id))')
+                    .eq('definition_id', overallDefinition.data.id).eq('voter_id', userId).maybeSingle();
+                if (overallBallot.error) throw overallBallot.error;
+                overallSubmitted = overallBallot.data?.status === 'submitted';
+                if (overallSubmitted) {
+                    overallRankingsIds = [...(overallBallot.data?.ballot_rankings ?? [])]
+                        .sort((a: any, b: any) => a.rank - b.rank)
+                        .map((ranking: any) => Number(one(ranking.programs)?.legacy_team_id)).filter(Boolean);
+                }
             }
         }
-
-        if (!overallRankingsIds.length && typeof localStorage !== 'undefined' && userId) {
-            try {
-                const userPrefix = `user_${userId}_`;
-                let foundRaw = localStorage.getItem(`${userPrefix}poll_ballot_${overallSlug}`);
-
-                if (foundRaw) {
-                    const parsed = JSON.parse(foundRaw);
-                    if (Array.isArray(parsed) && parsed.length) {
-                        overallRankingsIds = parsed;
-                    }
-                }
-            } catch {}
-        }
-
-        prerequisite = 'ready';
+        prerequisite = overallSubmitted ? 'ready' : 'overall-required';
         lockedTeamIds = deriveLockedD3TeamIds(overallRankingsIds, new Set(candidates.map((item) => item.teamId)), category.rankLimit);
     }
 
@@ -492,87 +474,44 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
 
 export async function savePollBallot(input: { definitionId: string; teamIds: number[]; submit: boolean; userId?: string }): Promise<string> {
     const db = client();
-    const authData = (db.auth && typeof db.auth.getUser === 'function') ? await db.auth.getUser() : null;
-    const currentUserId = input.userId || (authData as any)?.data?.user?.id || '19998156-19b5-409b-88f0-30e7c4d89616';
-    const userPrefix = currentUserId ? `user_${currentUserId}_` : '';
-
-    let pollId = 'b1758f17-33fd-4668-991e-16a8de896c76';
-    let category = input.definitionId;
-
-    try {
-        const periodsRes = await db.from('poll_periods').select('id, status, opens_at, closes_at').order('opens_at', { ascending: false });
-        const openRow = (periodsRes?.data ?? []).find((r: any) => r.status === 'open' || periodFromRow(r).effectivelyOpen);
-        if (openRow) {
-            pollId = String(openRow.id);
-        }
-
-        const defRow = await db.from('ballot_definitions').select('slug, period_id').eq('id', input.definitionId).maybeSingle();
-        if (defRow?.data) {
-            pollId = String(defRow.data.period_id || pollId);
-            category = String(defRow.data.slug || category);
-        } else {
-            const norm = normalizeCategorySlug(input.definitionId as PollCategorySlug);
-            category = norm;
-        }
-    } catch {}
-
-    const status = input.submit ? 'submitted' : 'draft';
-
-    const votesTable = db.from('votes');
-    if (votesTable && typeof votesTable.upsert === 'function') {
-        const upsertRes = await votesTable.upsert({
-            poll_id: pollId,
-            voter_id: String(currentUserId),
-            category,
-            rankings: input.teamIds,
-            status,
-            updated_at: new Date().toISOString(),
-        }, { onConflict: 'poll_id,voter_id,category' });
-
-        if (upsertRes?.error) {
-            console.warn('Notice saving to votes table:', upsertRes.error.message);
-        }
-    }
-
     const progQuery = db.from('programs');
     const programs = (progQuery && typeof progQuery.select === 'function')
         ? await progQuery.select('id, legacy_team_id').in('legacy_team_id', input.teamIds)
         : null;
     const ids = new Map(((programs?.data ?? []) as any[]).map((program) => [Number(program.legacy_team_id), program.id]));
-    const rankedPrograms = input.teamIds.map((teamId) => ids.get(teamId) || `program-${teamId}`);
+    if (programs?.error) throw programs.error;
+    const rankedPrograms = input.teamIds.map((teamId) => {
+        const id = ids.get(teamId);
+        if (!id) throw new Error(`Could not find program for team ${teamId}. Refresh and try again.`);
+        return id;
+    });
 
-    if (rankedPrograms.length) {
-        const rpcRes = await db.rpc('save_poll_ballot', {
+    const rpcRes = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(input.definitionId) ? await db.rpc('save_poll_ballot', {
             target_definition: input.definitionId,
             ranked_programs: rankedPrograms,
             submit_now: input.submit,
+        }) : { data: null, error: { code: 'PGRST202', message: 'save_poll_ballot is not used by category-based votes' } };
+
+    if (missingSchemaObject(rpcRes.error, 'save_poll_ballot')) {
+        const auth = await db.auth.getUser();
+        if (auth.error || !auth.data.user) throw new Error('Sign in again before saving your ballot.');
+        const category = getPollCategorySpec(normalizeCategorySlug(input.definitionId as PollCategorySlug));
+        const ballot = await loadPollBallot(category.slug, auth.data.user.id);
+        if (!ballot.period.effectivelyOpen) throw new Error('This poll is not open.');
+        if (ballot.submitted) throw new Error('This ballot has already been submitted.');
+        if (ballot.prerequisite !== 'ready') throw new Error('Submit the overall ballot first.');
+        const validation = validateBallotTeamIds(input.teamIds, input.submit ? category.rankLimit : input.teamIds.length,
+            new Set(ballot.candidates.map((candidate) => candidate.teamId)), ballot.lockedTeamIds);
+        if (validation) throw new Error(validation);
+        const result = await db.rpc('save_committee_vote', {
+            target_period: ballot.period.id, target_category: category.slug,
+            ranked_teams: input.teamIds, submit_now: input.submit,
         });
-
-        if (!rpcRes.error) {
-            return String(rpcRes.data);
-        }
+        if (result.error) throw result.error;
+        return String(result.data);
     }
-
-    try {
-        if (typeof localStorage !== 'undefined' && currentUserId) {
-            const userSubmittedKey = `${userPrefix}submitted_ballots`;
-            const localSubmitted = JSON.parse(localStorage.getItem(userSubmittedKey) || '{}');
-
-            if (input.submit) {
-                localSubmitted[input.definitionId] = true;
-                localSubmitted[category] = true;
-            }
-
-            localStorage.setItem(`${userPrefix}poll_ballot_${category}`, JSON.stringify(input.teamIds));
-            localStorage.setItem(`${userPrefix}poll_ballot_${input.definitionId}`, JSON.stringify(input.teamIds));
-
-            if (input.submit) {
-                localStorage.setItem(userSubmittedKey, JSON.stringify(localSubmitted));
-            }
-        }
-    } catch {}
-
-    return input.definitionId;
+    if (rpcRes.error) throw rpcRes.error;
+    return String(rpcRes.data);
 }
 
 export async function loadPollResults(periodId: string): Promise<PollCategoryResults[]> {
@@ -623,15 +562,12 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
             .eq('status', 'submitted');
     }
 
-    const votesTable = db.from('votes');
-    let votesRows: any[] = [];
-    if (votesTable && typeof votesTable.select === 'function') {
-        const votesRes = await votesTable
-            .select('category, rankings')
-            .eq('poll_id', targetPeriodId)
-            .eq('status', 'submitted');
-        votesRows = votesRes?.data ?? [];
-    }
+    let votesRows: Array<{ category: string; rankings: number[] }> = [];
+    if (missingSchemaObject(ballotsRes?.error, 'ballots')) {
+        const votes = await db.from('votes').select('category, rankings').eq('poll_id', targetPeriodId).eq('status', 'submitted');
+        if (votes.error) throw votes.error;
+        votesRows = votes.data ?? [];
+    } else if (ballotsRes?.error) throw ballotsRes.error;
 
     const names = new Map<number, string>();
     try {
@@ -664,15 +600,15 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
             categorySpec = getPollCategorySpec('men_team_overall');
         }
 
-        const categoryVotes = votesRows
-            .filter((v: any) => v.category === definition.slug || v.category === slug)
-            .map((v: any) => ({ rankings: (v.rankings || []).map(Number) }));
+        const categoryVotes: Array<{ rankings: number[] }> = votesRows
+            .filter((vote) => normalizeCategorySlug(vote.category as PollCategorySlug) === slug)
+            .map((vote) => ({ rankings: Array.isArray(vote.rankings) ? vote.rankings.map(Number) : [] }));
 
         if (ballotsRes?.data) {
             const bVotes = (ballotsRes.data ?? [])
                 .filter((b: any) => b.definition_id === definition.id)
                 .map((b: any) => ({
-                    rankings: (b.ballot_rankings ?? []).map((r: any) => {
+                    rankings: [...(b.ballot_rankings ?? [])].sort((a: any, b: any) => a.rank - b.rank).map((r: any) => {
                         const prog = one(r.programs);
                         const sch = one(prog?.schools);
                         const legacyId = Number(prog?.legacy_team_id ?? (r.programs as any)?.legacy_team_id);
@@ -725,75 +661,29 @@ async function loadResults(periodId: string): Promise<PollCategoryResults[]> {
 
 export async function loadIndividualBallots(definitionId: string, pollId?: string): Promise<IndividualPollBallot[]> {
     const db = client();
-    const norm = normalizeCategorySlug(definitionId as PollCategorySlug);
-
-    let targetPeriodId = pollId;
-    if (targetPeriodId) {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetPeriodId);
-        if (!isUuid) {
-            try {
-                const periodsForResolution = await db.from('poll_periods').select('id, status, opens_at').order('opens_at', { ascending: false });
-                const allPeriods = periodsForResolution?.data ?? [];
-                const openRow = allPeriods.find((r: any) => r.status === 'open' || periodFromRow(r).effectivelyOpen) ?? allPeriods[0];
-                const matchedPeriod = allPeriods.find((r: any) => r.id === targetPeriodId);
-                targetPeriodId = matchedPeriod?.id || openRow?.id || targetPeriodId;
-            } catch {}
-        }
-    }
-
-    const votesTable = db.from('votes');
-    if (votesTable && typeof votesTable.select === 'function') {
-        let query = votesTable
-            .select('id, voter_id, rankings, category')
-            .or(`category.eq.${definitionId},category.eq.${norm}`)
-            .eq('status', 'submitted');
-
-        if (targetPeriodId) {
-            query = query.eq('poll_id', targetPeriodId);
-        }
-
-        const votesRes = await query;
-
-        if (votesRes?.data && votesRes.data.length > 0) {
-            const voterIds = Array.from(new Set(votesRes.data.map((r: any) => r.voter_id).filter(Boolean)));
-            const profileMap = new Map<string, string>();
-            if (voterIds.length > 0) {
-                const { data: profiles } = await db.from('profiles').select('id, display_name').in('id', voterIds);
-                for (const p of profiles ?? []) {
-                    if (p.display_name) profileMap.set(p.id, p.display_name);
-                }
-            }
-
-            const progRes = await db.from('programs').select('legacy_team_id, schools!inner(name)');
-            const names = new Map<number, string>();
-            for (const r of (progRes?.data ?? []) as any[]) {
-                const sch = one(r.schools);
-                if (r.legacy_team_id && sch?.name) {
-                    names.set(Number(r.legacy_team_id), sch.name);
-                }
-            }
-
-            return votesRes.data.map((row: any) => {
-                const voterName = profileMap.get(row.voter_id) || 'Committee voter';
-                const rankingsArray: number[] = Array.isArray(row.rankings) ? row.rankings.map(Number) : [];
-                return {
-                    ballotId: row.id,
-                    voterName,
-                    rankings: rankingsArray.map((teamId, idx) => ({
-                        rank: idx + 1,
-                        teamId,
-                        teamName: names.get(teamId) || `Team #${teamId}`,
-                    })),
-                };
-            });
-        }
-    }
 
     const result = await db.from('ballots')
         .select('id, profiles!ballots_voter_id_fkey(display_name), ballot_rankings(rank, programs!inner(legacy_team_id, schools!inner(name)))')
         .eq('definition_id', definitionId)
         .eq('status', 'submitted');
-    if (result.error) return [];
+    if (missingSchemaObject(result.error, 'ballots')) {
+        if (!pollId) throw new Error('A poll period is required to load votes.');
+        const category = normalizeCategorySlug(definitionId as PollCategorySlug);
+        const votes = await db.from('votes').select('id, voter_id, rankings')
+            .eq('poll_id', pollId).in('category', [category, category.replace('_overall', '')]).eq('status', 'submitted');
+        if (votes.error) throw votes.error;
+        const voterIds = [...new Set((votes.data ?? []).map((vote) => vote.voter_id))];
+        if (!voterIds.length) return [];
+        const profiles = await db.from('profiles').select('id, display_name').in('id', voterIds);
+        if (profiles.error) throw profiles.error;
+        const programs = await db.from('programs').select('legacy_team_id, schools!inner(name)');
+        if (programs.error) throw programs.error;
+        const names = new Map((programs.data ?? []).map((program) => [Number(program.legacy_team_id), one(program.schools as Relation<{ name: string }>)?.name]));
+        const voters = new Map((profiles.data ?? []).map((profile) => [profile.id, profile.display_name]));
+        return (votes.data ?? []).map((vote) => ({ ballotId: vote.id, voterName: voters.get(vote.voter_id) ?? 'Committee voter',
+            rankings: (Array.isArray(vote.rankings) ? vote.rankings : []).map((teamId: number, index: number) => ({ rank: index + 1, teamId: Number(teamId), teamName: names.get(Number(teamId)) ?? `Team #${teamId}` })) }));
+    }
+    if (result.error) throw result.error;
     return (result.data ?? []).map((row) => ({
         ballotId: row.id,
         voterName: one(row.profiles as Relation<{ display_name: string }>)?.display_name ?? 'Committee voter',

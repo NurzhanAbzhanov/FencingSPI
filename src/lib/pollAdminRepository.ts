@@ -34,17 +34,17 @@ function one<T>(value: T | T[] | null): T | null {
     return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-export async function loadPollPeriods(seasonSlug: string): Promise<PollPeriodAdmin[]> {
-    const result = await client().from('poll_periods')
-        .select('id, label, status, opens_at, closes_at, seasons!inner(slug), poll_spi_snapshots(captured_at)')
-        .eq('seasons.slug', seasonSlug)
-        .order('month');
+export async function loadPollPeriods(seasonSlug?: string): Promise<PollPeriodAdmin[]> {
+    let request = client().from('poll_periods')
+        .select('id, label, status, opens_at, closes_at, seasons!inner(slug), poll_spi_snapshots(captured_at)');
+    if (seasonSlug) request = request.eq('seasons.slug', seasonSlug);
+    const result = await request.order('month');
     if (result.error) throw result.error;
     const now = Date.now();
     return (result.data ?? []).map((row) => ({
         id: row.id,
         label: row.label,
-        seasonSlug: one(row.seasons)?.slug ?? seasonSlug,
+        seasonSlug: one(row.seasons)?.slug ?? seasonSlug ?? '',
         status: row.status as PollPeriodStatus,
         opensAt: row.opens_at,
         closesAt: row.closes_at,
@@ -149,50 +149,24 @@ export async function loadParticipation(periodId: string): Promise<PollParticipa
         }
     }
 
-    try {
-        const result = await db.rpc('list_poll_participation', { target_period: targetPeriodId });
-        if (!result.error && result.data && result.data.length > 0) {
-            const grouped = new Map<string, PollParticipationRow>();
-            for (const row of result.data as ParticipationRpcRow[]) {
-                const current = grouped.get(row.voter_id) ?? { voterId: row.voter_id, voterName: row.voter_name, email: row.email, statuses: {} };
-                current.statuses[row.definition_slug] = row.ballot_status;
-                grouped.set(row.voter_id, current);
-            }
-            return [...grouped.values()];
-        }
-    } catch {}
-
-    const [profilesRes, votesRes] = await Promise.all([
-        db.from('profiles').select('id, display_name, can_vote, active').eq('active', true),
-        db.from('votes').select('voter_id, category, status').eq('poll_id', targetPeriodId),
-    ]);
-
-    const voters = (profilesRes?.data ?? []).filter((p: any) => p.can_vote !== false);
-    const votes = (votesRes?.data ?? []) as any[];
-
+    const result = await db.rpc('list_poll_participation', { target_period: targetPeriodId });
+    if (result.error?.code === 'PGRST202' || (result.error?.code === '42P01' && /ballot/.test(result.error.message))) {
+        const profiles = await db.from('profiles').select('id, display_name, can_vote').eq('active', true);
+        if (profiles.error) throw profiles.error;
+        const votes = await db.from('votes').select('voter_id, category, status').eq('poll_id', targetPeriodId);
+        if (votes.error) throw votes.error;
+        return (profiles.data ?? []).filter((profile) => profile.can_vote !== false).map((profile) => ({
+            voterId: profile.id, voterName: profile.display_name || 'Coach', email: '',
+            statuses: Object.fromEntries((votes.data ?? []).filter((vote) => vote.voter_id === profile.id).map((vote) => [vote.category, vote.status])),
+        }));
+    }
+    if (result.error) throw result.error;
     const grouped = new Map<string, PollParticipationRow>();
-    for (const v of voters as any[]) {
-        grouped.set(v.id, {
-            voterId: v.id,
-            voterName: v.display_name || 'Coach',
-            email: '',
-            statuses: {},
-        });
+    for (const row of (result.data ?? []) as ParticipationRpcRow[]) {
+        const current = grouped.get(row.voter_id) ?? { voterId: row.voter_id, voterName: row.voter_name, email: row.email, statuses: {} };
+        current.statuses[row.definition_slug] = row.ballot_status;
+        grouped.set(row.voter_id, current);
     }
-
-    for (const row of votes) {
-        if (!grouped.has(row.voter_id)) {
-            grouped.set(row.voter_id, {
-                voterId: row.voter_id,
-                voterName: 'Coach',
-                email: '',
-                statuses: {},
-            });
-        }
-        const voter = grouped.get(row.voter_id)!;
-        voter.statuses[row.category] = row.status || 'submitted';
-    }
-
     return [...grouped.values()];
 }
 

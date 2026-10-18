@@ -10,6 +10,7 @@ vi.mock("./supabase", () => ({
 
 import {
     loadMatches,
+    loadPollResults,
     loadPrograms,
     loadStandings,
     readLocalPrograms,
@@ -18,7 +19,7 @@ import {
 function query(data: unknown, error: unknown = null) {
     const result = Promise.resolve({ data, error });
     const builder: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "order", "range"]) {
+    for (const method of ["select", "eq", "order", "range", "limit"]) {
         builder[method] = vi.fn(() => builder);
     }
     builder.then = result.then.bind(result);
@@ -26,6 +27,13 @@ function query(data: unknown, error: unknown = null) {
 }
 
 describe("readLocalPrograms", () => {
+    it("loads archived ranks without converting unpublished points to zero", async () => {
+        mocks.from.mockReturnValueOnce(query([{
+            id: 1, team_id: 52, period: "Preseason", gender: "Men", weapon: "Team", scope: "Overall", rank: 1, points: null, source_url: "https://usfca.org/poll.pdf",
+        }])).mockReturnValueOnce(query([]));
+        const results = await loadPollResults("2025-26");
+        expect(results[0]).toMatchObject({ month: "Preseason", teamId: 52, rank: 1, points: null });
+    });
     beforeEach(() => localStorage.clear());
 
     beforeEach(() => mocks.from.mockReset());

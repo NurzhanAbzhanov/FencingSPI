@@ -1,0 +1,12 @@
+begin;
+select plan(7);
+select is((select count(*)::int from public.archived_poll_results), 344, '344 verified published ranks');
+select is((select count(*)::int from public.archived_poll_results where points is null), 91, 'Unpublished points remain null');
+select is((select count(*)::int from public.poll_periods p join public.seasons s on s.id=p.season_id where s.slug='2026-27' and p.status='draft'), 4, 'Four new draft periods');
+select is((select count(*)::int from public.spi_results r join public.seasons s on s.id=r.season_id where s.slug='2026-27'), 0, 'No fabricated new season SPI');
+select is((select count(*)::int from public.archived_poll_results where season_slug='2024-25' and gender='Men' and scope='Overall' and rank=15), 2, 'Published tie preserved');
+select is((select count(*)::int from public.archived_poll_results where season_slug='2025-26' and gender='Men' and scope='DIII' and period='Midseason' and rank=6), 0, 'Unresolved Tufts row not assigned to another program');
+set local role anon;
+select is((select count(*)::int from public.archived_poll_results), 344, 'Public can read the archive');
+select * from finish();
+rollback;

@@ -32,6 +32,7 @@ type DetailedCategory = {
     voterEmail?: string
     rankings: { rank: number; teamId: number; teamName: string }[]
   }[]
+  ballotError?: string
 }
 
 const CATEGORY_TABS = [
@@ -53,16 +54,21 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
   const [activeTab, setActiveTab] = useState<string>('all')
 
   useEffect(() => {
+    let active = true
     async function loadPolls() {
+      setLoading(true)
       if (!supabase) {
         setLoading(false)
         return
       }
 
-      const { data: pollRows } = await supabase
+      try {
+      const { data: pollRows, error: pollError } = await supabase
         .from('poll_periods')
         .select('id, label, status, opens_at, closes_at')
         .order('opens_at', { ascending: false })
+      if (pollError) throw pollError
+      if (!active) return
 
       const pollList = (pollRows ?? []) as Poll[]
       const sorted = [...pollList].sort((a, b) => {
@@ -72,15 +78,23 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
       })
       setPolls(sorted)
 
-      const defaultPollId = propPeriodId || (sorted.find((p) => p.status === 'open') ?? sorted[0])?.id || 'period-1'
+      const defaultPollId = sorted.find((p) => p.id === propPeriodId)?.id
+        || (sorted.find((p) => p.status === 'open') ?? sorted[0])?.id || ''
       setSelectedPollId(defaultPollId)
-      setLoading(false)
+      } catch (err: any) {
+        if (active) setError(err.message || 'Failed to load polls.')
+      } finally {
+        if (active) setLoading(false)
+      }
     }
     loadPolls()
+    return () => { active = false }
   }, [propPeriodId])
 
   useEffect(() => {
-    const targetId = selectedPollId || propPeriodId || 'period-1'
+    if (loading || !selectedPollId) return
+    const targetId = selectedPollId
+    let active = true
 
     async function loadStandings() {
       setStandingsLoading(true)
@@ -92,9 +106,12 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
         const detailed: DetailedCategory[] = await Promise.all(
           catResults.map(async (cr) => {
             let individualBallots: any[] = []
+            let ballotError: string | undefined
             try {
               individualBallots = await loadIndividualBallots(cr.definitionId, targetId)
-            } catch {}
+            } catch (err: any) {
+              ballotError = err.message || 'Could not load individual ballots.'
+            }
 
             return {
               categorySlug: cr.category.slug,
@@ -109,20 +126,22 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
                 firstPlaceVotes: s.firstPlaceVotes,
               })),
               ballots: individualBallots,
+              ballotError,
             }
           })
         )
 
-        setCategoriesData(detailed)
+        if (active) setCategoriesData(detailed)
       } catch (err: any) {
-        setError(err.message || 'Failed to load poll results.')
+        if (active) setError(err.message || 'Failed to load poll results.')
       } finally {
-        setStandingsLoading(false)
+        if (active) setStandingsLoading(false)
       }
     }
 
     loadStandings()
-  }, [selectedPollId, propPeriodId])
+    return () => { active = false }
+  }, [selectedPollId, loading])
 
   const handleExportCsv = () => {
     if (!categoriesData.length) return
@@ -244,7 +263,7 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
                     <div>
                       <h2 className="text-sm font-semibold text-gray-900">{cat.label}</h2>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {ballotCount === 0 ? 'No ballots yet' : `${ballotCount} ballot${ballotCount === 1 ? '' : 's'} submitted`}
+                        {cat.ballotError ? cat.ballotError : ballotCount === 0 ? 'No individual ballots available to view.' : `${ballotCount} ballot${ballotCount === 1 ? '' : 's'} submitted`}
                       </p>
                     </div>
 

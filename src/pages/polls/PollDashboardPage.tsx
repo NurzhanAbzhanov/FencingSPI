@@ -14,7 +14,6 @@ export default function PollDashboardPage({ user: _user }: { user?: any } = {}) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [userId, setUserId] = useState<string>('')
 
   useEffect(() => {
     async function init() {
@@ -24,7 +23,6 @@ export default function PollDashboardPage({ user: _user }: { user?: any } = {}) 
           const authUser = await supabase.auth.getUser()
           if (authUser?.data?.user) {
             currentUserId = authUser.data.user.id
-            setUserId(currentUserId)
             const profile = await supabase
               .from('profiles')
               .select('role')
@@ -74,13 +72,7 @@ export default function PollDashboardPage({ user: _user }: { user?: any } = {}) 
   const categories = data?.categories || []
   const visibleCategories = categories.filter((c: any) => !c.hidden)
 
-  let completedCategories: Record<string, boolean> = {}
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const userKey = userId ? `user_${userId}_submitted_ballots` : 'fencing_spi_submitted_ballots'
-      completedCategories = JSON.parse(localStorage.getItem(userKey) || '{}')
-    }
-  } catch {}
+  const completedCategories: Record<string, boolean> = {}
 
   visibleCategories.forEach((c: any) => {
     if (c.ballotStatus === 'submitted') {

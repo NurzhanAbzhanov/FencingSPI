@@ -107,12 +107,13 @@ export type CommitteeBallot = {
 export type PollResult = {
     definitionId: string;
     teamId: number;
-    month: PollMonth;
+    month: string;
     gender: Gender;
     weapon: Weapon;
     scope: PollScope;
     rank: number;
-    points: number;
+    points: number | null;
+    sourceUrl?: string;
 };
 
 export type UserRole = "coach" | "admin";

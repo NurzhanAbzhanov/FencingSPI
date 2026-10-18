@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
     loadPollResults: vi.fn().mockResolvedValue([
@@ -13,13 +13,29 @@ const mocks = vi.hoisted(() => ({
     loadIndividualBallots: vi.fn().mockResolvedValue([
         { ballotId: "b1", voterName: "Coach One", rankings: [{ rank: 1, teamId: 1, teamName: "Alpha" }] },
     ]),
+    from: vi.fn(),
 }));
 
 vi.mock("../../lib/pollRepository", () => mocks);
-vi.mock("../../lib/supabase", () => ({ supabase: null }));
+vi.mock("../../lib/supabase", () => ({ supabase: { from: mocks.from } }));
 import PollResultsPage from "./PollResultsPage";
 
 describe("PollResultsPage", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mocks.from.mockReturnValue({ select: () => ({ order: async () => ({ data: [
+            { id: "period-1", label: "October", status: "open", opens_at: null, closes_at: null },
+        ], error: null }) }) });
+    });
+
+    it("resolves current to the same poll ID for results and individual ballots", async () => {
+        render(<PollResultsPage periodId="current" />);
+        expect(await screen.findByText(/View individual ballots/i)).toBeInTheDocument();
+        expect(mocks.loadPollResults).toHaveBeenCalledWith("period-1");
+        expect(mocks.loadIndividualBallots).toHaveBeenCalledWith("def-1", "period-1");
+        expect(mocks.loadIndividualBallots).not.toHaveBeenCalledWith("def-1", "current");
+    });
+
     it("shows aggregate results and closed individual ballots", async () => {
         render(<PollResultsPage periodId="period-1" />);
         expect(await screen.findByText("Poll Results")).toBeInTheDocument();
