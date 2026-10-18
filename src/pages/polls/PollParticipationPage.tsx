@@ -135,7 +135,9 @@ export default function PollParticipationPage({ periodId, season = '2025-26' }: 
             <button type="button" className="block mx-auto mt-3 underline" onClick={() => setRetry((value) => value + 1)}>Retry</button>
           </div>
         ) : !selectedPeriodId ? (
-          <p className="text-xs text-gray-500 py-8 text-center">No polls found for {season}.</p>
+          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-xs text-gray-500 shadow-2xs">
+            No poll periods found.
+          </div>
         ) : (
           <>
             {/* Summary Stats Grid */}

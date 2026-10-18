@@ -35,13 +35,36 @@ function one<T>(value: T | T[] | null): T | null {
 }
 
 export async function loadPollPeriods(seasonSlug?: string): Promise<PollPeriodAdmin[]> {
-    let request = client().from('poll_periods')
-        .select('id, label, status, opens_at, closes_at, seasons!inner(slug), poll_spi_snapshots(captured_at)');
-    if (seasonSlug) request = request.eq('seasons.slug', seasonSlug);
-    const result = await request.order('month');
-    if (result.error) throw result.error;
+    const db = client();
+    if (seasonSlug) {
+        const result = await db.from('poll_periods')
+            .select('id, label, status, opens_at, closes_at, seasons!inner(slug), poll_spi_snapshots(captured_at)')
+            .eq('seasons.slug', seasonSlug)
+            .order('month');
+        if (result.error) throw result.error;
+        if (result.data && result.data.length > 0) {
+            const now = Date.now();
+            return result.data.map((row) => ({
+                id: row.id,
+                label: row.label,
+                seasonSlug: one(row.seasons)?.slug ?? seasonSlug,
+                status: row.status as PollPeriodStatus,
+                opensAt: row.opens_at,
+                closesAt: row.closes_at,
+                effectivelyOpen: row.status === 'open'
+                    && (!row.opens_at || Date.parse(row.opens_at) <= now)
+                    && (!row.closes_at || Date.parse(row.closes_at) > now),
+                snapshotCapturedAt: (row.poll_spi_snapshots ?? [])[0]?.captured_at ?? null,
+            }));
+        }
+    }
+
+    const fallbackResult = await db.from('poll_periods')
+        .select('id, label, status, opens_at, closes_at, seasons(slug), poll_spi_snapshots(captured_at)')
+        .order('opens_at', { ascending: false });
+    if (fallbackResult.error) throw fallbackResult.error;
     const now = Date.now();
-    return (result.data ?? []).map((row) => ({
+    return (fallbackResult.data ?? []).map((row) => ({
         id: row.id,
         label: row.label,
         seasonSlug: one(row.seasons)?.slug ?? seasonSlug ?? '',
