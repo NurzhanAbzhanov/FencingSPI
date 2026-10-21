@@ -10,6 +10,13 @@ For every completed update:
 
 Do not report a deployment as complete when authentication or deployment verification is blocked.
 
+## 2026-10-21 Committee Ballot Visibility
+
+- Active committee voters can view other members' submitted ballots while voting is open as well as after closing.
+- Other voters' drafts remain private; anonymous and noncommittee accounts cannot read individual ballots.
+- Submitted ballot locking and admin-only reset/delete rules are unchanged.
+- Database-only change: existing WordPress installations need no replacement ZIP.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.
