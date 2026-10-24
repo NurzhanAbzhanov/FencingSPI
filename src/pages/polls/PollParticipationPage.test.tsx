@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ loadParticipation: vi.fn(), loadPollPeriods: vi.fn() }));
 vi.mock("../../lib/pollAdminRepository", () => mocks);
@@ -31,7 +31,7 @@ describe("PollParticipationPage", () => {
         mocks.loadParticipation.mockResolvedValue([]);
         render(<PollParticipationPage season="2025-26" />);
         expect(await screen.findByText("No coaches found.")).toBeInTheDocument();
-        expect(mocks.loadParticipation).toHaveBeenCalledWith("current-period");
+        await waitFor(() => expect(mocks.loadParticipation).toHaveBeenCalledWith("current-period"));
     });
 
     it("stops an indefinitely pending request with a retry message", async () => {

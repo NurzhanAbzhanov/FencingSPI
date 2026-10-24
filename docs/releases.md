@@ -17,6 +17,13 @@ Do not report a deployment as complete when authentication or deployment verific
 - Submitted ballot locking and admin-only reset/delete rules are unchanged.
 - Database-only change: existing WordPress installations need no replacement ZIP.
 
+## WordPress 1.5.2
+
+- Fix local DIII logos in coaches poll views when embedded in WordPress.
+- Allow a changed school/logo URL to load after a previous image failure.
+- Export the selected results tab with poll/download metadata and separate category tables, repeated column headers, and blank separators.
+- Add UTF-8 BOM to CSV downloads for Excel compatibility.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.

@@ -14,9 +14,14 @@ const mocks = vi.hoisted(() => ({
         { ballotId: "b1", voterName: "Coach One", rankings: [{ rank: 1, teamId: 1, teamName: "Alpha" }] },
     ]),
     from: vi.fn(),
+    downloadCsv: vi.fn(),
 }));
 
 vi.mock("../../lib/pollRepository", () => mocks);
+vi.mock("../../lib/pollCsv", async (importOriginal) => ({
+    ...await importOriginal<typeof import('../../lib/pollCsv')>(),
+    downloadCsv: mocks.downloadCsv,
+}));
 vi.mock("../../lib/supabase", () => ({ supabase: { from: mocks.from } }));
 import PollResultsPage from "./PollResultsPage";
 
@@ -45,5 +50,22 @@ describe("PollResultsPage", () => {
         const expandBtn = await screen.findByText(/View individual ballots/i);
         await userEvent.click(expandBtn);
         expect(await screen.findByText("Coach One")).toBeInTheDocument();
+    });
+
+    it("exports labeled tables for only the selected category tab", async () => {
+        mocks.loadPollResults.mockResolvedValueOnce([
+            { definitionId: 'team', category: { slug: 'men_team_overall', label: "Men's Team Overall", rankLimit: 15 }, standings: [] },
+            { definitionId: 'epee', category: { slug: 'men_squad_epee_overall', label: "Men's Epee Overall", rankLimit: 15 }, standings: [{ rank: 1, teamId: 1, teamName: 'Alpha', points: 15, firstPlaceVotes: 1 }] },
+        ]);
+        render(<PollResultsPage periodId="current" />);
+        await screen.findByText("Men's Epee Overall");
+        await userEvent.click(screen.getByRole('button', { name: "Men's Squads" }));
+        await userEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
+        expect(mocks.downloadCsv).toHaveBeenCalledWith('october-mens_squads-results.csv', expect.any(String));
+        const csv = mocks.downloadCsv.mock.calls[0][1] as string;
+        expect(csv).toContain('"Poll","October"');
+        expect(csv).toContain('"Selection","Men\'s Squads"');
+        expect(csv).toContain('"Category","Men\'s Epee Overall"');
+        expect(csv).not.toContain("Men's Team Overall");
     });
 });

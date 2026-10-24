@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getSchoolLogoUrl } from '../../lib/schoolLogos'
+import { publicAsset } from '../../lib/publicAsset'
 
 export default function TeamLogo({
   name,
@@ -10,11 +11,12 @@ export default function TeamLogo({
   logoUrl?: string | null
   size?: number
 }) {
-  const [error, setError] = useState(false)
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const safeName = typeof name === 'string' ? name.trim() : ''
-  const resolvedUrl = safeName ? getSchoolLogoUrl({ name: safeName, logoUrl: logoUrl ?? null }) : null
+  const logo = safeName ? getSchoolLogoUrl({ name: safeName, logoUrl: logoUrl ?? null }) : null
+  const resolvedUrl = logo ? publicAsset(logo) : null
 
-  if (!resolvedUrl || error || !safeName) {
+  if (!resolvedUrl || failedUrl === resolvedUrl || !safeName) {
     const initial = (safeName || '?').charAt(0).toUpperCase()
     return (
       <span
@@ -32,7 +34,7 @@ export default function TeamLogo({
       src={resolvedUrl}
       alt={safeName}
       loading="lazy"
-      onError={() => setError(true)}
+      onError={() => setFailedUrl(resolvedUrl)}
       style={{ width: size, height: size, minWidth: size, minHeight: size }}
       className="object-contain flex-shrink-0"
     />

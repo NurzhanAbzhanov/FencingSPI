@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { loadPollResults, loadIndividualBallots } from '../../lib/pollRepository'
 import TeamLogo from '../../components/polls/TeamLogo'
-import { createPollResultsCsv, downloadCsv } from '../../lib/pollCsv'
+import { createPollReportCsv, downloadCsv } from '../../lib/pollCsv'
 
 type Poll = {
   id: string
@@ -144,10 +144,13 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
   }, [selectedPollId, loading])
 
   const handleExportCsv = () => {
-    if (!categoriesData.length) return
+    if (standingsLoading || !filteredCategories.length) return
     const activePollLabel = polls.find((p) => p.id === selectedPollId)?.label || 'Poll Results'
-    const csvContent = createPollResultsCsv(categoriesData.flatMap((r) => r.standings))
-    const filename = `${activePollLabel.toLowerCase().replace(/\s+/g, '-')}-results.csv`
+    const csvContent = createPollReportCsv(filteredCategories, {
+      poll: activePollLabel,
+      selection: CATEGORY_TABS.find((tab) => tab.id === activeTab)?.label ?? activeTab,
+    })
+    const filename = `${activePollLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${activeTab}-results.csv`
     downloadCsv(filename, csvContent)
   }
 
@@ -185,7 +188,7 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
             <button
               type="button"
               onClick={handleExportCsv}
-              disabled={categoriesData.length === 0}
+              disabled={standingsLoading || filteredCategories.length === 0}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
