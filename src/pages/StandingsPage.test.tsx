@@ -21,6 +21,14 @@ const standings: Standing[] = [
 ];
 
 describe("StandingsPage", () => {
+    it("shows schools and published October ranks without inventing preseason SPI", () => {
+        render(<StandingsPage programs={programs} standings={[]} season="2026-27" onSeasonChange={() => undefined}
+            pollResults={[{ definitionId: 'october', teamId: 1, month: 'October', gender: 'Men', weapon: 'Team', scope: 'Overall', rank: 2, points: 100 }]} />);
+        const row = screen.getByText('Test University').closest('tr')!;
+        expect(within(row).getAllByRole('cell', { name: '2' })).toHaveLength(2);
+        expect(row.querySelector('.spi-cell')).toHaveTextContent('—');
+        expect(screen.queryByText('0.00')).not.toBeInTheDocument();
+    });
     it("leaves schools without verified profiles unlinked while keeping the Results action", () => {
         render(<StandingsPage programs={[{ ...programs[0], id: 49, name: "Boston College" }]}
             standings={[{ ...standings[0], teamId: 49 }]} pollResults={[]} season="2025-26" onSeasonChange={() => undefined} />);

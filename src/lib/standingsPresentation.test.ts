@@ -13,6 +13,12 @@ describe("formatDivision", () => {
 });
 
 describe("createStandingsCsv", () => {
+    it("leaves uncalculated SPI and unranked schools blank", () => {
+        const csv = createStandingsCsv({ downloadedAt: new Date(), season: '2026-27', gender: 'Men', selection: 'Team', division: 'All', region: 'All', conference: 'All',
+            rows: [{ rank: null, school: 'New school', division: '3', conference: 'Test', region: 'West', spi: null }] });
+        expect(csv).toContain('\n,New school,III,Test,West,');
+        expect(csv).not.toContain('null');
+    });
     it("places the download timestamp and active filters above the standings table", () => {
         const csv = createStandingsCsv({
             downloadedAt: new Date("2026-08-12T10:15:30.000Z"),

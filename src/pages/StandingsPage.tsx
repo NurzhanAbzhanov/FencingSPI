@@ -21,6 +21,7 @@ type Props = {
 
 type SortKey = "rank" | "school" | "division" | "conference" | "region" | "spi";
 type Sort = { key: SortKey; direction: "asc" | "desc" };
+type DisplayStanding = Omit<Standing, 'spi'> & { spi: number | null };
 
 export default function StandingsPage({ initialWeapon = "Team", programs, standings, pollResults, season, onSeasonChange, loading = false, loadError = false, onFiltersChange }: Props) {
     const [selection, setSelection] = useState<Weapon>(initialWeapon);
@@ -41,6 +42,8 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
         ? [...new Set(selectedPolls.map((row) => row.month))].sort((a, b) => periodOrder.indexOf(a) - periodOrder.indexOf(b))
         : historicalPeriods;
     const sources = [...new Set(selectedPolls.map((row) => row.sourceUrl).filter((url): url is string => Boolean(url)))];
+    const latestPollPeriod = [...periods].reverse().find((period) => selectedPolls.some((row) => row.month === period));
+    const pollRank = (teamId: number) => selectedPolls.find((row) => row.teamId === teamId && row.month === latestPollPeriod)?.rank ?? null;
 
     function pollCell(teamId: number, period: string) {
         const result = selectedPolls.find((row) => row.teamId === teamId && row.month === period);
@@ -49,20 +52,32 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
         return <span title={result.points == null ? "Points not published" : `${result.points} points`}>{tied ? "T" : ""}{result.rank}</span>;
     }
 
-    const rows: Array<{ standing: Standing; program: Program; rank: number }> = useMemo(() => {
-        const joined = standings
+    const rows = useMemo(() => {
+        const displayStandings: DisplayStanding[] = preseason ? programs.map((program) => ({
+            teamId: program.id, teamName: program.name, gender: program.gender, weapon: selection, spi: null,
+        })) : standings;
+        const joined = displayStandings
             .filter((row) => row.weapon === selection)
             .map((standing) => ({ standing, program: programs.find((item) => item.id === standing.teamId) }))
-            .filter((row): row is { standing: Standing; program: Program } => Boolean(row.program))
+            .filter((row): row is { standing: DisplayStanding; program: Program } => Boolean(row.program))
             .filter(({ standing, program }) =>
                 standing.gender === gender &&
                 (division === "All" || program.division === division) &&
                 (region === "All" || program.region === region) &&
                 (conference === "All" || program.conferences.includes(conference))
             );
-        joined.sort((a, b) => compareRows(a, b, sort));
-        return joined.map((row, index) => ({ ...row, rank: index + 1 }));
-    }, [conference, division, gender, programs, region, selection, sort, standings]);
+        joined.sort((a, b) => {
+            if (preseason && (sort.key === 'spi' || sort.key === 'rank')) {
+                const ar = pollRank(a.program.id), br = pollRank(b.program.id);
+                if (ar === null && br !== null) return 1;
+                if (br === null && ar !== null) return -1;
+                if (ar !== null && br !== null && ar !== br) return sort.direction === 'desc' ? ar - br : br - ar;
+                return a.program.name.localeCompare(b.program.name);
+            }
+            return compareRows(a, b, sort);
+        });
+        return joined.map((row, index) => ({ ...row, rank: preseason ? pollRank(row.program.id) : index + 1 }));
+    }, [conference, division, gender, programs, region, selection, sort, standings, preseason, pollResults]);
 
     const regions = unique([...programs.map((program) => program.region), ...(region === "All" ? [] : [region])]);
     const conferences = unique([...programs.flatMap((program) => program.conferences), ...(conference === "All" ? [] : [conference])]);
@@ -117,7 +132,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
             </div>
 
             <div className="data-summary"><strong>{rows.length}</strong> total {unitLabel}</div>
-            {preseason && <p className="season-notice" role="status">Season not started</p>}
+            {preseason && <p className="season-notice" role="status">{selectedPolls.length ? 'SPI and power ratings are not yet available. Rankings reflect the latest published coaches poll.' : 'Season not started'}</p>}
             <div className="platform-table-wrap">
                 <table className="platform-table standings-table" style={{ tableLayout: "fixed" }}>
                     <thead><tr>
@@ -132,7 +147,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                     </tr></thead>
                     <tbody>{rows.length ? rows.map(({ rank, standing, program }) => (
                         <tr key={`${standing.teamId}-${standing.weapon}`}>
-                            <td className="rank-cell text-center" style={{ textAlign: "center" }}>{rank}</td>
+                            <td className="rank-cell text-center" style={{ textAlign: "center" }}>{rank ?? '—'}</td>
                             <td className="school-cell" style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                                     <SchoolLogo program={program} size="small" />
@@ -189,7 +204,7 @@ function SortHeader({ label, sortKey, sort, onSort, align = "left", width }: { l
     </th>;
 }
 
-function compareRows(a: { standing: Standing; program: Program }, b: { standing: Standing; program: Program }, sort: Sort) {
+function compareRows(a: { standing: DisplayStanding; program: Program }, b: { standing: DisplayStanding; program: Program }, sort: Sort) {
     const av = valueForSort(a, sort.key); 
     const bv = valueForSort(b, sort.key);
     const comparison = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
@@ -197,12 +212,12 @@ function compareRows(a: { standing: Standing; program: Program }, b: { standing:
     return a.program.name.localeCompare(b.program.name);
 }
 
-function valueForSort(row: { standing: Standing; program: Program }, key: SortKey): string | number {
-    if (key === "spi" || key === "rank") return row.standing.spi;
+function valueForSort(row: { standing: DisplayStanding; program: Program }, key: SortKey): string | number {
+    if (key === "spi" || key === "rank") return row.standing.spi ?? 0;
     if (key === "school") return row.program.name;
     if (key === "conference") return row.program.conferences.join(", ");
     return row.program[key];
 }
 
 function unique(values: string[]) { return [...new Set(values)].sort(); }
-function formatNumber(value: number) { return value.toFixed(2); }
+function formatNumber(value: number | null) { return value === null ? '—' : value.toFixed(2); }

@@ -24,6 +24,14 @@ function query(data: unknown, error: unknown = null) {
 }
 
 describe("pollRepository", () => {
+    it('loads frozen published vote results without consulting live ballots', async () => {
+        mocks.from.mockReturnValue(query([{ team_id: 49, gender: 'Men', weapon: 'Team', scope: 'Overall', rank: 1, points: 100, first_place_votes: 4,
+            programs: { schools: { name: 'Boston College' } } }]));
+        const { loadPollResults } = await import('./pollRepository');
+        const result = await loadPollResults('004955ba-5872-43b5-a0a2-2c185ad49026');
+        expect(result[0]).toMatchObject({ definitionId: 'men_team_overall', standings: [{ teamId: 49, points: 100, firstPlaceVotes: 4 }] });
+        expect(mocks.from).not.toHaveBeenCalledWith('votes');
+    });
     beforeEach(() => {
         mocks.from.mockReset();
         mocks.rpc.mockReset();

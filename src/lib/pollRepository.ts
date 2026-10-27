@@ -637,6 +637,25 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
 
 async function loadResults(periodId: string): Promise<PollCategoryResults[]> {
     const db = client();
+    if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(periodId)) {
+        const snapshot = await db.from('archived_poll_results')
+            .select('team_id, gender, weapon, scope, rank, points, first_place_votes, programs!inner(schools!inner(name))')
+            .eq('poll_period_id', periodId).order('rank');
+        if (snapshot.error && !['PGRST204', 'PGRST205', '42703'].includes(snapshot.error.code)) throw snapshot.error;
+        if (snapshot.data?.length) {
+            const groups = new Map<string, PollCategoryResults>();
+            for (const row of snapshot.data) {
+                const weapon = row.weapon === 'Team' ? 'team' : `squad_${String(row.weapon).toLowerCase()}`;
+                const slug = `${String(row.gender).toLowerCase()}_${weapon}_${String(row.scope).toLowerCase()}`;
+                const school = one(one(row.programs as Relation<{ schools: Relation<{ name: string }> }>)?.schools ?? null);
+                const group = groups.get(slug) ?? { definitionId: slug, category: getPollCategorySpec(slug), standings: [] };
+                group.standings.push({ rank: Number(row.rank), teamId: Number(row.team_id), teamName: school?.name ?? `Team #${row.team_id}`,
+                    points: Number(row.points), firstPlaceVotes: Number(row.first_place_votes ?? 0) });
+                groups.set(slug, group);
+            }
+            return [...groups.values()];
+        }
+    }
     const result = await db.from('published_poll_results')
         .select('definition_id, points, rank, first_place_votes, programs!inner(legacy_team_id, schools!inner(name)), ballot_definitions!inner(slug, period_id)')
         .eq('ballot_definitions.period_id', periodId)
@@ -699,7 +718,8 @@ export async function loadPublicPollResults(periodId?: string): Promise<PollCate
     const db = client();
     const periodsRes = await db.from('poll_periods').select('id, status, opens_at').order('opens_at', { ascending: false });
     const periodRows = (periodsRes.data ?? []) as any[];
-    const openRow = periodRows.find((r) => r.status === 'open' || periodFromRow(r).effectivelyOpen) ?? periodRows[0];
-    const targetId = periodId || openRow?.id || 'b1758f17-33fd-4668-991e-16a8de896c76';
+    const openRow = periodRows.find((r) => r.status === 'published') ?? periodRows.find((r) => r.status === 'open' || periodFromRow(r).effectivelyOpen) ?? periodRows[0];
+    const targetId = periodId && periodId !== 'current' ? periodId : openRow?.id;
+    if (!targetId) return [];
     return loadPollResults(String(targetId));
 }

@@ -1,12 +1,12 @@
 import type { Gender, Weapon } from "../types/types";
 
 export type StandingsCsvRow = {
-    rank: number;
+    rank: number | null;
     school: string;
     division: string;
     conference: string;
     region: string;
-    spi: number;
+    spi: number | null;
 };
 
 type StandingsCsvOptions = {
@@ -42,12 +42,12 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
     ];
     const headers = ["Rank", "School", "Division", "Conference", "Region", "SPI"];
     const table = options.rows.map((row) => [
-        row.rank,
+        row.rank ?? '',
         row.school,
         formatDivision(row.division),
         row.conference,
         row.region,
-        row.spi,
+        row.spi ?? '',
     ]);
 
     return [

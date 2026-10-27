@@ -79,7 +79,7 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
       setPolls(sorted)
 
       const defaultPollId = sorted.find((p) => p.id === propPeriodId)?.id
-        || (sorted.find((p) => p.status === 'open') ?? sorted[0])?.id || ''
+        || (sorted.find((p) => p.status === 'open') ?? sorted.find((p) => p.status === 'published') ?? sorted[0])?.id || ''
       setSelectedPollId(defaultPollId)
       } catch (err: any) {
         if (active) setError(err.message || 'Failed to load polls.')

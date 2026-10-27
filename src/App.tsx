@@ -28,7 +28,7 @@ import "./App.css";
 
 export default function App() {
     const [route, setRoute] = useState<Route>(() => isInitialPasswordSetup ? { page: "set-password" } : getRouteFromHash());
-    const [season, setSeason] = useState("2025-26");
+    const [season, setSeason] = useState("2026-27");
     const [programs, setPrograms] = useState<Program[]>([]);
     const [matches, setMatches] = useState<SeasonMatch[]>([]);
     const [standings, setStandings] = useState<Standing[]>([]);

@@ -26,6 +26,15 @@ vi.mock("../../lib/supabase", () => ({ supabase: { from: mocks.from } }));
 import PollResultsPage from "./PollResultsPage";
 
 describe("PollResultsPage", () => {
+    it('defaults to the published poll instead of a future draft when voting is closed', async () => {
+        mocks.from.mockReturnValueOnce({ select: () => ({ order: async () => ({ data: [
+            { id: 'future', label: 'January', status: 'draft', opens_at: null, closes_at: null },
+            { id: 'published', label: 'October', status: 'published', opens_at: null, closes_at: null },
+        ], error: null }) }) });
+        render(<PollResultsPage periodId="current" />);
+        await screen.findByText(/View individual ballots/i);
+        expect(mocks.loadPollResults).toHaveBeenCalledWith('published');
+    });
     beforeEach(() => {
         vi.clearAllMocks();
         mocks.from.mockReturnValue({ select: () => ({ order: async () => ({ data: [

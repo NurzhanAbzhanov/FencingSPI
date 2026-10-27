@@ -24,6 +24,14 @@ Do not report a deployment as complete when authentication or deployment verific
 - Export the selected results tab with poll/download metadata and separate category tables, repeated column headers, and blank separators.
 - Add UTF-8 BOM to CSV downloads for Excel compatibility.
 
+## WordPress 1.5.3
+
+- Publish October 2026-27 from submitted votes through the existing public publication store, with frozen points, tie-aware ranks, and first-place counts.
+- Repair the admin Publish action to use the deployed votes schema rather than retired ballot tables.
+- Make 2026-27 active and the default website season.
+- Show current-season schools and their latest published poll ranks before SPI is calculated. Uncalculated SPI and unranked schools stay blank in exports.
+- Do not create or carry forward any current-season SPI or PR records.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.
