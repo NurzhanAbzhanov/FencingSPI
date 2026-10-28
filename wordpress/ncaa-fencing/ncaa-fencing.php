@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NCAA Fencing
  * Description: Embed the NCAA Fencing SPI and coaches poll application with [ncaa_fencing].
- * Version: 1.5.4
+ * Version: 1.5.5
  * Requires at least: 6.0
  * Requires PHP: 7.4
  */
@@ -45,7 +45,7 @@ add_action('template_redirect', function () {
     $html = str_replace('href="/usfca-logo.png"', 'href="' . esc_url($base . 'usfca-logo.png') . '"', $html);
     $config = '<script>window.NCAA_FENCING_ASSET_BASE=' . wp_json_encode(rtrim($base, '/'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';</script>';
     $bridge = '<script src="' . esc_url(plugins_url('frame.js', __FILE__)) . '" defer></script>';
-    $styles = '<link rel="stylesheet" href="' . esc_url(plugins_url('embedded.css', __FILE__)) . '?ver=1.5.4">';
+    $styles = '<link rel="stylesheet" href="' . esc_url(plugins_url('embedded.css', __FILE__)) . '?ver=1.5.5">';
     echo str_replace('</head>', $config . $bridge . $styles . '</head>', $html);
     exit;
 }, 0);
@@ -55,7 +55,7 @@ add_shortcode('ncaa_fencing', function () {
     if (!ncaa_fencing_can_view($post)) {
         return '';
     }
-    wp_enqueue_script('ncaa-fencing-embed', plugins_url('embed.js', __FILE__), array(), '1.5.4', true);
+    wp_enqueue_script('ncaa-fencing-embed', plugins_url('embed.js', __FILE__), array(), '1.5.5', true);
     $src = add_query_arg('ncaa_fencing_app', '1', get_permalink($post));
     return '<iframe data-ncaa-fencing title="NCAA Fencing" src="' . esc_url($src) . '" style="display:block;width:100%;height:85vh;min-height:600px;border:0;background:#fff" allow="clipboard-write"></iframe>';
 });

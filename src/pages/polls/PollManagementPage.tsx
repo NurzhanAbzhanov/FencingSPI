@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { publishPoll } from '../../lib/pollAdminRepository'
+import { Send } from 'lucide-react'
 
 type Poll = {
   id: string | number
   label: string
+  status: 'draft' | 'open' | 'closed' | 'published'
   is_open: boolean
   opened_at: string | null
   closed_at: string | null
@@ -84,6 +87,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('error')
   const [busy, setBusy] = useState(false)
+  const [publishingPollId, setPublishingPollId] = useState<string | number | null>(null)
 
   // Create-form state
   const currentMonthNum = new Date().getMonth() + 1;
@@ -127,6 +131,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
       const loaded: Poll[] = periodsRes.data.map((p) => ({
         id: p.id,
         label: p.label,
+        status: p.status,
         is_open: p.status === 'open',
         opened_at: p.opens_at,
         closed_at: p.closes_at,
@@ -148,7 +153,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
       return []
     }
 
-    const loaded = (data ?? []) as Poll[]
+    const loaded: Poll[] = (data ?? []).map((poll) => ({ ...poll, status: poll.is_open ? 'open' : 'closed' }))
     setPolls(loaded)
     return loaded
   }
@@ -180,6 +185,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
         .filter(
           (p) =>
             !p.is_open &&
+            p.status !== 'published' &&
             (p.scheduled_open_at || p.opened_at) &&
             new Date((p.scheduled_open_at || p.opened_at)!) <= now &&
             (!(p.scheduled_close_at || p.closed_at) || new Date((p.scheduled_close_at || p.closed_at)!) > now),
@@ -381,6 +387,27 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
     setBusy(false)
   }
 
+  async function handlePublishPoll(poll: Poll) {
+    if (busy || poll.status !== 'closed') return
+    if (!window.confirm(`Publish results for "${poll.label}"?\n\nThis will make the finished results publicly available. Submitted ballots will not be changed.`)) return
+    setBusy(true)
+    setPublishingPollId(poll.id)
+    setMessage('')
+    try {
+      await publishPoll(String(poll.id))
+      setPolls((current) => current.map((item) => item.id === poll.id ? { ...item, status: 'published' } : item))
+      setMessage('Poll results published.')
+      setMessageType('success')
+      await refreshPolls()
+    } catch (err: any) {
+      setMessage(err.message || 'Could not publish poll results.')
+      setMessageType('error')
+    } finally {
+      setPublishingPollId(null)
+      setBusy(false)
+    }
+  }
+
   function startEditSchedule(poll: Poll) {
     setEditingSchedulePollId(poll.id)
     setScheduleOpen(toDatetimeLocal(poll.scheduled_open_at || poll.opened_at))
@@ -448,6 +475,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
 
         {message && (
           <div
+            role={messageType === 'error' ? 'alert' : 'status'}
             className={`mb-5 px-3.5 py-2.5 rounded-md text-xs border shadow-2xs ${
               messageType === 'success'
                 ? 'bg-green-50 border-green-200 text-green-800'
@@ -638,7 +666,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
-                              Closed
+                              {poll.status === 'published' ? 'Published' : poll.status === 'draft' ? 'Draft' : 'Closed'}
                             </span>
                           )}
                         </td>
@@ -681,6 +709,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
                             <a href={`#/admin/participation?period=${poll.id}`} className="text-green-700 hover:text-green-800 font-medium">
                               Participation
                             </a>
+                            {poll.status === 'published' && <a href={`#/polls/public/${poll.id}`} className="text-green-700 hover:text-green-800 font-medium">Public results</a>}
                           </div>
                         </td>
 
@@ -707,7 +736,11 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5">
-                              {poll.is_open ? (
+                              {poll.status === 'closed' && <button type="button" onClick={() => handlePublishPoll(poll)} disabled={busy}
+                                className="h-6 px-2.5 inline-flex items-center gap-1 text-[11px] font-semibold rounded border border-green-600 text-white bg-green-700 hover:bg-green-800 disabled:opacity-50 cursor-pointer">
+                                <Send size={12} /> {publishingPollId === poll.id ? 'Publishing…' : 'Publish results'}
+                              </button>}
+                              {poll.status === 'published' ? null : poll.is_open ? (
                                 <button
                                   type="button"
                                   onClick={() => handleClosePoll(poll.id)}
@@ -729,7 +762,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
                               <button
                                 type="button"
                                 onClick={() => startEditSchedule(poll)}
-                                disabled={busy}
+                                disabled={busy || poll.status === 'published'}
                                 className="h-6 px-2 text-[11px] font-medium rounded border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                               >
                                 Edit Schedule
@@ -737,7 +770,7 @@ export default function PollManagementPage({ season: _propSeason = '2025-26' }: 
                               <button
                                 type="button"
                                 onClick={() => handleDeletePoll(poll.id, poll.label)}
-                                disabled={busy}
+                                disabled={busy || poll.status === 'published'}
                                 className="h-6 px-2 text-[11px] font-medium rounded border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50 cursor-pointer"
                               >
                                 Delete

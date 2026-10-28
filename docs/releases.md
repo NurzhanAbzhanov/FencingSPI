@@ -39,6 +39,14 @@ Do not report a deployment as complete when authentication or deployment verific
 - Preserve all teams tied at the cutoff rank. Preserve original ballots, point calculations, and complete stored snapshots.
 - Ballot sizes, individual ballot inspection, and unpublished live results are unchanged.
 
+## WordPress 1.5.5
+
+- Add Publish results to closed polls in Manage Polls, with confirmation, progress, and server error feedback.
+- Use the existing administrator-only publication function and refresh the displayed status after success.
+- Distinguish Draft, Open, Closed, and Published rather than collapsing all inactive polls to Closed.
+- Add a Public results link for published polls and prevent accidental reopen, rescheduling, or deletion through this page.
+- Exclude published polls from automatic opening.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.
