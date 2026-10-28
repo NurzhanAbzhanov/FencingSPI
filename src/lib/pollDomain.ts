@@ -38,6 +38,12 @@ const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
 
 export const POLL_CATEGORY_SPECS: PollCategorySpec[] = CATEGORY_DEFINITIONS;
 
+// Publication cutoffs do not change ballot size or the points already awarded.
+export function isWithinPublishedPollLimit(row: { weapon: Weapon; scope: PollScope; rank: number }): boolean {
+    const limit = row.scope === 'DIII' ? 8 : row.weapon === 'Team' ? 15 : 12;
+    return row.rank > 0 && row.rank <= limit;
+}
+
 export function normalizeCategorySlug(rawSlug: string): PollCategorySlug {
     let s = rawSlug;
     if (s.endsWith('_epee') || s.endsWith('_foil') || s.endsWith('_sabre')) {

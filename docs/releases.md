@@ -32,6 +32,13 @@ Do not report a deployment as complete when authentication or deployment verific
 - Show current-season schools and their latest published poll ranks before SPI is calculated. Uncalculated SPI and unranked schools stay blank in exports.
 - Do not create or carry forward any current-season SPI or PR records.
 
+## WordPress 1.5.4
+
+- Published ranking cutoffs: Team Overall 15, Squad Overall 12, and Division III Team/Squad 8.
+- Apply cutoffs consistently to poll results, CSV exports, and published poll ranks on the SPI standings page.
+- Preserve all teams tied at the cutoff rank. Preserve original ballots, point calculations, and complete stored snapshots.
+- Ballot sizes, individual ballot inspection, and unpublished live results are unchanged.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.

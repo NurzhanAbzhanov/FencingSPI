@@ -3,9 +3,26 @@ import {
     computePollStandings,
     deriveLockedD3TeamIds,
     getPollCategorySpec,
+    isWithinPublishedPollLimit,
     POLL_CATEGORY_SPECS,
     validateBallotTeamIds,
 } from './pollDomain';
+
+describe('published poll limits', () => {
+    it.each([
+        ['Team', 'Overall', 15], ['Epee', 'Overall', 12], ['Foil', 'Overall', 12], ['Sabre', 'Overall', 12],
+        ['Team', 'DIII', 8], ['Epee', 'DIII', 8], ['Foil', 'DIII', 8], ['Sabre', 'DIII', 8],
+    ] as const)('caps %s %s at rank %i without changing ballot limits', (weapon, scope, cap) => {
+        expect(isWithinPublishedPollLimit({ weapon, scope, rank: cap })).toBe(true);
+        expect(isWithinPublishedPollLimit({ weapon, scope, rank: cap + 1 })).toBe(false);
+    });
+
+    it('keeps every team tied at the cutoff', () => {
+        const ranks = [11, 12, 12, 14].filter((rank) => isWithinPublishedPollLimit({ weapon: 'Foil', scope: 'Overall', rank }));
+        expect(ranks).toEqual([11, 12, 12]);
+        expect(getPollCategorySpec('men_squad_foil_overall').rankLimit).toBe(15);
+    });
+});
 
 describe('poll categories', () => {
     it('defines ten visible categories and the supplied team and hidden weapon rules', () => {

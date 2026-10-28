@@ -24,6 +24,19 @@ function query(data: unknown, error: unknown = null) {
 }
 
 describe("pollRepository", () => {
+    it('applies publication cutoffs to frozen category results without truncating ballots', async () => {
+        const base = { team_id: 49, gender: 'Men', points: 100, first_place_votes: 4, programs: { schools: { name: 'Test school' } } };
+        mocks.from.mockReturnValue(query([
+            { ...base, weapon: 'Team', scope: 'Overall', rank: 15 }, { ...base, weapon: 'Team', scope: 'Overall', rank: 16 },
+            { ...base, weapon: 'Foil', scope: 'Overall', rank: 12 }, { ...base, weapon: 'Foil', scope: 'Overall', rank: 13 },
+            { ...base, weapon: 'Team', scope: 'DIII', rank: 8 }, { ...base, weapon: 'Team', scope: 'DIII', rank: 9 },
+            { ...base, weapon: 'Epee', scope: 'DIII', rank: 8 }, { ...base, weapon: 'Epee', scope: 'DIII', rank: 9 },
+        ]));
+        const { loadPollResults } = await import('./pollRepository');
+        const groups = await loadPollResults('004955ba-5872-43b5-a0a2-2c185ad49026');
+        expect(groups.flatMap((group) => group.standings.map((row) => row.rank))).toEqual([15, 12, 8, 8]);
+        expect(mocks.from).not.toHaveBeenCalledWith('votes');
+    });
     it('loads frozen published vote results without consulting live ballots', async () => {
         mocks.from.mockReturnValue(query([{ team_id: 49, gender: 'Men', weapon: 'Team', scope: 'Overall', rank: 1, points: 100, first_place_votes: 4,
             programs: { schools: { name: 'Boston College' } } }]));

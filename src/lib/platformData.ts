@@ -1,6 +1,7 @@
 import type { PlatformUser, PollResult, Program, SeasonMatch, Standing } from "../types/platform";
 import type { Gender, Weapon } from "../types/types";
 import { supabase } from "./supabase";
+import { isWithinPublishedPollLimit } from './pollDomain';
 
 export const SEASONS = [
     { slug: "2026-27", name: "2026-27" },
@@ -157,7 +158,7 @@ export async function loadPollResults(season: string): Promise<PollResult[]> {
         definitionId: `archive-${row.id}`, teamId: Number(row.team_id), month: row.period,
         gender: row.gender as Gender, weapon: row.weapon as Weapon, scope: row.scope,
         rank: Number(row.rank), points: row.points == null ? null : Number(row.points), sourceUrl: row.source_url,
-    }));
+    })).filter(isWithinPublishedPollLimit);
     // Some installations have migrated ballot storage and have no live results yet.
     // Do not join a retired ballot table just to discover that the result set is empty.
     const published = await supabase.from("published_poll_results").select("*").limit(1);
@@ -174,7 +175,7 @@ export async function loadPollResults(season: string): Promise<PollResult[]> {
         if (!program || !definition || !period || linkedSeason?.slug !== season) return [];
         const month = resolvePollMonth(period.label, period.month, period.opens_at) as PollResult["month"];
         return [{ definitionId: row.definition_id, teamId: Number(program.legacy_team_id), month, gender: definition.gender, weapon: definition.weapon, scope: definition.scope, rank: row.rank, points: row.points }];
-    })];
+    })].filter(isWithinPublishedPollLimit);
 }
 
 const DEMO_USER_KEY = "spi-platform-demo-user";

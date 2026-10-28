@@ -1,4 +1,4 @@
-import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, normalizeCategorySlug, validateBallotTeamIds } from './pollDomain';
+import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, isWithinPublishedPollLimit, normalizeCategorySlug, validateBallotTeamIds } from './pollDomain';
 import { supabase } from './supabase';
 import type {
     IndividualPollBallot,
@@ -653,7 +653,9 @@ async function loadResults(periodId: string): Promise<PollCategoryResults[]> {
                     points: Number(row.points), firstPlaceVotes: Number(row.first_place_votes ?? 0) });
                 groups.set(slug, group);
             }
-            return [...groups.values()];
+            return [...groups.values()].map((group) => ({ ...group,
+                standings: group.standings.filter((row) => isWithinPublishedPollLimit({ ...group.category, rank: row.rank })),
+            }));
         }
     }
     const result = await db.from('published_poll_results')
@@ -675,7 +677,9 @@ async function loadResults(periodId: string): Promise<PollCategoryResults[]> {
         current.standings.push({ rank: row.rank, teamId: Number(program.legacy_team_id), teamName: school.name, points: row.points, firstPlaceVotes: row.first_place_votes } satisfies PollStanding);
         grouped.set(row.definition_id, current);
     }
-    return [...grouped.values()];
+    return [...grouped.values()].map((group) => ({ ...group,
+        standings: group.standings.filter((row) => isWithinPublishedPollLimit({ ...group.category, rank: row.rank })),
+    }));
 }
 
 export async function loadIndividualBallots(definitionId: string, pollId?: string): Promise<IndividualPollBallot[]> {
