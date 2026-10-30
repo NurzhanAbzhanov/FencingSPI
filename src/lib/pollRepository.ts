@@ -1,4 +1,4 @@
-import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, isWithinPublishedPollLimit, normalizeCategorySlug, validateBallotTeamIds } from './pollDomain';
+import { computePollStandings, deriveLockedD3TeamIds, getPollCategorySpec, isWithinPublishedPollLimit, normalizeCategorySlug, orderPollCategories, validateBallotTeamIds } from './pollDomain';
 import { supabase } from './supabase';
 import type {
     IndividualPollBallot,
@@ -151,7 +151,7 @@ export async function loadPollDashboard(userId: string): Promise<PollDashboard> 
             gender: slug.startsWith('women') ? 'Women' : 'Men',
             weapon: slug.includes('epee') ? 'Epee' : slug.includes('foil') ? 'Foil' : slug.includes('sabre') ? 'Sabre' : 'Team',
             scope: slug.includes('diii') ? 'DIII' : 'Overall',
-            rank_limit: slug.includes('diii') ? 8 : 15,
+            rank_limit: slug.includes('diii') ? 10 : 15,
         }));
     }
 
@@ -516,7 +516,7 @@ export async function savePollBallot(input: { definitionId: string; teamIds: num
 
 export async function loadPollResults(periodId: string): Promise<PollCategoryResults[]> {
     const published = await loadResults(periodId);
-    if (published.length) return published;
+    if (published.length) return orderPollCategories(published);
 
     const db = client();
 
@@ -549,7 +549,7 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
             gender: slug.startsWith('women') ? 'Women' : 'Men',
             weapon: slug.includes('epee') ? 'Epee' : slug.includes('foil') ? 'Foil' : slug.includes('sabre') ? 'Sabre' : 'Team',
             scope: slug.includes('diii') ? 'DIII' : 'Overall',
-            rank_limit: slug.includes('diii') ? 8 : 15,
+            rank_limit: slug.includes('diii') ? 10 : 15,
         }));
     }
 
@@ -580,7 +580,7 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
         }
     } catch {}
 
-    return defRows.flatMap((definition) => {
+    return orderPollCategories(defRows.flatMap((definition) => {
         let slug: PollCategorySlug = 'men_team_overall';
         const defSlugStr = String(definition.slug || '');
         try {
@@ -632,7 +632,7 @@ export async function loadPollResults(periodId: string): Promise<PollCategoryRes
             category: categorySpec,
             standings,
         }];
-    });
+    }));
 }
 
 async function loadResults(periodId: string): Promise<PollCategoryResults[]> {

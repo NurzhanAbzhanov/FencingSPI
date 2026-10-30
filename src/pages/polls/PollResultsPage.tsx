@@ -117,7 +117,7 @@ export default function PollResultsPage({ periodId: propPeriodId }: { periodId?:
               categorySlug: cr.category.slug,
               definitionId: cr.definitionId,
               label: cr.category.label,
-              slotCount: cr.category.rankLimit || 15,
+              slotCount: individualBallots.length ? Math.max(...individualBallots.map((ballot) => ballot.rankings.length)) : cr.category.rankLimit || 15,
               standings: cr.standings.map((s) => ({
                 rank: s.rank,
                 teamId: s.teamId,

@@ -31,11 +31,12 @@ describe("readLocalPrograms", () => {
         const base = { id: 1, team_id: 52, period: 'October', gender: 'Men', scope: 'Overall', points: 100, source_url: 'https://usfca.org/poll' };
         mocks.from.mockReturnValueOnce(query([
             { ...base, weapon: 'Team', rank: 15 }, { ...base, weapon: 'Team', rank: 16 },
-            { ...base, weapon: 'Foil', rank: 12 }, { ...base, weapon: 'Foil', rank: 13 },
+            { ...base, weapon: 'Foil', rank: 15 }, { ...base, weapon: 'Foil', rank: 16 },
             { ...base, weapon: 'Epee', scope: 'DIII', rank: 8 }, { ...base, weapon: 'Epee', scope: 'DIII', rank: 9 },
+            { ...base, weapon: 'Team', scope: 'DIII', rank: 10 }, { ...base, weapon: 'Team', scope: 'DIII', rank: 11 },
         ])).mockReturnValueOnce(query([]));
         const rows = await loadPollResults('2026-27');
-        expect(rows.map((row) => row.rank)).toEqual([15, 12, 8]);
+        expect(rows.map((row) => row.rank)).toEqual([15, 15, 8, 10]);
         expect(rows.every((row) => row.points === 100)).toBe(true);
     });
     it("loads archived ranks without converting unpublished points to zero", async () => {

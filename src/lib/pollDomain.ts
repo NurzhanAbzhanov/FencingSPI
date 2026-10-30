@@ -20,8 +20,8 @@ type CategoryDefinition = {
 const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
     { slug: 'men_team_overall', label: "Men's Team Overall", gender: 'Men', weapon: 'Team', scope: 'Overall', rankLimit: 15, hidden: false },
     { slug: 'women_team_overall', label: "Women's Team Overall", gender: 'Women', weapon: 'Team', scope: 'Overall', rankLimit: 15, hidden: false },
-    { slug: 'men_team_diii', label: "Men's Team Division III", gender: 'Men', weapon: 'Team', scope: 'DIII', rankLimit: 8, hidden: false },
-    { slug: 'women_team_diii', label: "Women's Team Division III", gender: 'Women', weapon: 'Team', scope: 'DIII', rankLimit: 8, hidden: false },
+    { slug: 'men_team_diii', label: "Men's Team Division III", gender: 'Men', weapon: 'Team', scope: 'DIII', rankLimit: 10, hidden: false },
+    { slug: 'women_team_diii', label: "Women's Team Division III", gender: 'Women', weapon: 'Team', scope: 'DIII', rankLimit: 10, hidden: false },
     { slug: 'men_squad_epee_overall', label: "Men's Epee Overall", gender: 'Men', weapon: 'Epee', scope: 'Overall', rankLimit: 15, hidden: false },
     { slug: 'women_squad_epee_overall', label: "Women's Epee Overall", gender: 'Women', weapon: 'Epee', scope: 'Overall', rankLimit: 15, hidden: false },
     { slug: 'men_squad_foil_overall', label: "Men's Foil Overall", gender: 'Men', weapon: 'Foil', scope: 'Overall', rankLimit: 15, hidden: false },
@@ -40,8 +40,16 @@ export const POLL_CATEGORY_SPECS: PollCategorySpec[] = CATEGORY_DEFINITIONS;
 
 // Publication cutoffs do not change ballot size or the points already awarded.
 export function isWithinPublishedPollLimit(row: { weapon: Weapon; scope: PollScope; rank: number }): boolean {
-    const limit = row.scope === 'DIII' ? 8 : row.weapon === 'Team' ? 15 : 12;
+    const limit = row.scope === 'DIII' ? (row.weapon === 'Team' ? 10 : 8) : 15;
     return row.rank > 0 && row.rank <= limit;
+}
+
+export function orderPollCategories<T extends { category: { slug: string } }>(rows: readonly T[]): T[] {
+    const position = (slug: string) => {
+        const index = POLL_CATEGORY_SPECS.findIndex((item) => item.slug === normalizeCategorySlug(slug));
+        return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+    };
+    return [...rows].sort((a, b) => position(a.category.slug) - position(b.category.slug));
 }
 
 export function normalizeCategorySlug(rawSlug: string): PollCategorySlug {
@@ -66,7 +74,7 @@ export function getPollCategorySpec(slug: string): PollCategorySpec {
 export function deriveLockedD3TeamIds(
     overallRankedTeamIds: number[],
     availableD3TeamIds: Set<number>,
-    limit = 8,
+    limit = 10,
 ): number[] {
     const locked: number[] = [];
 

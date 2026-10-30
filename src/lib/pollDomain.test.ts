@@ -4,22 +4,23 @@ import {
     deriveLockedD3TeamIds,
     getPollCategorySpec,
     isWithinPublishedPollLimit,
+    orderPollCategories,
     POLL_CATEGORY_SPECS,
     validateBallotTeamIds,
 } from './pollDomain';
 
 describe('published poll limits', () => {
     it.each([
-        ['Team', 'Overall', 15], ['Epee', 'Overall', 12], ['Foil', 'Overall', 12], ['Sabre', 'Overall', 12],
-        ['Team', 'DIII', 8], ['Epee', 'DIII', 8], ['Foil', 'DIII', 8], ['Sabre', 'DIII', 8],
+        ['Team', 'Overall', 15], ['Epee', 'Overall', 15], ['Foil', 'Overall', 15], ['Sabre', 'Overall', 15],
+        ['Team', 'DIII', 10], ['Epee', 'DIII', 8], ['Foil', 'DIII', 8], ['Sabre', 'DIII', 8],
     ] as const)('caps %s %s at rank %i without changing ballot limits', (weapon, scope, cap) => {
         expect(isWithinPublishedPollLimit({ weapon, scope, rank: cap })).toBe(true);
         expect(isWithinPublishedPollLimit({ weapon, scope, rank: cap + 1 })).toBe(false);
     });
 
     it('keeps every team tied at the cutoff', () => {
-        const ranks = [11, 12, 12, 14].filter((rank) => isWithinPublishedPollLimit({ weapon: 'Foil', scope: 'Overall', rank }));
-        expect(ranks).toEqual([11, 12, 12]);
+        const ranks = [14, 15, 15, 17].filter((rank) => isWithinPublishedPollLimit({ weapon: 'Foil', scope: 'Overall', rank }));
+        expect(ranks).toEqual([14, 15, 15]);
         expect(getPollCategorySpec('men_squad_foil_overall').rankLimit).toBe(15);
     });
 });
@@ -28,7 +29,7 @@ describe('poll categories', () => {
     it('defines ten visible categories and the supplied team and hidden weapon rules', () => {
         expect(POLL_CATEGORY_SPECS.filter((item) => !item.hidden)).toHaveLength(10);
         expect(getPollCategorySpec('men_team_diii')).toMatchObject({
-            rankLimit: 8,
+            rankLimit: 10,
             scope: 'DIII',
             weapon: 'Team',
         });
@@ -40,6 +41,19 @@ describe('poll categories', () => {
 
     it('rejects invalid category slugs', () => {
         expect(() => getPollCategorySpec('not-a-category')).toThrow('Unknown poll category');
+    });
+});
+
+describe('poll category order', () => {
+    it('puts team overall, team DIII, then weapon pairs in a stable order', () => {
+        const categories = POLL_CATEGORY_SPECS.filter((category) => !category.hidden).map((category) => ({ category }));
+        const reversed = [...categories].reverse();
+        expect(orderPollCategories(reversed).map((item) => item.category.slug)).toEqual([
+            'men_team_overall', 'women_team_overall', 'men_team_diii', 'women_team_diii',
+            'men_squad_epee_overall', 'women_squad_epee_overall', 'men_squad_foil_overall', 'women_squad_foil_overall',
+            'men_squad_sabre_overall', 'women_squad_sabre_overall',
+        ]);
+        expect(reversed[0].category.slug).toBe('women_squad_sabre_overall');
     });
 });
 

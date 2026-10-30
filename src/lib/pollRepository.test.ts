@@ -28,13 +28,14 @@ describe("pollRepository", () => {
         const base = { team_id: 49, gender: 'Men', points: 100, first_place_votes: 4, programs: { schools: { name: 'Test school' } } };
         mocks.from.mockReturnValue(query([
             { ...base, weapon: 'Team', scope: 'Overall', rank: 15 }, { ...base, weapon: 'Team', scope: 'Overall', rank: 16 },
-            { ...base, weapon: 'Foil', scope: 'Overall', rank: 12 }, { ...base, weapon: 'Foil', scope: 'Overall', rank: 13 },
-            { ...base, weapon: 'Team', scope: 'DIII', rank: 8 }, { ...base, weapon: 'Team', scope: 'DIII', rank: 9 },
+            { ...base, weapon: 'Foil', scope: 'Overall', rank: 15 }, { ...base, weapon: 'Foil', scope: 'Overall', rank: 16 },
+            { ...base, weapon: 'Team', scope: 'DIII', rank: 10 }, { ...base, weapon: 'Team', scope: 'DIII', rank: 11 },
             { ...base, weapon: 'Epee', scope: 'DIII', rank: 8 }, { ...base, weapon: 'Epee', scope: 'DIII', rank: 9 },
         ]));
         const { loadPollResults } = await import('./pollRepository');
         const groups = await loadPollResults('004955ba-5872-43b5-a0a2-2c185ad49026');
-        expect(groups.flatMap((group) => group.standings.map((row) => row.rank))).toEqual([15, 12, 8, 8]);
+        expect(groups.map((group) => group.category.slug)).toEqual(['men_team_overall', 'men_team_diii', 'men_squad_foil_overall', 'men_squad_epee_diii']);
+        expect(groups.flatMap((group) => group.standings.map((row) => row.rank))).toEqual([15, 10, 15, 8]);
         expect(mocks.from).not.toHaveBeenCalledWith('votes');
     });
     it('loads frozen published vote results without consulting live ballots', async () => {

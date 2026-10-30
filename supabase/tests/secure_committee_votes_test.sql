@@ -21,7 +21,7 @@ insert into public.poll_periods(id,season_id,month,label,status) values
 insert into public.schools(id,name) select 910000+i,'Security school '||i from generate_series(1,15) i;
 insert into public.programs(school_id,legacy_team_id,gender) select 910000+i,910000+i,'Men' from generate_series(1,15) i;
 insert into public.program_seasons(season_id,program_id,division) select 'a2000000-0000-4000-8000-000000000001',id,
-    case when legacy_team_id <= 910008 then 3 else 1 end from public.programs where legacy_team_id between 910001 and 910015;
+    case when legacy_team_id <= 910010 then 3 else 1 end from public.programs where legacy_team_id between 910001 and 910015;
 
 set local role anon;
 select throws_ok('select * from public.votes','42501','permission denied for table votes','Anonymous visitors cannot read votes');
@@ -47,21 +47,23 @@ select throws_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-00
 select lives_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_overall',array(select generate_series(910001,910015))::bigint[],true)$$,'Member submits a complete ballot');
 select throws_ok($$update public.votes set status='draft' where voter_id=auth.uid()$$,
     'P0001','Submitted ballots are locked. Ask an administrator to reset it.','Direct API cannot unlock a submission');
-select lives_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_diii',array(select generate_series(910001,910008))::bigint[],true)$$,'DIII preserves overall order');
+select throws_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_diii',array(select generate_series(910001,910008))::bigint[],true)$$,
+    'P0001','Ballot requires 10 ranked teams','DIII submissions require ten schools');
+select lives_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_diii',array(select generate_series(910001,910010))::bigint[],true)$$,'Ten-school DIII ballot preserves overall order');
 select lives_ok($$update public.poll_periods set status='closed' where id='a3000000-0000-4000-8000-000000000001'$$,'Nonadmin schedule update is filtered by RLS');
 -- Updates blocked by RLS affect zero rows, rather than raising an exception.
 reset role;
 select is((select status::text from public.poll_periods where id='a3000000-0000-4000-8000-000000000001'),'open','Member cannot change the poll schedule');
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',true);
 set local role authenticated;
-select is((select count(*)::integer from public.votes),2,'Other committee members can see submitted ballots before closing');
+select is((select count(*)::integer from public.votes where poll_id='a3000000-0000-4000-8000-000000000001'),2,'Other committee members can see submitted ballots before closing');
 select lives_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_overall',array[910002]::bigint[],false)$$,'Second member can save their own draft');
-select is((select count(*)::integer from public.votes),3,'Member sees submitted ballots and their own draft while open');
+select is((select count(*)::integer from public.votes where poll_id='a3000000-0000-4000-8000-000000000001'),3,'Member sees submitted ballots and their own draft while open');
 select is((select count(*)::integer from public.votes where status='draft' and voter_id<>auth.uid()),0,'Other voters drafts remain private');
 reset role;
 update public.poll_periods set status='closed' where id='a3000000-0000-4000-8000-000000000001';
 set local role authenticated;
-select is((select count(*)::integer from public.votes),3,'Committee sees submitted votes after closing and its own draft');
+select is((select count(*)::integer from public.votes where poll_id='a3000000-0000-4000-8000-000000000001'),3,'Committee sees submitted votes after closing and its own draft');
 select throws_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-000000000001','men_team_overall',array[910003]::bigint[],false)$$,
     'P0001','This poll is not open','Cannot edit a draft after closing');
 reset role;
@@ -73,7 +75,9 @@ select throws_ok($$select public.save_committee_vote('a3000000-0000-4000-8000-00
 reset role;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',true);
 set local role authenticated;
-select is((select count(*)::integer from public.votes),3,'Admin can inspect all votes');
+select is((select count(*)::integer from public.votes where poll_id='a3000000-0000-4000-8000-000000000001'),3,'Admin can inspect all fixture votes');
+select lives_ok($$select public.publish_poll_period('a3000000-0000-4000-8000-000000000001')$$,'Admin publishes ten-school DIII ballots');
+select is((select sum(points)::integer from public.archived_poll_results where poll_period_id='a3000000-0000-4000-8000-000000000001' and scope='DIII'),55,'DIII publication awards ten through one points');
 reset role;
 update public.poll_periods set status='open' where id='a3000000-0000-4000-8000-000000000001';
 set local role authenticated;

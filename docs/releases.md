@@ -47,6 +47,14 @@ Do not report a deployment as complete when authentication or deployment verific
 - Add a Public results link for published polls and prevent accidental reopen, rescheduling, or deletion through this page.
 - Exclude published polls from automatic opening.
 
+## WordPress 1.5.6
+
+- Display top 15 Team Overall and Squad Overall ranks, and top 10 DIII Team ranks, preserving cutoff ties.
+- Require ten schools on future DIII Team ballots in the UI and server validation; award ten through one points when publishing them.
+- Preserve October's existing eight-school DIII ballots and published points. Individual ballot tables use their original lengths.
+- Order results and exports: Team Overall Men/Women, Team DIII Men/Women, Epee Men/Women, Foil Men/Women, Sabre Men/Women.
+- Existing hidden DIII squad ballot rules and their publication cutoffs are unchanged.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.
