@@ -81,10 +81,37 @@ describe("powerRatingOverrides", () => {
         ]);
     });
 
-    it("rejects upload rows with missing required values", () => {
+    it("rejects missing column headers rather than treating a wrong file as an empty roster", () => {
         expect(() => normalizeFencerRatingUploadRows([
             { School: "Boston College", Weapon: "Foil" },
-        ])).toThrow("Row 2 is missing a power rating");
+        ])).toThrow("Missing required column: Power Rating");
+    });
+
+    it('treats invalid ratings as unknown instead of using remaining rated fencers', () => {
+        const issues: Array<{row:number;message:string}> = [];
+        expect(normalizeFencerRatingUploadRows([
+            {School:'Boston College',Weapon:'Foil',PR:'TBD'},
+            {School:'Boston College',Weapon:'Foil',PR:0},
+        ],issues)).toEqual([
+            {teamName:'Boston College',weapon:'Foil',powerRating:null},
+            {teamName:'Boston College',weapon:'Foil',powerRating:0},
+        ]);
+        expect(issues[0].row).toBe(2);
+    });
+    it('continues past missing cells while retaining incomplete-squad markers', () => {
+        const issues: Array<{ row: number; message: string }> = [];
+        const rows=normalizeFencerRatingUploadRows([
+            { School:'Boston College',Weapon:'Foil',PR:80 },
+            { School:'',Weapon:'Foil',PR:60 },
+            { School:'Duke University',Weapon:'',PR:70 },
+            { School:'Boston College',Weapon:'Epee',PR:'' },
+        ],issues);
+        expect(rows).toEqual([
+            {teamName:'Boston College',weapon:'Foil',powerRating:80},
+            {teamName:'Duke University',weapon:null,powerRating:70},
+            {teamName:'Boston College',weapon:'Epee',powerRating:null},
+        ]);
+        expect(issues.map((issue)=>issue.row)).toEqual([3,4]);
     });
 
     it('preserves unknown ratings as null and real zero as zero', () => {

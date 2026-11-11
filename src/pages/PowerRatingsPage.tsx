@@ -25,6 +25,7 @@ import type {
     Program,
 } from "../types/platform";
 import type { Gender, Weapon } from "../types/types";
+import type { FencerRatingUploadIssue } from "../lib/powerRatingOverrides";
 import "./PowerRatingsPage.css";
 
 const WEAPONS: Weapon[] = ["Team", "Epee", "Foil", "Sabre"];
@@ -52,6 +53,7 @@ export default function PowerRatingsPage({
     const [draftReason, setDraftReason] = useState("");
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [message, setMessage] = useState("");
+    const [uploadIssues, setUploadIssues] = useState<string[]>([]);
     const [ratingFiles, setRatingFiles] = useState<Partial<Record<Gender, File>>>({});
     const [recalculating, setRecalculating] = useState(false);
     const [fileInputKey, setFileInputKey] = useState(0);
@@ -216,11 +218,19 @@ export default function PowerRatingsPage({
 
         setRecalculating(true);
         setMessage("");
+        setUploadIssues([]);
         try {
             const prepared = [];
+            const warnings: string[] = [];
             for (const upload of uploads) {
-                prepared.push({ ...upload, rows: await parseFencerRatingFile(upload.file) });
+                const issues: FencerRatingUploadIssue[] = [];
+                const rows = await parseFencerRatingFile(upload.file, issues);
+                warnings.push(...issues.map(issue => `${upload.file.name}, row ${issue.row}: ${issue.message}`));
+                if (rows.length) prepared.push({ ...upload, rows });
+                else warnings.push(`${upload.file.name}: no assignable rows; existing ratings were not replaced.`);
             }
+            setUploadIssues(warnings);
+            if (!prepared.length) throw new Error("No assignable fencer rows found. Existing ratings were not replaced.");
             for (const upload of prepared) {
                 await recalculatePowerRatings(
                     targetSeason,
@@ -235,7 +245,7 @@ export default function PowerRatingsPage({
             }
             setRatingFiles({});
             setFileInputKey((current) => current + 1);
-            setMessage(`Power ratings recalculated for ${uploadNames}, ${targetSeason}.`);
+            setMessage(`Power ratings recalculated for ${prepared.map(upload => upload.gender).join(" and ")}, ${targetSeason}.`);
         } catch (error) {
             setMessage(error instanceof Error ? error.message : "Could not recalculate power ratings.");
         } finally {
@@ -343,6 +353,12 @@ export default function PowerRatingsPage({
                 <div className={`form-message ${status === "error" ? "error" : ""}`} role="status">
                     {message}
                 </div>
+            )}
+            {uploadIssues.length > 0 && (
+                <details>
+                    <summary>Upload issues ({uploadIssues.length})</summary>
+                    <ul>{uploadIssues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>
+                </details>
             )}
 
             {status === "loading" ? (

@@ -13,9 +13,11 @@ const STORAGE_KEY = "spi-power-rating-overrides-v1";
 
 export type FencerRatingUploadRow = {
     teamName: string;
-    weapon: Exclude<Weapon, "Team">;
+    weapon: Exclude<Weapon, "Team"> | null;
     powerRating: number | null;
 };
+
+export type FencerRatingUploadIssue = { row: number; message: string };
 
 export async function loadPowerRatingSeasons(): Promise<string[]> {
     if (!supabase) return [];
@@ -66,7 +68,7 @@ export async function loadPowerRatingRecords(
     });
 }
 
-export async function parseFencerRatingFile(file: File): Promise<FencerRatingUploadRow[]> {
+export async function parseFencerRatingFile(file: File, issues: FencerRatingUploadIssue[] = []): Promise<FencerRatingUploadRow[]> {
     const XLSX = await import("xlsx");
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
     const sheetName = workbook.SheetNames[0];
@@ -74,15 +76,25 @@ export async function parseFencerRatingFile(file: File): Promise<FencerRatingUpl
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
         defval: "",
     });
-    return normalizeFencerRatingUploadRows(rows);
+    return normalizeFencerRatingUploadRows(rows, issues);
 }
 
 export function normalizeFencerRatingUploadRows(
-    rows: Array<Record<string, unknown>>
+    rows: Array<Record<string, unknown>>,
+    issues: FencerRatingUploadIssue[] = []
 ): FencerRatingUploadRow[] {
     if (rows.length === 0) throw new Error("The fencer-rating file has no data rows.");
 
-    return rows.map((row, index) => {
+    const headers = new Set(rows.flatMap(row => Object.keys(row).map(normalizeHeader)));
+    for (const [label, aliases] of [
+        ["School", ["teamname", "schoolname", "school", "team"]],
+        ["Weapon", ["weapon"]],
+        ["Power Rating", ["powerrating", "rating", "pr"]],
+    ] as const) {
+        if (!aliases.some(alias => headers.has(alias))) throw new Error(`Missing required column: ${label}`);
+    }
+
+    return rows.flatMap((row, index): FencerRatingUploadRow[] => {
         const normalized = new Map(
             Object.entries(row).map(([key, value]) => [normalizeHeader(key), value])
         );
@@ -91,19 +103,23 @@ export function normalizeFencerRatingUploadRows(
         const ratingValue = readAlias(normalized, ["powerrating", "rating", "pr"]);
         const rowNumber = index + 2;
 
-        if (!teamName) throw new Error(`Row ${rowNumber} is missing a team name.`);
-        if (!weaponValue) throw new Error(`Row ${rowNumber} is missing a weapon.`);
-        if (ratingValue === undefined) {
-            throw new Error(`Row ${rowNumber} is missing a power rating.`);
+        if (!teamName) {
+            issues.push({ row: rowNumber, message: "Missing school; row excluded." });
+            return [];
         }
-
-        const weapon = normalizeWeapon(weaponValue);
-        const powerRating = cleanCell(ratingValue) === '' ? null : Number(cleanCell(ratingValue));
+        let weapon: FencerRatingUploadRow['weapon'] = null;
+        try {
+            weapon = normalizeWeapon(weaponValue);
+        } catch {
+            issues.push({ row: rowNumber, message: `${teamName}: missing or invalid weapon; calculated program PRs unavailable until corrected.` });
+        }
+        let powerRating = cleanCell(ratingValue) === '' ? null : Number(cleanCell(ratingValue));
         if (powerRating !== null && (!Number.isFinite(powerRating) || powerRating < 0)) {
-            throw new Error(`Row ${rowNumber} has an invalid power rating.`);
+            powerRating = null;
+            issues.push({ row: rowNumber, message: `${teamName}: invalid power rating treated as unknown; squad excluded.` });
         }
 
-        return { teamName, weapon, powerRating };
+        return [{ teamName, weapon, powerRating }];
     });
 }
 

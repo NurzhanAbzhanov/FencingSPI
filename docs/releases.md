@@ -17,6 +17,13 @@ Do not report a deployment as complete when authentication or deployment verific
 - Submitted ballot locking and admin-only reset/delete rules are unchanged.
 - Database-only change: existing WordPress installations need no replacement ZIP.
 
+## WordPress 1.6.1
+
+- Missing roster cells no longer reject the entire upload. Valid programs continue calculating; upload issues identify the affected file and row.
+- Missing schools are skipped. Missing/invalid weapons retain an incomplete-program marker, withholding calculated PRs for that program until corrected. Invalid ratings stay unknown and exclude the affected squad.
+- Files with no assignable rows do not replace existing gender rosters. Missing required columns and unreadable files still stop validation before writes.
+- Manual overrides and historical SPI formulas remain unchanged. Both sides must have an available PR for a match result to contribute to SPI.
+
 ## WordPress 1.5.2
 
 - Fix local DIII logos in coaches poll views when embedded in WordPress.

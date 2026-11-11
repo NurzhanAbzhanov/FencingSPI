@@ -43,6 +43,15 @@ begin
         or (select spi from public.spi_results where season_id=target and program_id=b and weapon='Epee') is not null then
         raise exception 'An unavailable opponent must be excluded symmetrically, without PRC-only SPI'; end if;
 
+    perform public.replace_fencer_ratings_and_recalculate('partial-fixture','Men',
+        roster || jsonb_build_array(jsonb_build_object('team_name','Partial A','weapon',null,'power_rating',80)),
+        'unassigned-weapon.xlsx');
+    if exists(select 1 from public.spi_results where season_id=target and program_id=a and power_rating is not null) then
+        raise exception 'An unassigned roster weapon must block calculated program PRs'; end if;
+    if (select count(*) from public.spi_results where season_id=target and program_id=b and power_rating=60)<>4 then
+        raise exception 'An incomplete program must not block other programs'; end if;
+    perform public.replace_fencer_ratings_and_recalculate('partial-fixture','Men',roster,'partial.xlsx');
+
     insert into public.power_rating_overrides(season_id,program_id,weapon,adjusted_power_rating,reason,updated_by)
     values(target,a,'Epee',100,'Verified manual rating','b1000000-0000-4000-8000-000000000001');
     if (select included_results from public.spi_results where season_id=target and program_id=b and weapon='Epee')<>1 then

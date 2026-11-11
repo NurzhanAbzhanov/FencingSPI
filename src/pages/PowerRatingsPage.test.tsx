@@ -25,13 +25,38 @@ import PowerRatingsPage from "./PowerRatingsPage";
 
 describe("PowerRatingsPage", () => {
     it('validates both files before replacing either gender', async () => {
-        mocks.parseFile.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('Row 269 is missing a weapon.'));
+        mocks.parseFile.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('Could not read women.xlsx'));
         render(<PowerRatingsPage embedded programs={[]} season="2026-27" user={{id:'admin',name:'Admin',role:'admin',canVote:true}} />);
         await userEvent.upload(await screen.findByLabelText('Men fencer ratings'),new File(['data'],'men.xlsx'));
         await userEvent.upload(screen.getByLabelText('Women fencer ratings'),new File(['data'],'women.xlsx'));
         await userEvent.click(screen.getByRole('button',{name:'Recalculate power ratings'}));
-        expect(await screen.findByText('Row 269 is missing a weapon.')).toBeInTheDocument();
+        expect(await screen.findByText('Could not read women.xlsx')).toBeInTheDocument();
         expect(mocks.recalculate).not.toHaveBeenCalled();
+    });
+    it('calculates valid rows and displays missing-cell issues', async () => {
+        mocks.parseFile.mockImplementation(async (_file, issues) => {
+            issues.push({row: 269, message: 'Missing weapon; program PRs unavailable.'});
+            return [{teamName:'Duke University',weapon:null,powerRating:70}];
+        });
+        render(<PowerRatingsPage embedded programs={[]} season="2026-27" user={{id:'admin',name:'Admin',role:'admin',canVote:true}} />);
+        await userEvent.upload(await screen.findByLabelText('Women fencer ratings'),new File(['data'],'women.xlsx'));
+        await userEvent.click(screen.getByRole('button',{name:'Recalculate power ratings'}));
+        await waitFor(() => expect(mocks.recalculate).toHaveBeenCalledWith('2026-27','Women',[
+            {teamName:'Duke University',weapon:null,powerRating:70},
+        ],'women.xlsx'));
+        expect(screen.getByText(/women.xlsx, row 269/)).toBeInTheDocument();
+    });
+    it('does not replace an empty gender upload while processing the other file', async () => {
+        mocks.parseFile.mockResolvedValueOnce([]).mockResolvedValueOnce([
+            {teamName:'Duke University',weapon:'Foil',powerRating:70},
+        ]);
+        render(<PowerRatingsPage embedded programs={[]} season="2026-27" user={{id:'admin',name:'Admin',role:'admin',canVote:true}} />);
+        await userEvent.upload(await screen.findByLabelText('Men fencer ratings'),new File(['data'],'men.xlsx'));
+        await userEvent.upload(screen.getByLabelText('Women fencer ratings'),new File(['data'],'women.xlsx'));
+        await userEvent.click(screen.getByRole('button',{name:'Recalculate power ratings'}));
+        await waitFor(() => expect(mocks.recalculate).toHaveBeenCalledTimes(1));
+        expect(mocks.recalculate.mock.calls[0][1]).toBe('Women');
+        expect(screen.getByText(/men.xlsx: no assignable rows/)).toBeInTheDocument();
     });
     it('does not display unknown power ratings as zero', async () => {
         render(<PowerRatingsPage embedded programs={[{ id:49,name:'Boston College',gender:'Men',division:'1',conference:'ACC',conferences:['ACC'],region:'Northeast',logoUrl:null }]}
