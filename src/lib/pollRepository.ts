@@ -12,7 +12,7 @@ import type {
 
 type Relation<T> = T | T[] | null;
 type SeasonRow = { id: string; slug: string; starts_on: string; ends_on: string };
-type SpiResultRow = { season_id: string; program_id: string; spi: number; power_rating?: number | null };
+type SpiResultRow = { season_id: string; program_id: string; spi: number | null; power_rating?: number | null };
 
 const DEFAULT_CATEGORY_SLUGS: PollCategorySlug[] = [
     'men_team_overall',
@@ -323,6 +323,7 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
 
         let spiBySeasonAndProgram = new Map<string, number>();
         let powerRatingByProgram = new Map<string, number>();
+        const currentRatingRows = new Set<string>();
         const previousPowerRatingByProgram = new Map<string, number>();
         const isPreseason = /\boctober\b|\bpreseason\b/i.test(period.label);
 
@@ -336,9 +337,10 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
 
             if (!spiResult?.error && spiResult?.data) {
                 for (const result of (spiResult.data as SpiResultRow[])) {
-                    spiBySeasonAndProgram.set(`${result.season_id}:${result.program_id}`, Number(result.spi));
-                    if (result.season_id === currentSeason?.id && result.power_rating != null) {
-                        powerRatingByProgram.set(result.program_id, Number(result.power_rating));
+                    if (result.spi != null) spiBySeasonAndProgram.set(`${result.season_id}:${result.program_id}`, Number(result.spi));
+                    if (result.season_id === currentSeason?.id) {
+                        currentRatingRows.add(result.program_id);
+                        if (result.power_rating != null) powerRatingByProgram.set(result.program_id, Number(result.power_rating));
                     }
                     if (result.season_id === previousSeason?.id && result.power_rating != null) {
                         previousPowerRatingByProgram.set(result.program_id, Number(result.power_rating));
@@ -377,7 +379,7 @@ export async function loadPollBallot(categorySlug: PollCategorySlug, userId: str
         }
 
         candidates = snapshotCandidates.map((candidate) => {
-            const currentPr = powerRatingByProgram.get(candidate.programId) ?? candidate.powerRating
+            const currentPr = powerRatingByProgram.get(candidate.programId) ?? (currentRatingRows.has(candidate.programId) ? null : candidate.powerRating)
                 ?? (isPreseason ? previousPowerRatingByProgram.get(candidate.programId) : null) ?? null;
             return {
                 ...candidate,

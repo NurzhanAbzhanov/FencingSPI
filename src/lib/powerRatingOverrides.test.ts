@@ -87,6 +87,16 @@ describe("powerRatingOverrides", () => {
         ])).toThrow("Row 2 is missing a power rating");
     });
 
+    it('preserves unknown ratings as null and real zero as zero', () => {
+        expect(normalizeFencerRatingUploadRows([
+            { School: 'Boston College', Weapon: 'Foil', PR: '' },
+            { School: 'Boston College', Weapon: 'Epee', PR: 0 },
+        ])).toEqual([
+            { teamName: 'Boston College', weapon: 'Foil', powerRating: null },
+            { teamName: 'Boston College', weapon: 'Epee', powerRating: 0 },
+        ]);
+    });
+
     it("invokes the atomic recalculation RPC", async () => {
         mocks.rpc.mockResolvedValueOnce({ data: null, error: null });
         const rows = [{ teamName: "Boston College", weapon: "Epee" as const, powerRating: 90 }];

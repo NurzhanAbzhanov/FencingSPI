@@ -34,11 +34,13 @@ export default function PowerRatingsPage({
     programs,
     season,
     user,
+    onRatingsChanged,
 }: {
     embedded?: boolean;
     programs: Program[];
     season: string;
     user: PlatformUser;
+    onRatingsChanged?: () => void;
 }) {
     const [records, setRecords] = useState<PowerRatingRecord[]>([]);
     const [overrides, setOverrides] = useState<PowerRatingOverride[]>([]);
@@ -122,7 +124,7 @@ export default function PowerRatingsPage({
     function startEditing(program: Program) {
         const key = createOverrideKey({ teamId: program.id, gender, weapon });
         const currentOverride = overridesByKey.get(key);
-        const calculated = recordsByKey.get(key)?.calculatedPowerRating ?? 0;
+        const calculated = recordsByKey.get(key)?.calculatedPowerRating ?? '';
         setEditingKey(key);
         setDraftRating(String(currentOverride?.adjustedPowerRating ?? calculated));
         setDraftReason(currentOverride?.reason ?? "");
@@ -138,7 +140,7 @@ export default function PowerRatingsPage({
 
     async function saveOverride(program: Program) {
         const adjustedPowerRating = Number(draftRating);
-        if (!Number.isFinite(adjustedPowerRating) || adjustedPowerRating < 0) {
+        if (!draftRating.trim() || !Number.isFinite(adjustedPowerRating) || adjustedPowerRating < 0) {
             setMessage("Enter a non-negative power rating.");
             return;
         }
@@ -168,6 +170,7 @@ export default function PowerRatingsPage({
             ]);
             setEditingKey(null);
             setMessage(`${program.name} ${weapon} power rating overridden.`);
+            onRatingsChanged?.();
         } catch (error) {
             setMessage(
                 error instanceof Error ? error.message : "Could not save override."
@@ -184,6 +187,7 @@ export default function PowerRatingsPage({
                 )
             );
             setMessage(`${teamName} ${weapon} power rating reset.`);
+            onRatingsChanged?.();
         } catch (error) {
             setMessage(
                 error instanceof Error ? error.message : "Could not reset override."
@@ -213,14 +217,18 @@ export default function PowerRatingsPage({
         setRecalculating(true);
         setMessage("");
         try {
+            const prepared = [];
             for (const upload of uploads) {
-                const rows = await parseFencerRatingFile(upload.file);
+                prepared.push({ ...upload, rows: await parseFencerRatingFile(upload.file) });
+            }
+            for (const upload of prepared) {
                 await recalculatePowerRatings(
                     targetSeason,
                     upload.gender,
-                    rows,
+                    upload.rows,
                     upload.file.name
                 );
+                onRatingsChanged?.();
             }
             if (targetSeason === season) {
                 setRecords(await loadPowerRatingRecords(season));
@@ -250,7 +258,7 @@ export default function PowerRatingsPage({
             <section className="power-rating-recalculation" aria-labelledby="power-rating-recalculation-title">
                 <div>
                     <h3 id="power-rating-recalculation-title">Recalculate from fencer ratings</h3>
-                    <p>Required columns: School, Weapon, Power Rating. Manual overrides remain unchanged.</p>
+                    <p>Required columns: School, Weapon, Power Rating. Blank ratings are unknown; incomplete squads are excluded. Upload the full roster for each gender.</p>
                 </div>
                 <div className="power-rating-upload-fields" key={fileInputKey}>
                     <fieldset className="season-choice-field">
@@ -361,7 +369,7 @@ export default function PowerRatingsPage({
                                     weapon,
                                 });
                                 const calculated =
-                                    recordsByKey.get(key)?.calculatedPowerRating ?? 0;
+                                    recordsByKey.get(key)?.calculatedPowerRating ?? null;
                                 const override = overridesByKey.get(key);
                                 const editing = editingKey === key;
                                 return (
@@ -429,7 +437,8 @@ export default function PowerRatingsPage({
     );
 }
 
-function formatPowerRating(value: number): string {
+function formatPowerRating(value: number | null): string {
+    if (value === null) return '—';
     return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 

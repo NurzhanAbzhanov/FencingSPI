@@ -235,13 +235,14 @@ describe("pollRepository", () => {
         mocks.from
             .mockReturnValueOnce(query([{ id: "definition-1", period_id: "period-1", slug: "men_team_overall",
                 poll_periods: { label, status: "open", opens_at: null, closes_at: null, seasons: { slug: "2026-27" } } }]))
-            .mockReturnValueOnce(query([{ program_id: "p1", spi: 0, power_rating: null,
+            .mockReturnValueOnce(query([{ program_id: "p1", spi: 0, power_rating: label === 'November' ? 70 : null,
                 programs: { legacy_team_id: 49, schools: { name: "Boston College", logo_url: null } } }]))
             .mockReturnValueOnce(query([
                 { id: "current", slug: "2026-27", ends_on: "2027-07-31" },
                 { id: "previous", slug: "2025-26", ends_on: "2026-07-31" },
             ]))
-            .mockReturnValueOnce(query([{ season_id: "previous", program_id: "p1", spi: 95, power_rating: 80 }]))
+            .mockReturnValueOnce(query([{ season_id: "previous", program_id: "p1", spi: 95, power_rating: 80 },
+                { season_id: 'current', program_id: 'p1', spi: null, power_rating: null }]))
             .mockReturnValueOnce(query(current == null ? [] : [{ program_id: "p1", adjusted_power_rating: current }]))
             .mockReturnValueOnce(query(previousOverride == null ? [] : [{ program_id: "p1", adjusted_power_rating: previousOverride }]));
         const ballot = await loadPollBallot("men_team_overall", "user-1");

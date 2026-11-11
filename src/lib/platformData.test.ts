@@ -27,6 +27,12 @@ function query(data: unknown, error: unknown = null) {
 }
 
 describe("readLocalPrograms", () => {
+    it('keeps unavailable SPI null and returns coverage without inventing zero', async () => {
+        mocks.from.mockReturnValueOnce(query([{ team_id: 49, team_name: 'Boston College', gender: 'Men', weapon: 'Foil', spi: null,
+            coverage_tracked: true, included_results: 0, excluded_results: 2, is_provisional: true }]));
+        expect(await loadStandings('2026-27')).toEqual([{ teamId: 49, teamName: 'Boston College', gender: 'Men', weapon: 'Foil', spi: null,
+            coverageTracked: true, includedResults: 0, excludedResults: 2, isProvisional: true }]);
+    });
     it('caps published ranks on the SPI page without changing stored points', async () => {
         const base = { id: 1, team_id: 52, period: 'October', gender: 'Men', scope: 'Overall', points: 100, source_url: 'https://usfca.org/poll' };
         mocks.from.mockReturnValueOnce(query([

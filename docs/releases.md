@@ -55,6 +55,14 @@ Do not report a deployment as complete when authentication or deployment verific
 - Order results and exports: Team Overall Men/Women, Team DIII Men/Women, Epee Men/Women, Foil Men/Women, Sabre Men/Women.
 - Existing hidden DIII squad ballot rules and their publication cutoffs are unchanged.
 
+## WordPress 1.6.0
+
+- Accept blank fencer PRs as unknown. Exclude squads with missing ratings or fewer than three fencers, and require three complete raw squad PRs for calculated Team PR.
+- Keep matches stored while ratings are unavailable. Calculate partial-season SPI only for pairings with both own and opponent PRs, with included/excluded result coverage and provisional labels.
+- Refresh SPI when roster ratings, matches or explicit manual overrides change. Unknown PR/SPI values remain blank rather than zero, including poll reference data and exports.
+- Preserve legacy historical calculations and imported-season protections; no supplied roster is imported automatically.
+- Validate every selected upload before replacing either gender's data.
+
 ## WordPress 1.5.1
 
 - Resolve the current poll to its real ID before loading both aggregate and individual ballots.

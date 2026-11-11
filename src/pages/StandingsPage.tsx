@@ -34,7 +34,8 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
         onFiltersChange?.({ gender, "team/squad": selection, division, region, conference, sort: `${sort.key} ${sort.direction}` });
     }, [gender, selection, division, region, conference, sort, onFiltersChange]);
     const mode = selection === "Team" ? "Team" : "Squad";
-    const preseason = !loading && !loadError && season === "2026-27" && standings.length === 0;
+    const coverageTracked = standings.some((row) => row.coverageTracked);
+    const preseason = !loading && !loadError && season === "2026-27" && !standings.some((row) => row.spi !== null);
     const selectedPolls = pollResults.filter((row) => row.gender === gender && row.weapon === selection && row.scope === (division === "3" ? "DIII" : "Overall"));
     const historicalPeriods = ["Preseason", "Midseason", "End-season"];
     const periodOrder = [...historicalPeriods, ...POLL_MONTHS];
@@ -53,9 +54,10 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
     }
 
     const rows = useMemo(() => {
-        const displayStandings: DisplayStanding[] = preseason ? programs.map((program) => ({
-            teamId: program.id, teamName: program.name, gender: program.gender, weapon: selection, spi: null,
-        })) : standings;
+        const displayStandings: DisplayStanding[] = preseason || coverageTracked ? programs.map((program) =>
+            standings.find((row) => row.teamId === program.id && row.weapon === selection) ?? {
+                teamId: program.id, teamName: program.name, gender: program.gender, weapon: selection, spi: null,
+            }) : standings;
         const joined = displayStandings
             .filter((row) => row.weapon === selection)
             .map((standing) => ({ standing, program: programs.find((item) => item.id === standing.teamId) }))
@@ -76,8 +78,12 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
             }
             return compareRows(a, b, sort);
         });
-        return joined.map((row, index) => ({ ...row, rank: preseason ? pollRank(row.program.id) : index + 1 }));
-    }, [conference, division, gender, programs, region, selection, sort, standings, preseason, pollResults]);
+        const calculatedRanks = new Map(joined.filter((row) => row.standing.spi !== null)
+            .sort((a,b) => (b.standing.spi ?? 0)-(a.standing.spi ?? 0) || a.program.name.localeCompare(b.program.name))
+            .map((row,index) => [row.program.id,index+1]));
+        return joined.map((row, index) => ({ ...row, rank: preseason ? pollRank(row.program.id) :
+            coverageTracked ? calculatedRanks.get(row.program.id) ?? null : index + 1 }));
+    }, [conference, division, gender, programs, region, selection, sort, standings, preseason, pollResults, coverageTracked]);
 
     const regions = unique([...programs.map((program) => program.region), ...(region === "All" ? [] : [region])]);
     const conferences = unique([...programs.flatMap((program) => program.conferences), ...(conference === "All" ? [] : [conference])]);
@@ -95,6 +101,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
     function downloadSelection() {
         const csv = createStandingsCsv({
             downloadedAt: new Date(), season, gender, selection, division, region, conference,
+            includeCoverage: coverageTracked,
             rows: rows.map(({ rank, standing, program }) => ({
                 rank,
                 school: program.name,
@@ -102,6 +109,9 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 conference: program.conferences.join(", "),
                 region: program.region,
                 spi: standing.spi,
+                includedResults: standing.includedResults,
+                excludedResults: standing.excludedResults,
+                isProvisional: standing.isProvisional,
             })),
         });
         const link = document.createElement("a");
@@ -132,7 +142,8 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
             </div>
 
             <div className="data-summary"><strong>{rows.length}</strong> total {unitLabel}</div>
-            {preseason && <p className="season-notice" role="status">{selectedPolls.length ? 'SPI and power ratings are not yet available. Rankings reflect the latest published coaches poll.' : 'Season not started'}</p>}
+            {preseason && <p className="season-notice" role="status">{coverageTracked ? 'No eligible SPI results yet. Rankings reflect the latest published coaches poll where available.' : selectedPolls.length ? 'SPI and power ratings are not yet available. Rankings reflect the latest published coaches poll.' : 'Season not started'}</p>}
+            {coverageTracked && rows.some((row) => row.standing.isProvisional) && <p className="season-notice">Provisional SPI. Results without available power ratings for both opponents are excluded.</p>}
             <div className="platform-table-wrap">
                 <table className="platform-table standings-table" style={{ tableLayout: "fixed" }}>
                     <thead><tr>
@@ -143,6 +154,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                         <SortHeader label="Region" sortKey="region" sort={sort} onSort={handleSort} align="left" width="160px" />
                         {periods.map((month) => <th className="poll-column" key={month} style={{ width: "75px", textAlign: "center" }}>{historicalPeriods.includes(month) ? month : month.slice(0, 3)} poll</th>)}
                         <SortHeader label="SPI" sortKey="spi" sort={sort} onSort={handleSort} align="right" width="105px" />
+                        {coverageTracked && <th style={{ width: '115px' }}>Results counted</th>}
                         <th style={{ textAlign: "center", width: "85px" }}>Results</th>
                     </tr></thead>
                     <tbody>{rows.length ? rows.map(({ rank, standing, program }) => (
@@ -166,14 +178,15 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                                     {pollCell(program.id, month)}
                                 </td>
                             ))}
-                            <td className="numeric spi-cell" style={{ textAlign: "right" }}>{formatNumber(standing.spi)}</td>
+                            <td className="numeric spi-cell" style={{ textAlign: "right" }}>{formatNumber(standing.spi)}{standing.spi !== null && standing.isProvisional && <small style={{ display: 'block' }}>Provisional</small>}</td>
+                            {coverageTracked && <td title={`${standing.excludedResults ?? 0} results excluded`}>{standing.includedResults ?? 0} / {(standing.includedResults ?? 0)+(standing.excludedResults ?? 0)}</td>}
                             <td style={{ textAlign: "center" }}>
                                 <a className="icon-text-link" href={`#/schools/${program.id}/results?season=${season}`}>
                                     <List size={15} /> View
                                 </a>
                             </td>
                         </tr>
-                    )) : <tr><td className="empty-table" colSpan={7 + periods.length} role="status">{loading ? "Loading season data" : loadError ? "Season data unavailable. Try another season or refresh the page." : preseason ? "SPI will be available after competition results are entered." : "No standings are loaded for this selection."}</td></tr>}</tbody>
+                    )) : <tr><td className="empty-table" colSpan={7 + periods.length + (coverageTracked ? 1 : 0)} role="status">{loading ? "Loading season data" : loadError ? "Season data unavailable. Try another season or refresh the page." : preseason ? "SPI will be available after competition results are entered." : "No standings are loaded for this selection."}</td></tr>}</tbody>
                 </table>
             </div>
             {sources.length > 0 && <div className="poll-sources" aria-label="Published poll sources">Published polls: {sources.map((url, index) => <a href={url} key={url} target="_blank" rel="noreferrer">Source {index + 1}</a>)}</div>}
@@ -205,6 +218,10 @@ function SortHeader({ label, sortKey, sort, onSort, align = "left", width }: { l
 }
 
 function compareRows(a: { standing: DisplayStanding; program: Program }, b: { standing: DisplayStanding; program: Program }, sort: Sort) {
+    if (sort.key === 'spi' || sort.key === 'rank') {
+        if (a.standing.spi === null && b.standing.spi !== null) return 1;
+        if (b.standing.spi === null && a.standing.spi !== null) return -1;
+    }
     const av = valueForSort(a, sort.key); 
     const bv = valueForSort(b, sort.key);
     const comparison = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));

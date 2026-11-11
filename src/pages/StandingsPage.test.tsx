@@ -21,6 +21,20 @@ const standings: Standing[] = [
 ];
 
 describe("StandingsPage", () => {
+    it('shows provisional coverage and leaves unavailable schools unranked', () => {
+        render(<StandingsPage programs={[...programs, { ...programs[0], id: 2, name: 'Unrated School' }]} season="2026-27" pollResults={[]} onSeasonChange={() => undefined}
+            standings={[
+                { ...standings[0], spi: 50, coverageTracked: true, includedResults: 1, excludedResults: 1, isProvisional: true },
+                { ...standings[0], teamId: 2, spi: null, coverageTracked: true, includedResults: 0, excludedResults: 1, isProvisional: true },
+            ]} />);
+        expect(screen.getByRole('columnheader', { name: 'Results counted' })).toBeInTheDocument();
+        const known = screen.getByText('Test University').closest('tr')!;
+        expect(within(known).getByText('Provisional')).toBeInTheDocument();
+        expect(within(known).getByTitle('1 results excluded')).toHaveTextContent('1 / 2');
+        const unknown = screen.getByText('Unrated School').closest('tr')!;
+        expect(unknown.querySelector('.spi-cell')).toHaveTextContent('—');
+        expect(unknown.querySelector('.rank-cell')).toHaveTextContent('—');
+    });
     it("shows schools and published October ranks without inventing preseason SPI", () => {
         render(<StandingsPage programs={programs} standings={[]} season="2026-27" onSeasonChange={() => undefined}
             pollResults={[{ definitionId: 'october', teamId: 1, month: 'October', gender: 'Men', weapon: 'Team', scope: 'Overall', rank: 2, points: 100 }]} />);

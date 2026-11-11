@@ -8,7 +8,7 @@ import CoachManagementPage from "./polls/CoachManagementPage";
 import FeedbackInbox from "../components/FeedbackInbox";
 import SidRegistrations from "../components/SidRegistrations";
 
-export default function AdminPage({ user, programs, season, onProgramAdded }: { user: PlatformUser; programs: Program[]; season: string; onProgramAdded: (program: Program) => void }) {
+export default function AdminPage({ user, programs, season, onProgramAdded, onRatingsChanged }: { user: PlatformUser; programs: Program[]; season: string; onProgramAdded: (program: Program) => void; onRatingsChanged?: () => void }) {
     const [name, setName] = useState(""); 
     const [gender, setGender] = useState<Gender>("Men"); 
     const [division, setDivision] = useState("3"); 
@@ -62,6 +62,6 @@ export default function AdminPage({ user, programs, season, onProgramAdded }: { 
 
         <CoachManagementPage embedded />
 
-        <PowerRatingsPage embedded programs={programs} season={season} user={user} />
+        <PowerRatingsPage embedded programs={programs} season={season} user={user} onRatingsChanged={onRatingsChanged} />
     </section>;
 }

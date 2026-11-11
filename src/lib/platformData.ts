@@ -110,7 +110,7 @@ export async function loadStandings(
 
     const result = await supabase
         .from("public_spi_standings")
-        .select("team_id, team_name, gender, weapon, spi")
+        .select("team_id, team_name, gender, weapon, spi, coverage_tracked, included_results, excluded_results, is_provisional")
         .eq("season_slug", season)
         .order("spi", { ascending: false });
 
@@ -121,7 +121,9 @@ export async function loadStandings(
         teamName: String(row.team_name),
         gender: row.gender as Gender,
         weapon: row.weapon as Weapon,
-        spi: Number(row.spi),
+        spi: row.spi == null ? null : Number(row.spi),
+        ...(row.coverage_tracked ? { coverageTracked: true, includedResults: Number(row.included_results),
+            excludedResults: Number(row.excluded_results), isProvisional: Boolean(row.is_provisional) } : {}),
     }));
 }
 

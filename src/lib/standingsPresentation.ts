@@ -7,6 +7,9 @@ export type StandingsCsvRow = {
     conference: string;
     region: string;
     spi: number | null;
+    includedResults?: number;
+    excludedResults?: number;
+    isProvisional?: boolean;
 };
 
 type StandingsCsvOptions = {
@@ -18,6 +21,7 @@ type StandingsCsvOptions = {
     region: string;
     conference: string;
     rows: StandingsCsvRow[];
+    includeCoverage?: boolean;
 };
 
 const DIVISION_LABELS: Record<string, string> = {
@@ -41,6 +45,7 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
         ["Conference", options.conference],
     ];
     const headers = ["Rank", "School", "Division", "Conference", "Region", "SPI"];
+    if (options.includeCoverage) headers.push('Included results', 'Excluded results', 'Provisional');
     const table = options.rows.map((row) => [
         row.rank ?? '',
         row.school,
@@ -48,6 +53,7 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
         row.conference,
         row.region,
         row.spi ?? '',
+        ...(options.includeCoverage ? [row.includedResults ?? 0, row.excludedResults ?? 0, row.isProvisional ? 'Yes' : 'No'] : []),
     ]);
 
     return [

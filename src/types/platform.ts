@@ -37,7 +37,11 @@ export type Standing = {
     teamName: string;
     gender: Gender;
     weapon: Weapon;
-    spi: number;
+    spi: number | null;
+    coverageTracked?: boolean;
+    includedResults?: number;
+    excludedResults?: number;
+    isProvisional?: boolean;
 };
 
 export type PowerRatingRecord = {

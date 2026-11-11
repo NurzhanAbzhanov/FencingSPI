@@ -151,7 +151,7 @@ export default function App() {
         route.page === "poll-results" ? <PollResultsPage periodId={route.periodId} /> :
         route.page === "public-poll-results" ? <PublicPollResultsPage periodId={route.periodId} /> :
         route.page === "invalid-ballot" ? <AccessDenied title="Ballot not found" message="This coaches poll category is not available." /> :
-        route.page === "admin" && user?.role === "admin" ? <AdminPage user={user} programs={programs} season={season} onProgramAdded={(program) => setPrograms((current) => [...current, program])} /> :
+        route.page === "admin" && user?.role === "admin" ? <AdminPage user={user} programs={programs} season={season} onProgramAdded={(program) => setPrograms((current) => [...current, program])} onRatingsChanged={() => setDataRevision((value) => value + 1)} /> :
         route.page === "admin-polls" && user?.role === "admin" ? <PollManagementPage season={season} /> :
         route.page === "admin-coaches" && user?.role === "admin" ? <CoachManagementPage /> :
         route.page === "admin-participation" && user?.role === "admin" ? <PollParticipationPage periodId={route.periodId} season={season} /> :

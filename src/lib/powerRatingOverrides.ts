@@ -14,7 +14,7 @@ const STORAGE_KEY = "spi-power-rating-overrides-v1";
 export type FencerRatingUploadRow = {
     teamName: string;
     weapon: Exclude<Weapon, "Team">;
-    powerRating: number;
+    powerRating: number | null;
 };
 
 export async function loadPowerRatingSeasons(): Promise<string[]> {
@@ -93,13 +93,13 @@ export function normalizeFencerRatingUploadRows(
 
         if (!teamName) throw new Error(`Row ${rowNumber} is missing a team name.`);
         if (!weaponValue) throw new Error(`Row ${rowNumber} is missing a weapon.`);
-        if (ratingValue === undefined || cleanCell(ratingValue) === "") {
+        if (ratingValue === undefined) {
             throw new Error(`Row ${rowNumber} is missing a power rating.`);
         }
 
         const weapon = normalizeWeapon(weaponValue);
-        const powerRating = Number(cleanCell(ratingValue));
-        if (!Number.isFinite(powerRating) || powerRating < 0) {
+        const powerRating = cleanCell(ratingValue) === '' ? null : Number(cleanCell(ratingValue));
+        if (powerRating !== null && (!Number.isFinite(powerRating) || powerRating < 0)) {
             throw new Error(`Row ${rowNumber} has an invalid power rating.`);
         }
 

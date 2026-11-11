@@ -13,6 +13,12 @@ describe("formatDivision", () => {
 });
 
 describe("createStandingsCsv", () => {
+    it('exports coverage alongside provisional SPI', () => {
+        const csv=createStandingsCsv({ downloadedAt:new Date(),season:'2026-27',gender:'Men',selection:'Foil',division:'All',region:'All',conference:'All',includeCoverage:true,
+            rows:[{rank:1,school:'Partial School',division:'1',conference:'ACC',region:'West',spi:50,includedResults:1,excludedResults:2,isProvisional:true}] });
+        expect(csv).toContain('SPI,Included results,Excluded results,Provisional');
+        expect(csv).toContain('50,1,2,Yes');
+    });
     it("leaves uncalculated SPI and unranked schools blank", () => {
         const csv = createStandingsCsv({ downloadedAt: new Date(), season: '2026-27', gender: 'Men', selection: 'Team', division: 'All', region: 'All', conference: 'All',
             rows: [{ rank: null, school: 'New school', division: '3', conference: 'Test', region: 'West', spi: null }] });

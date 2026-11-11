@@ -24,6 +24,23 @@ vi.mock("../lib/powerRatingOverrides", () => ({
 import PowerRatingsPage from "./PowerRatingsPage";
 
 describe("PowerRatingsPage", () => {
+    it('validates both files before replacing either gender', async () => {
+        mocks.parseFile.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('Row 269 is missing a weapon.'));
+        render(<PowerRatingsPage embedded programs={[]} season="2026-27" user={{id:'admin',name:'Admin',role:'admin',canVote:true}} />);
+        await userEvent.upload(await screen.findByLabelText('Men fencer ratings'),new File(['data'],'men.xlsx'));
+        await userEvent.upload(screen.getByLabelText('Women fencer ratings'),new File(['data'],'women.xlsx'));
+        await userEvent.click(screen.getByRole('button',{name:'Recalculate power ratings'}));
+        expect(await screen.findByText('Row 269 is missing a weapon.')).toBeInTheDocument();
+        expect(mocks.recalculate).not.toHaveBeenCalled();
+    });
+    it('does not display unknown power ratings as zero', async () => {
+        render(<PowerRatingsPage embedded programs={[{ id:49,name:'Boston College',gender:'Men',division:'1',conference:'ACC',conferences:['ACC'],region:'Northeast',logoUrl:null }]}
+            season="2026-27" user={{id:'admin',name:'Admin',role:'admin',canVote:true}} />);
+        await screen.findByText('Boston College');
+        const row=screen.getByText('Boston College').closest('tr')!;
+        expect(row.querySelector('.effective-rating')).toHaveTextContent('—');
+        expect(row.querySelectorAll('.numeric')[0]).toHaveTextContent('—');
+    });
     beforeEach(() => {
         mocks.loadRecords.mockReset().mockResolvedValue([]);
         mocks.loadOverrides.mockReset().mockResolvedValue([]);
@@ -37,8 +54,10 @@ describe("PowerRatingsPage", () => {
 
     it("recalculates a gender from an uploaded fencer-rating file and refreshes records", async () => {
         const user = userEvent.setup();
+        const onRatingsChanged = vi.fn();
         render(<PowerRatingsPage
             embedded
+            onRatingsChanged={onRatingsChanged}
             programs={[{
                 id: 49,
                 name: "Boston College",
@@ -68,6 +87,7 @@ describe("PowerRatingsPage", () => {
             "men-ratings.xlsx"
         ));
         expect(mocks.loadRecords).toHaveBeenCalledTimes(1);
+        expect(onRatingsChanged).toHaveBeenCalledTimes(1);
         expect(screen.getByRole("status")).toHaveTextContent("Power ratings recalculated");
         expect(screen.getByRole("region", { name: "Power Ratings" })).toBeInTheDocument();
     });
