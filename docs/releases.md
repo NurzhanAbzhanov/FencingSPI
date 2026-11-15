@@ -17,6 +17,13 @@ Do not report a deployment as complete when authentication or deployment verific
 - Submitted ballot locking and admin-only reset/delete rules are unchanged.
 - Database-only change: existing WordPress installations need no replacement ZIP.
 
+## 2026-11-15 Penn State Naming
+
+- Standardize the women's school name to Penn State, matching the men's program and yielding one host choice.
+- Preserve both school records and all program IDs, matches, ratings, and ballots; no calculation changes.
+- Existing PR import alias still accepts Pennsylvania State University for both genders.
+- Database-only change: refresh the page; no replacement WordPress ZIP is required.
+
 ## WordPress 1.6.1
 
 - Missing roster cells no longer reject the entire upload. Valid programs continue calculating; upload issues identify the affected file and row.
