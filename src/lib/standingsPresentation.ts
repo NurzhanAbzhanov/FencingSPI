@@ -1,4 +1,33 @@
 import type { Gender, Weapon } from "../types/types";
+import type { SeasonMatch } from "../types/platform";
+
+export type WinLossRecord = { wins: number; losses: number; ties: number };
+
+export function createWinLossRecords(matches: SeasonMatch[], weapon: Weapon): Map<number, WinLossRecord> {
+    const records = new Map<number, WinLossRecord>();
+    for (const match of matches) {
+        const left = weapon === 'Team' ? match.leftEpee + match.leftFoil + match.leftSabre
+            : weapon === 'Epee' ? match.leftEpee : weapon === 'Foil' ? match.leftFoil : match.leftSabre;
+        const right = weapon === 'Team' ? match.rightEpee + match.rightFoil + match.rightSabre
+            : weapon === 'Epee' ? match.rightEpee : weapon === 'Foil' ? match.rightFoil : match.rightSabre;
+        if (left + right === 0) continue;
+        for (const [teamId, scoreFor, scoreAgainst] of [
+            [match.leftTeamId, left, right], [match.rightTeamId, right, left],
+        ]) {
+            const record = records.get(teamId) ?? { wins: 0, losses: 0, ties: 0 };
+            if (scoreFor > scoreAgainst) record.wins++;
+            else if (scoreFor < scoreAgainst) record.losses++;
+            else record.ties++;
+            records.set(teamId, record);
+        }
+    }
+    return records;
+}
+
+export function formatWinLossRecord(record?: WinLossRecord): string {
+    if (!record) return '—';
+    return `${record.wins}-${record.losses}${record.ties ? `-${record.ties}` : ''}`;
+}
 
 export type StandingsCsvRow = {
     rank: number | null;
@@ -7,6 +36,7 @@ export type StandingsCsvRow = {
     conference: string;
     region: string;
     spi: number | null;
+    record?: string;
     includedResults?: number;
     excludedResults?: number;
     isProvisional?: boolean;
@@ -44,7 +74,7 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
         ["Region", options.region],
         ["Conference", options.conference],
     ];
-    const headers = ["Rank", "School", "Division", "Conference", "Region", "SPI"];
+    const headers = ["Rank", "School", "Division", "Conference", "Region", "SPI", "W-L"];
     if (options.includeCoverage) headers.push('Included results', 'Excluded results', 'Provisional');
     const table = options.rows.map((row) => [
         row.rank ?? '',
@@ -53,6 +83,7 @@ export function createStandingsCsv(options: StandingsCsvOptions): string {
         row.conference,
         row.region,
         row.spi ?? '',
+        row.record ?? '',
         ...(options.includeCoverage ? [row.includedResults ?? 0, row.excludedResults ?? 0, row.isProvisional ? 'Yes' : 'No'] : []),
     ]);
 

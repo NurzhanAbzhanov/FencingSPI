@@ -21,6 +21,21 @@ const standings: Standing[] = [
 ];
 
 describe("StandingsPage", () => {
+    it('shows full match records independently of PR eligibility and switches by squad', async () => {
+        const matches=[{id:1,date:'2026-11-01',gender:'Men' as const,leftTeamId:1,rightTeamId:2,
+            leftEpee:6,rightEpee:3,leftFoil:2,rightFoil:7,leftSabre:8,rightSabre:1,host:'Test'}];
+        render(<StandingsPage programs={[...programs,{...programs[0],id:2,name:'Other University'}]}
+            standings={[standings[0],{...standings[0],teamId:2,teamName:'Other University',spi:110},
+                standings[1],{...standings[1],teamId:2,teamName:'Other University',spi:95}]}
+            matches={[...matches,{...matches[0],id:2,gender:'Women',leftEpee:0,rightEpee:9,leftFoil:0,rightFoil:9,leftSabre:0,rightSabre:9}]} pollResults={[]} season="2026-27" onSeasonChange={() => undefined} />);
+        const row=screen.getByText('Test University').closest('tr')!;
+        expect(within(row).getByText('1-0')).toBeInTheDocument();
+        await userEvent.click(screen.getByRole('button',{name:'W-L'}));
+        expect(screen.getAllByRole('row')[1]).toHaveTextContent('Test University');
+        expect(row.querySelector('.rank-cell')).toHaveTextContent('2');
+        await userEvent.selectOptions(screen.getByLabelText('Team/Squad'),'Foil');
+        expect(within(screen.getByText('Test University').closest('tr')!).getByText('0-1')).toBeInTheDocument();
+    });
     it('shows provisional coverage and leaves unavailable schools unranked', () => {
         render(<StandingsPage programs={[...programs, { ...programs[0], id: 2, name: 'Unrated School' }]} season="2026-27" pollResults={[]} onSeasonChange={() => undefined}
             standings={[

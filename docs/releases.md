@@ -24,6 +24,13 @@ Do not report a deployment as complete when authentication or deployment verific
 - Existing PR import alias still accepts Pennsylvania State University for both genders.
 - Database-only change: refresh the page; no replacement WordPress ZIP is required.
 
+## WordPress 1.6.2
+
+- Add a sortable W-L column and matching CSV field to Team and Squad SPI standings, using matches from the selected season and gender.
+- Count dual-meet totals for Team and weapon scores for Squad. Include all recorded match results, independent of SPI power-rating eligibility.
+- Show ties as W-L-T when present, skip unfenced 0-0 pairings, and leave missing historical match records unavailable rather than inventing a 0-0 record.
+- Keep SPI ranks stable when sorting by W-L or other columns. No PR or SPI calculation changes.
+
 ## WordPress 1.6.1
 
 - Missing roster cells no longer reject the entire upload. Valid programs continue calculating; upload issues identify the affected file and row.

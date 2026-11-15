@@ -15,14 +15,16 @@ body { background: #fff; }
 .standings-table th, .standings-table td { padding: 7px 6px; height: 44px; white-space: normal; overflow-wrap: anywhere; }
 .standings-table th { font-size: .65rem; }
 .standings-table .table-sort { height: 32px; gap: 3px; }
-.standings-table th:nth-child(1) { width: 5% !important; }
-.standings-table th:nth-child(2) { width: 24% !important; }
-.standings-table th:nth-child(3) { width: 6% !important; }
-.standings-table th:nth-child(4) { width: 12% !important; }
-.standings-table th:nth-child(5) { width: 12% !important; }
-.standings-table th.poll-column { width: 6% !important; }
-.standings-table th:nth-last-child(2) { width: 9% !important; }
-.standings-table th:last-child { width: 8% !important; }
+.standings-table th.standings-col-rank { width: 4% !important; }
+.standings-table th.standings-col-school { width: 22% !important; }
+.standings-table th.standings-col-division { width: 5% !important; }
+.standings-table th.standings-col-conference { width: 10% !important; }
+.standings-table th.standings-col-region { width: 11% !important; }
+.standings-table th.poll-column { width: 5% !important; }
+.standings-table th.standings-col-spi { width: 7% !important; }
+.standings-table th.standings-col-record { width: 6% !important; }
+.standings-table th.standings-col-coverage { width: 8% !important; }
+.standings-table th.standings-col-results { width: 7% !important; }
 .standings-table .school-cell { min-width: 0; }
 .standings-table .school-cell span, .standings-table .school-profile-link { white-space: normal !important; overflow: visible !important; }
 .standings-table .spi-cell { background: #eff8f8; white-space: nowrap; }

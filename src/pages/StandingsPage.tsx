@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import SchoolLogo from "../components/SchoolLogo";
 import { teamProfileUrl } from "../lib/teamProfile";
 import { POLL_MONTHS, SEASONS } from "../lib/platformData";
-import { createStandingsCsv, formatDivision } from "../lib/standingsPresentation";
-import type { PollResult, Program, Standing } from "../types/platform";
+import { createStandingsCsv, formatDivision, createWinLossRecords, formatWinLossRecord } from "../lib/standingsPresentation";
+import type { WinLossRecord } from "../lib/standingsPresentation";
+import type { PollResult, Program, Standing, SeasonMatch } from "../types/platform";
 import type { Gender, Weapon } from "../types/types";
 
 type Props = {
@@ -14,16 +15,17 @@ type Props = {
     initialWeapon?: Weapon;
     programs: Program[];
     standings: Standing[];
+    matches?: SeasonMatch[];
     pollResults: PollResult[];
     season: string;
     onSeasonChange: (season: string) => void;
 };
 
-type SortKey = "rank" | "school" | "division" | "conference" | "region" | "spi";
+type SortKey = "rank" | "school" | "division" | "conference" | "region" | "spi" | "record";
 type Sort = { key: SortKey; direction: "asc" | "desc" };
 type DisplayStanding = Omit<Standing, 'spi'> & { spi: number | null };
 
-export default function StandingsPage({ initialWeapon = "Team", programs, standings, pollResults, season, onSeasonChange, loading = false, loadError = false, onFiltersChange }: Props) {
+export default function StandingsPage({ initialWeapon = "Team", programs, standings, matches = [], pollResults, season, onSeasonChange, loading = false, loadError = false, onFiltersChange }: Props) {
     const [selection, setSelection] = useState<Weapon>(initialWeapon);
     const [gender, setGender] = useState<Gender>("Men");
     const [division, setDivision] = useState<"All" | "1" | "3">("All");
@@ -34,6 +36,9 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
         onFiltersChange?.({ gender, "team/squad": selection, division, region, conference, sort: `${sort.key} ${sort.direction}` });
     }, [gender, selection, division, region, conference, sort, onFiltersChange]);
     const mode = selection === "Team" ? "Team" : "Squad";
+    const records = useMemo(() => createWinLossRecords(
+        loading || loadError ? [] : matches.filter(match => match.gender === gender), selection
+    ), [matches, gender, selection, loading, loadError]);
     const coverageTracked = standings.some((row) => row.coverageTracked);
     const preseason = !loading && !loadError && season === "2026-27" && !standings.some((row) => row.spi !== null);
     const selectedPolls = pollResults.filter((row) => row.gender === gender && row.weapon === selection && row.scope === (division === "3" ? "DIII" : "Overall"));
@@ -76,14 +81,21 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 if (ar !== null && br !== null && ar !== br) return sort.direction === 'desc' ? ar - br : br - ar;
                 return a.program.name.localeCompare(b.program.name);
             }
+            if (sort.key === 'record') {
+                const ar=records.get(a.program.id), br=records.get(b.program.id);
+                if (!ar && br) return 1;
+                if (ar && !br) return -1;
+                const comparison=(ar?.wins ?? 0)-(br?.wins ?? 0) || (br?.losses ?? 0)-(ar?.losses ?? 0);
+                return (sort.direction === 'desc' ? -comparison : comparison) || a.program.name.localeCompare(b.program.name);
+            }
             return compareRows(a, b, sort);
         });
         const calculatedRanks = new Map(joined.filter((row) => row.standing.spi !== null)
             .sort((a,b) => (b.standing.spi ?? 0)-(a.standing.spi ?? 0) || a.program.name.localeCompare(b.program.name))
             .map((row,index) => [row.program.id,index+1]));
-        return joined.map((row, index) => ({ ...row, rank: preseason ? pollRank(row.program.id) :
-            coverageTracked ? calculatedRanks.get(row.program.id) ?? null : index + 1 }));
-    }, [conference, division, gender, programs, region, selection, sort, standings, preseason, pollResults, coverageTracked]);
+        return joined.map((row) => ({ ...row, rank: preseason ? pollRank(row.program.id) :
+            calculatedRanks.get(row.program.id) ?? null }));
+    }, [conference, division, gender, programs, region, selection, sort, standings, preseason, pollResults, coverageTracked, records]);
 
     const regions = unique([...programs.map((program) => program.region), ...(region === "All" ? [] : [region])]);
     const conferences = unique([...programs.flatMap((program) => program.conferences), ...(conference === "All" ? [] : [conference])]);
@@ -93,7 +105,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
             if (current.key === key) {
                 return { key, direction: current.direction === "asc" ? "desc" : "asc" };
             }
-            const initial = ["spi", "rank"].includes(key) ? "desc" : "asc";
+            const initial = ["spi", "rank", "record"].includes(key) ? "desc" : "asc";
             return { key, direction: initial };
         });
     }
@@ -109,6 +121,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                 conference: program.conferences.join(", "),
                 region: program.region,
                 spi: standing.spi,
+                record: formatWinLossRecord(records.get(program.id)),
                 includedResults: standing.includedResults,
                 excludedResults: standing.excludedResults,
                 isProvisional: standing.isProvisional,
@@ -147,15 +160,16 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
             <div className="platform-table-wrap">
                 <table className="platform-table standings-table" style={{ tableLayout: "fixed" }}>
                     <thead><tr>
-                        <SortHeader label="Rank" sortKey="rank" sort={sort} onSort={handleSort} align="center" width="60px" />
-                        <SortHeader label="School" sortKey="school" sort={sort} onSort={handleSort} align="left" width="300px" />
-                        <SortHeader label="Division" sortKey="division" sort={sort} onSort={handleSort} align="center" width="85px" />
-                        <SortHeader label="Conference" sortKey="conference" sort={sort} onSort={handleSort} align="left" width="160px" />
-                        <SortHeader label="Region" sortKey="region" sort={sort} onSort={handleSort} align="left" width="160px" />
-                        {periods.map((month) => <th className="poll-column" key={month} style={{ width: "75px", textAlign: "center" }}>{historicalPeriods.includes(month) ? month : month.slice(0, 3)} poll</th>)}
-                        <SortHeader label="SPI" sortKey="spi" sort={sort} onSort={handleSort} align="right" width="105px" />
-                        {coverageTracked && <th style={{ width: '115px' }}>Results counted</th>}
-                        <th style={{ textAlign: "center", width: "85px" }}>Results</th>
+                        <SortHeader label="Rank" sortKey="rank" sort={sort} onSort={handleSort} align="center" width="50px" />
+                        <SortHeader label="School" sortKey="school" sort={sort} onSort={handleSort} align="left" width="260px" />
+                        <SortHeader label="Division" sortKey="division" sort={sort} onSort={handleSort} align="center" width="65px" />
+                        <SortHeader label="Conference" sortKey="conference" sort={sort} onSort={handleSort} align="left" width="120px" />
+                        <SortHeader label="Region" sortKey="region" sort={sort} onSort={handleSort} align="left" width="140px" />
+                        {periods.map((month) => <th className="poll-column" key={month} style={{ width: "65px", textAlign: "center", whiteSpace: 'normal' }}>{historicalPeriods.includes(month) ? month : month.slice(0, 3)} poll</th>)}
+                        <SortHeader label="SPI" sortKey="spi" sort={sort} onSort={handleSort} align="right" width="85px" />
+                        <SortHeader label="W-L" sortKey="record" sort={sort} onSort={handleSort} align="center" width="75px" />
+                        {coverageTracked && <th className="standings-col-coverage" style={{ width: '100px', whiteSpace: 'normal' }}>Results counted</th>}
+                        <th className="standings-col-results" style={{ textAlign: "center", width: "70px" }}>Results</th>
                     </tr></thead>
                     <tbody>{rows.length ? rows.map(({ rank, standing, program }) => (
                         <tr key={`${standing.teamId}-${standing.weapon}`}>
@@ -179,6 +193,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                                 </td>
                             ))}
                             <td className="numeric spi-cell" style={{ textAlign: "right" }}>{formatNumber(standing.spi)}{standing.spi !== null && standing.isProvisional && <small style={{ display: 'block' }}>Provisional</small>}</td>
+                            <td className="numeric" style={{ textAlign: 'center' }} title={recordTitle(records.get(program.id))}>{formatWinLossRecord(records.get(program.id))}</td>
                             {coverageTracked && <td title={`${standing.excludedResults ?? 0} results excluded`}>{standing.includedResults ?? 0} / {(standing.includedResults ?? 0)+(standing.excludedResults ?? 0)}</td>}
                             <td style={{ textAlign: "center" }}>
                                 <a className="icon-text-link" href={`#/schools/${program.id}/results?season=${season}`}>
@@ -186,7 +201,7 @@ export default function StandingsPage({ initialWeapon = "Team", programs, standi
                                 </a>
                             </td>
                         </tr>
-                    )) : <tr><td className="empty-table" colSpan={7 + periods.length + (coverageTracked ? 1 : 0)} role="status">{loading ? "Loading season data" : loadError ? "Season data unavailable. Try another season or refresh the page." : preseason ? "SPI will be available after competition results are entered." : "No standings are loaded for this selection."}</td></tr>}</tbody>
+                    )) : <tr><td className="empty-table" colSpan={8 + periods.length + (coverageTracked ? 1 : 0)} role="status">{loading ? "Loading season data" : loadError ? "Season data unavailable. Try another season or refresh the page." : preseason ? "SPI will be available after competition results are entered." : "No standings are loaded for this selection."}</td></tr>}</tbody>
                 </table>
             </div>
             {sources.length > 0 && <div className="poll-sources" aria-label="Published poll sources">Published polls: {sources.map((url, index) => <a href={url} key={url} target="_blank" rel="noreferrer">Source {index + 1}</a>)}</div>}
@@ -204,11 +219,12 @@ function Filter({ label, value, onChange, options }: { label: string; value: str
 function SortHeader({ label, sortKey, sort, onSort, align = "left", width }: { label: string; sortKey: SortKey; sort: Sort; onSort: (key: SortKey) => void; align?: "left" | "center" | "right"; width?: string }) {
     const isActive = sort.key === sortKey;
     const justify = align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
-    return <th style={{ width, textAlign: align }}>
+    return <th className={`standings-col-${sortKey}`} style={{ width, textAlign: align }}>
         <button 
             className="table-sort" 
             style={{ justifyContent: justify }}
             type="button" 
+            title={sortKey === 'record' ? 'Wins, then fewer losses' : undefined}
             onClick={() => onSort(sortKey)}
         >
             {label}
@@ -230,6 +246,7 @@ function compareRows(a: { standing: DisplayStanding; program: Program }, b: { st
 }
 
 function valueForSort(row: { standing: DisplayStanding; program: Program }, key: SortKey): string | number {
+    if (key === 'record') return 0;
     if (key === "spi" || key === "rank") return row.standing.spi ?? 0;
     if (key === "school") return row.program.name;
     if (key === "conference") return row.program.conferences.join(", ");
@@ -237,4 +254,7 @@ function valueForSort(row: { standing: DisplayStanding; program: Program }, key:
 }
 
 function unique(values: string[]) { return [...new Set(values)].sort(); }
+function recordTitle(record?: WinLossRecord) {
+    return record ? `${record.wins} wins, ${record.losses} losses${record.ties ? `, ${record.ties} ties` : ''}` : 'No recorded matches available';
+}
 function formatNumber(value: number | null) { return value === null ? '—' : value.toFixed(2); }
