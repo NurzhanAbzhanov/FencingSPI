@@ -31,6 +31,15 @@ Do not report a deployment as complete when authentication or deployment verific
 - Show ties as W-L-T when present, skip unfenced 0-0 pairings, and leave missing historical match records unavailable rather than inventing a 0-0 record.
 - Keep SPI ranks stable when sorting by W-L or other columns. No PR or SPI calculation changes.
 
+## WordPress 1.6.3
+
+- Allow fully rated one- and two-fencer squads, averaging available fencers. Larger squads still average only the top three.
+- Apply a minimum adjusted PR of 20 to known squad and Team ratings after gender-specific rounding. Team raw PR still averages the three raw squad PRs.
+- Missing ratings, missing squads, and unassigned-weapon blockers remain unavailable; do not substitute 20 for unknown data.
+- Enforce the minimum of 20 on manual overrides in the UI, client API, and database. Individual fencer input ratings are not subject to this output minimum.
+- Recalculate 2026-27 PR/SPI in place using stored rosters, preserving roster rows, matches, overrides, published polls, and all historical seasons.
+- Use a shared private database calculation helper for future uploads and recalculation without replacing stored roster rows.
+
 ## WordPress 1.6.1
 
 - Missing roster cells no longer reject the entire upload. Valid programs continue calculating; upload issues identify the affected file and row.

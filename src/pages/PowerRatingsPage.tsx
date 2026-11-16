@@ -142,8 +142,8 @@ export default function PowerRatingsPage({
 
     async function saveOverride(program: Program) {
         const adjustedPowerRating = Number(draftRating);
-        if (!draftRating.trim() || !Number.isFinite(adjustedPowerRating) || adjustedPowerRating < 0) {
-            setMessage("Enter a non-negative power rating.");
+        if (!draftRating.trim() || !Number.isFinite(adjustedPowerRating) || adjustedPowerRating < 20) {
+            setMessage("Enter a power rating of at least 20.");
             return;
         }
         if (!draftReason.trim()) {
@@ -268,7 +268,7 @@ export default function PowerRatingsPage({
             <section className="power-rating-recalculation" aria-labelledby="power-rating-recalculation-title">
                 <div>
                     <h3 id="power-rating-recalculation-title">Recalculate from fencer ratings</h3>
-                    <p>Required columns: School, Weapon, Power Rating. Blank ratings are unknown; incomplete squads are excluded. Upload the full roster for each gender.</p>
+                    <p>Required columns: School, Weapon, Power Rating. Squads with one or two rated fencers use their average; larger squads use the top three. Blank ratings remain unknown. Minimum calculated PR: 20. Upload the full roster for each gender.</p>
                 </div>
                 <div className="power-rating-upload-fields" key={fileInputKey}>
                     <fieldset className="season-choice-field">
@@ -398,7 +398,7 @@ export default function PowerRatingsPage({
                                                 <input
                                                     aria-label={`${program.name} override power rating`}
                                                     className="override-rating-input"
-                                                    min="0"
+                                                    min="20"
                                                     step="10"
                                                     type="number"
                                                     value={draftRating}

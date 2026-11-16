@@ -74,15 +74,15 @@ begin
     select completed || jsonb_agg(jsonb_build_object('team_name','Partial C','weapon',weapon,'power_rating',0)) into two_fencers
         from (values ('Epee'),('Foil'),('Sabre')) w(weapon) cross join lateral generate_series(1,case when weapon='Epee' then 2 else 3 end);
     perform public.replace_fencer_ratings_and_recalculate('partial-fixture','Men',two_fencers,'two-fencers.xlsx');
-    if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000003' and weapon='Epee') is not null then
-        raise exception 'Squads with fewer than three fencers must be excluded'; end if;
+    if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000003' and weapon='Epee') is distinct from 20 then
+        raise exception 'Two-fencer squads must be allowed with the minimum rating of 20'; end if;
     select completed || jsonb_agg(jsonb_build_object('team_name','Partial C','weapon',weapon,'power_rating',0)) into completed
         from (values ('Epee'),('Foil'),('Sabre')) w(weapon) cross join generate_series(1,3);
     perform public.replace_fencer_ratings_and_recalculate('partial-fixture','Men',completed,'complete-all.xlsx');
     if exists(select 1 from public.spi_results where season_id=target and (spi is null or excluded_results<>0 or is_provisional)) then
         raise exception 'Finishing rosters must restore all eligible results, including real zero PR'; end if;
-    if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000003' and weapon='Team') is distinct from 0 then
-        raise exception 'Genuine zero must not become unknown or ten'; end if;
+    if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000003' and weapon='Team') is distinct from 20 then
+        raise exception 'Known zero averages must receive the minimum adjusted PR of 20'; end if;
     select count(*) into row_count from public.matches where season_id=target;
     if row_count<>2 then raise exception 'No match should be deleted during rating recalculation'; end if;
     perform set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000000',true);
@@ -104,6 +104,23 @@ begin
     if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000004' and weapon='Team') is distinct from 20
         or (select power_rating from public.spi_results where season_id=target and program_id=a and weapon='Team') is distinct from 90 then
         raise exception 'Women must round up without changing mens ratings'; end if;
+    select jsonb_agg(jsonb_build_object('team_name','Partial A','weapon',weapon,'power_rating',rating)) into women
+        from (values ('Epee',40),('Epee',20),('Foil',50),('Sabre',90),('Sabre',80),('Sabre',70),('Sabre',10)) f(weapon,rating);
+    perform public.replace_fencer_ratings_and_recalculate('partial-fixture','Women',women,'small-squads.xlsx');
+    if (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000004' and weapon='Epee') is distinct from 30
+        or (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000004' and weapon='Foil') is distinct from 50
+        or (select power_rating from public.spi_results where season_id=target and program_id='b3000000-0000-4000-8000-000000000004' and weapon='Team') is distinct from 60 then
+        raise exception 'One/two fencers must use their average; large squads use top three and Team uses raw squad averages'; end if;
+    if has_function_privilege('anon','public.recalculate_season_power_ratings(uuid,public.fencing_gender)','execute')
+        or has_function_privilege('authenticated','public.recalculate_season_power_ratings(uuid,public.fencing_gender)','execute') then
+        raise exception 'Private recalculation helper must not be directly accessible'; end if;
+    denied:=false;
+    begin
+        insert into public.power_rating_overrides(season_id,program_id,weapon,adjusted_power_rating,reason,updated_by)
+        values(target,a,'Epee',10,'Below minimum','b1000000-0000-4000-8000-000000000001');
+    exception when check_violation then denied:=true;
+    end;
+    if not denied then raise exception 'Manual overrides below 20 must be rejected'; end if;
 end;
 $$;
 rollback;

@@ -14,6 +14,7 @@ import {
     loadPowerRatingSeasons,
     normalizeFencerRatingUploadRows,
     recalculatePowerRatings,
+    savePowerRatingOverride,
 } from "./powerRatingOverrides";
 
 function query(data: unknown, error: unknown = null) {
@@ -27,6 +28,11 @@ function query(data: unknown, error: unknown = null) {
 }
 
 describe("powerRatingOverrides", () => {
+    it('rejects manual PRs below 20 before any database or local write', async () => {
+        await expect(savePowerRatingOverride({season:'2026-27',teamId:1,gender:'Men',weapon:'Team',
+            adjustedPowerRating:10,reason:'Test',updatedAt:new Date().toISOString(),updatedBy:'Admin'}))
+            .rejects.toThrow('at least 20');
+    });
     beforeEach(() => {
         mocks.from.mockReset();
         mocks.rpc.mockReset();

@@ -62,9 +62,10 @@ function calculateTeamPowerRatings(
 
     
     for(const ratings of Object.values(grouped)){
-        const epee = findWeaponRatingOrZero(ratings, "Epee");
-        const foil = findWeaponRatingOrZero(ratings, "Foil");
-        const saber = findWeaponRatingOrZero(ratings, "Sabre");
+        const epee = ratings.find(rating => rating.weapon === "Epee");
+        const foil = ratings.find(rating => rating.weapon === "Foil");
+        const saber = ratings.find(rating => rating.weapon === "Sabre");
+        if (!epee || !foil || !saber) continue;
 
         const rawPowerRating = (epee.rawPowerRating + foil.rawPowerRating + saber.rawPowerRating) / 3;
 
@@ -83,25 +84,6 @@ function calculateTeamPowerRatings(
 
     return teamRatings;
 
-}
-
-function findWeaponRatingOrZero(
-    ratings : SquadPowerRating[],
-    weapon : Exclude<Weapon, "Team">
-) : SquadPowerRating {
-    const rating = ratings.find((rating) => rating.weapon === weapon)
-
-    if(rating){
-        return rating;
-    }
-
-    return {
-        teamId: ratings[0].teamId,
-        gender: ratings[0].gender,
-        weapon,
-        rawPowerRating: 0,
-        adjustedPowerRating: 0,
-    };
 }
 
 export function normalizeFencerRatingRows(
@@ -172,7 +154,7 @@ function calculateAveragePowerRating(
     for(const row of rows){
        sumPR += row.powerRating;
     }
-    const rawPowerRating = sumPR / 3;
+    const rawPowerRating = sumPR / rows.length;
     
     return {
         teamId: rows[0].teamId,
@@ -190,8 +172,8 @@ function adjustPowerRating(
     rawPowerRating: number,
     gender: Gender
 ): number{  
-    if (rawPowerRating < 10) {
-        return 10;
+    if (rawPowerRating < 20) {
+        return 20;
     }
 
     if(gender === "Men"){

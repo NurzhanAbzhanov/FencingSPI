@@ -210,6 +210,9 @@ export async function loadPowerRatingOverrides(
 export async function savePowerRatingOverride(
     override: PowerRatingOverride
 ): Promise<void> {
+    if (!Number.isFinite(override.adjustedPowerRating) || override.adjustedPowerRating < 20) {
+        throw new Error("Enter a power rating of at least 20.");
+    }
     if (!supabase) {
         saveLocalOverride(override);
         return;
