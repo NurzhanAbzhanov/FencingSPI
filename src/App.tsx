@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FeedbackDialog from "./components/FeedbackDialog";
@@ -15,6 +15,7 @@ import SetPasswordPage from "./pages/SetPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import SignInPage from "./pages/SignInPage";
 import StandingsPage from "./pages/StandingsPage";
+const CalendarPage = lazy(()=>import('./pages/CalendarPage'));
 import CoachManagementPage from "./pages/polls/CoachManagementPage";
 import PollBallotPage from "./pages/polls/PollBallotPage";
 import PollDashboardPage from "./pages/polls/PollDashboardPage";
@@ -133,11 +134,12 @@ export default function App() {
     async function signOut() { signOutDemo(); if (supabase) await supabase.auth.signOut(); setUser(null); window.location.hash = "#/spi"; }
 
     const protectedPage = ["change-password", "enter-results", "polls", "poll-ballot", "poll-results", "admin", "admin-polls", "admin-coaches", "admin-participation"].includes(route.page);
-    const dataIndependentPage = ["change-password", "sign-in", "set-password", "polls", "poll-ballot", "poll-results", "public-poll-results", "admin-polls", "admin-coaches", "admin-participation", "invalid-ballot"].includes(route.page);
+    const dataIndependentPage = ["calendar", "change-password", "sign-in", "set-password", "polls", "poll-ballot", "poll-results", "public-poll-results", "admin-polls", "admin-coaches", "admin-participation", "invalid-ballot"].includes(route.page);
     return <><Header activePage={route.page} user={user} onSignOut={signOut} onFeedback={openFeedback} onSidSignup={() => setSidSignupOpen(true)} /><main className="app-shell">
         {status === "loading" && !dataIndependentPage && route.page !== "spi" ? <div className="page-loading">Loading season data</div> :
         status === "error" && !dataIndependentPage && route.page !== "spi" ? <div className="empty-state"><h1>Season data unavailable</h1><p>Refresh the page or choose the active 2025-26 season.</p></div> :
         protectedPage && !user ? <SignInPage onSignedIn={setUser} /> :
+        route.page === 'calendar' ? <Suspense fallback={<p role="status">Loading calendar</p>}><CalendarPage /></Suspense> :
         route.page === "spi" ? <StandingsPage key={route.initialWeapon ?? "Team"} initialWeapon={route.initialWeapon} programs={programs} standings={status === "ready" ? standings : []} matches={status === "ready" ? matches : []} pollResults={status === "ready" ? pollResults : []} loading={status === "loading"} loadError={status === "error"} season={season} onSeasonChange={changeSeason} onFiltersChange={setStandingsFilters} /> :
         route.page === "school-results" ? <SchoolResultsPage teamId={route.teamId} season={route.season} programs={programs} matches={matches} /> :
         route.page === "enter-results" && user?.role === "admin" ? entryStatus !== "ready" ? <p role="status">{entryStatus === "loading" ? "Loading season matches" : "Could not load season matches. Refresh to retry."}</p> : <ResultsEntryPage key={season} season={season} onSeasonChange={changeSeason} submissions={matchSubmissions} teams={programs} onSaveSubmission={handleMatchSave} onDeleteSubmission={handleMatchDelete} /> :

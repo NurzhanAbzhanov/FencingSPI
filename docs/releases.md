@@ -10,6 +10,16 @@ For every completed update:
 
 Do not report a deployment as complete when authentication or deployment verification is blocked.
 
+## WordPress 1.7.0 Calendar
+
+- Add public Calendar navigation and an independent calendar route that does not depend on standings availability.
+- Add Admin Calendar uploads, private previews/drafts, timestamped immutable version history, explicit publishing, and restoration by republishing a saved version.
+- Initial public version is the supplied index--2-.html, stored unchanged (23,757 bytes; MD5 5fe7bc3ae86d6c99dad2f565421b2e5f).
+- Uploads use the supplied calendar HTML format: literal const E event array, nine text fields per event, at most 1 MiB, 1,000 events, and 24 months. Event dates, styling, and text can be updated without a deployment. Custom JavaScript is not executed.
+- parse5 strips unsafe markup; Acorn extracts literal event data; a trusted renderer preserves calendar/list/filter/dialog behavior. Opaque iframe origin and nonce-only CSP protect the surrounding app and block untrusted code, navigation handlers, forms, API calls, and nested frames.
+- Use actual local date for completed/upcoming display. No edits to stored source or SPI/match/poll data.
+- Apply the plugin update once to expose the new page and controls in WordPress. Subsequent calendar publication changes come from Supabase; no new plugin ZIP is needed for those content updates.
+
 ## 2026-10-21 Committee Ballot Visibility
 
 - Active committee voters can view other members' submitted ballots while voting is open as well as after closing.

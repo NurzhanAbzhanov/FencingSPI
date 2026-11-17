@@ -1,0 +1,73 @@
+const safe = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const C = {inv:"var(--inv)",dual:"var(--dual)",conf:"var(--conf)",champ:"var(--champ)",nat:"var(--nat)"};
+const TYPE = {inv:"Invitational",dual:"Dual / tri",conf:"Conference meet",champ:"Conf. championship",nat:"National"};
+const ev = E.map((r,i)=>({id:i,s:r[0],e:r[1],name:r[2],host:r[3],loc:r[4],type:r[5],g:r[6],teams:r[7],note:r[8]}));
+const fmt = d => new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+const wd = d => new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"short"});
+const range = x => x.s===x.e ? `${wd(x.s)} ${fmt(x.s)}` : `${wd(x.s)} ${fmt(x.s)} – ${wd(x.e)} ${fmt(x.e)}`;
+const gtxt = g => g==="MW"?"Men & Women":g==="M"?"Men":"Women";
+
+function filtered(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const t=document.getElementById('type').value, g=document.getElementById('gender').value;
+  const hp=document.getElementById('hidePast').checked;
+  return ev.filter(x=>(!q||(x.name+" "+x.host+" "+x.loc+" "+x.teams).toLowerCase().includes(q))
+    &&(!t||x.type===t)&&(!g||x.g.includes(g))&&(!hp||x.e>=TODAY));
+}
+function stats(list){
+  const schools=new Set();list.forEach(x=>x.teams.split(",").forEach(t=>schools.add(t.replace(/\(.*\)/,"").trim())));
+  const up=list.filter(x=>x.e>=TODAY).length;
+  document.getElementById('stats').innerHTML=
+   `<div class="stat"><b>${list.length}</b><small>college meets</small></div>
+    <div class="stat"><b>${up}</b><small>upcoming (from ${fmt(TODAY)})</small></div>
+    <div class="stat"><b>${list.filter(x=>x.type==='champ'||x.type==='nat').length}</b><small>championships</small></div>
+    <div class="stat"><b>${list.filter(x=>x.note).length}</b><small>flagged conflicts</small></div>`;
+}
+function renderCal(list){
+  const months=MONTHS;
+  let h="";
+  for(const [y,m] of months){
+    const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate(), pad=first.getDay();
+    h+=`<section class="month"><h2>${first.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</h2><div class="grid">`;
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>h+=`<div class="dow">${d}</div>`);
+    for(let i=0;i<pad;i++) h+=`<div class="day out"></div>`;
+    for(let d=1;d<=days;d++){
+      const iso=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const items=list.filter(x=>x.s<=iso&&x.e>=iso);
+      h+=`<div class="day${iso===TODAY?' today':''}"><span class="n">${d}</span>`;
+      items.forEach(x=>h+=`<span class="chip${x.e<TODAY?' past':''}${x.note?' flag':''}" style="--c:${C[x.type]}" data-id="${x.id}" title="${safe(x.name)} — ${safe(x.host)}">${safe(x.name)}</span>`);
+      h+=`</div>`;
+    }
+    const tail=(7-((pad+days)%7))%7; for(let i=0;i<tail;i++) h+=`<div class="day out"></div>`;
+    h+=`</div></section>`;
+  }
+  document.getElementById('cal').innerHTML=h;
+}
+function renderList(list){
+  let h="", cur="";
+  list.slice().sort((a,b)=>a.s.localeCompare(b.s)||a.name.localeCompare(b.name)).forEach(x=>{
+    const mo=new Date(x.s+"T12:00:00").toLocaleDateString("en-US",{month:"long",year:"numeric"});
+    if(mo!==cur){cur=mo;h+=`<h2 style="font-size:16px;margin:18px 0 8px">${mo}</h2>`;}
+    h+=`<div class="row" style="--c:${C[x.type]}${x.e<TODAY?';opacity:.65':''}">
+      <div class="d">${range(x)}${x.e<TODAY?'<small>Completed</small>':''}</div>
+      <div><div class="t">${safe(x.name)}</div><div class="loc">Host: ${safe(x.host)} · ${safe(x.loc)}</div>
+      <div class="teams"><b>SPI teams listing it:</b> ${safe(x.teams)}</div>${x.note?`<div class="note">⚠ ${safe(x.note)}</div>`:''}</div>
+      <div class="meta">${TYPE[x.type]}<br>${gtxt(x.g)}</div></div>`;
+  });
+  document.getElementById('list').innerHTML=h||'<p>No meets match.</p>';
+}
+function render(){const l=filtered();stats(l);renderCal(l);renderList(l);}
+function show(id){
+  const x=ev[id];
+  document.getElementById('dlgBody').innerHTML=`<h3>${safe(x.name)}</h3><p style="margin:0;color:var(--muted)">${range(x)} · ${TYPE[x.type]} · ${gtxt(x.g)}</p>
+   <p><b>Host:</b> ${safe(x.host)}<br><b>Location:</b> ${safe(x.loc)}</p><p><b>SPI teams listing it:</b> ${safe(x.teams)}</p>${x.note?`<p style="color:var(--champ)">⚠ ${safe(x.note)}</p>`:''}`;
+  document.getElementById('dlg').showModal();
+}
+document.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)show(+c.dataset.id);});
+['q','type','gender','hidePast'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+const tC=document.getElementById('tCal'),tL=document.getElementById('tList');
+function view(v){document.getElementById('cal').hidden=v!=='cal';document.getElementById('list').hidden=v!=='list';tC.classList.toggle('on',v==='cal');tL.classList.toggle('on',v==='list');}
+tC.onclick=()=>view('cal');tL.onclick=()=>view('list');
+render();
+
+document.querySelector("#dlg button").onclick=()=>document.getElementById("dlg").close();

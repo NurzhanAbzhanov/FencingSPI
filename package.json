@@ -15,8 +15,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
     "@tailwindcss/vite": "^4.3.3",
+    "acorn": "^8.19.0",
     "exceljs": "^4.4.0",
     "lucide-react": "^1.28.0",
+    "parse5": "^8.1.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.3",

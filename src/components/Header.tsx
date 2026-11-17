@@ -9,6 +9,7 @@ export default function Header({ activePage, user, onSignOut, onFeedback, onSidS
             <li><a className={activePage === "spi" ? "active" : ""} href="#/spi">SPI</a></li>
             {user?.role === "admin" && <li><a className={activePage === "enter-results" ? "active" : ""} href="#/enter-results">Enter Results</a></li>}
             <li><a className={["polls", "poll-ballot", "poll-results", "public-poll-results"].includes(activePage) ? "active" : ""} href="#/polls">Coaches Poll</a></li>
+            <li><a className={activePage === 'calendar' ? 'active' : ''} href="#/calendar">Calendar</a></li>
             <li><button type="button" className="nav-signup" onClick={onSidSignup}><UserPlus size={16} /> SID Signup</button></li>
             {user?.role === "admin" && <li><a className={["admin", "admin-polls", "admin-coaches", "admin-participation"].includes(activePage) ? "active" : ""} href="#/admin"><ShieldCheck size={15} /> Admin</a></li>}
         </ul></nav>
